@@ -1,23 +1,23 @@
 .\" Process this file with
 .\" groff -man -Tascii foo.1
 .\"
-.TH pmctl 1 "FEB 2006" Linux "User Manuals"
+.TH sispmctl 1 "FEB 2006" Linux "User Manuals"
 
 .SH NAME
-pmctl - Gembird Silver Shield PM ConTroL program
+sispmctl - Gembird Silver Shield PM ConTroL program
 
 .SH SYNOPSIS
-.B pmctl [ 
+.B sispmctl [ 
 .I -u <path>
 .B ] [
 .I -p <#port>
 .B ] 
 .I -l
 .P
-.B pmctl 
+.B sispmctl 
 .I -s
 .P
-.B pmctl [
+.B sispmctl [
 .I -q
 .B ] [
 .I -n
@@ -27,7 +27,7 @@ pmctl - Gembird Silver Shield PM ConTroL program
 .I -b 
 .B <on|off>
 .P
-.B pmctl [
+.B sispmctl [
 .I -q
 .B ] [
 .I -n
@@ -42,7 +42,7 @@ pmctl - Gembird Silver Shield PM ConTroL program
 .B > <1..4|all>
 
 .SH DESCRIPTION
-.B pmctl
+.B sispmctl
 is a tool to switch the USB controlled outlets of Gembird Silver Shield PM.
 It is known by many names, e.g. Revolt Power Switch.
 .P
@@ -59,7 +59,7 @@ stay listening on network port for http protocol.
 .IP -p
 IP network port (default: 2638) for listener. There is no authentication implemented yet.
 .IP -u
-give the directory path where pages lay, that are served (default: /usr/local/httpd/pmctl ).
+give the directory path where pages lay, that are served (default: /usr/local/httpd/sispmctl ).
 The Web path component is completely ignored for security reasons.
 .IP -b
 switch the buzzer on and off (I was not able to test it, mine does not hat it)
@@ -80,15 +80,15 @@ print version & copyright
 
 .SH WEB INTERFACE
 
-The pmctl program provides a web interface when started with the 
+The sispmctl program provides a web interface when started with the 
 .I -l
 option. No additional http server is needed. 
-Each selected usb device is blocked by pmctl while running.
+Each selected usb device is blocked by sispmctl while running.
 .P
 After installation, the first of three web-interfaces is selected. The default location of the HTML
 files is /usr/local/httpd/sispm_ctl/doc which is a symbolic link to /usr/local/httpd/sispm_ctl/skin1.
 .P
-The http capabilities of pmctl are limited. 
+The http capabilities of sispmctl are limited. 
 Technically speaking, only the first line of each http request is parsed.
 The terminating path component, i.e. file name, is looked up in the repository directory.
 If present the file is parsed and in absence of control sequences sent as is.
@@ -114,15 +114,15 @@ Best is to redirect to other pages that only include status requests.
 .SH EXAMPLES
 Switch off the first outlet of the first SiS-PM and the third outlet of the second SiS-PM:
 .P
-.B pmctl -f 1 -d 1 -f 3
+.B sispmctl -f 1 -d 1 -f 3
  
 Print the status of the forth outlet as zero or one:
 .P
-.B pmctl -nqg 4
+.B sispmctl -nqg 4
 
-Run pmctl on the second device as a web-server:
+Run sispmctl on the second device as a web-server:
 .P
-.B pmctl -d 1 -l
+.B sispmctl -d 1 -l
 
 You can connect to it from the same machine by pointing to http://localhost:2638 with
 your webbrowser
