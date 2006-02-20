@@ -1,0 +1,134 @@
+.\" Process this file with
+.\" groff -man -Tascii foo.1
+.\"
+.TH pmctl 1 "FEB 2006" Linux "User Manuals"
+
+.SH NAME
+pmctl - Gembird Silver Shield PM ConTroL program
+
+.SH SYNOPSIS
+.B pmctl [ 
+.I -u <path>
+.B ] [
+.I -p <#port>
+.B ] 
+.I -l
+.P
+.B pmctl 
+.I -s
+.P
+.B pmctl [
+.I -q
+.B ] [
+.I -n
+.B ] [
+.I -d 
+.B 1... ]
+.I -b 
+.B <on|off>
+.P
+.B pmctl [
+.I -q
+.B ] [
+.I -n
+.B ] [
+.I -d 
+.B 1... ] <
+.I -o 
+.B |
+.I -f 
+.B |
+.I -g 
+.B > <1..4|all>
+
+.SH DESCRIPTION
+.B pmctl
+is a tool to switch the USB controlled outlets of Gembird Silver Shield PM.
+It is known by many names, e.g. Revolt Power Switch.
+.P
+It is coded in C and does use the usb specific library (LibUSB).  
+This allows you a portable and fast solution.
+
+.SH OPTIONS
+.IP -h
+Print usage information
+.IP -s
+Scan all universal serial buses for devices with the ID 04B4:FD11.
+.IP -l
+stay listening on network port for http protocol.
+.IP -p
+IP network port (default: 2638) for listener. There is no authentication implemented yet.
+.IP -u
+give the directory path where pages lay, that are served (default: /usr/local/httpd/pmctl ).
+The Web path component is completely ignored for security reasons.
+.IP -b
+switch the buzzer on and off (I was not able to test it, mine does not hat it)
+.IP -o
+switch the named outlet to "ON"
+.IP -f
+switch the named outlet to "OFF"
+.IP -g
+show the status of the named outlet
+.IP -d
+Choose not the first but the named one in the sequence of detected devices (see scan option)
+.IP -n
+do not print "ON" and "OFF", but "1" and "0" instead
+.IP -q
+do neither print explanations nor disclaimers except it is requested
+.IP -v
+print version & copyright
+
+.SH WEB INTERFACE
+
+The pmctl program provides a web interface when started with the 
+.I -l
+option. No additional http server is needed. 
+Each selected usb device is blocked by pmctl while running.
+.P
+After installation, the first of three web-interfaces is selected. The default location of the HTML
+files is /usr/local/httpd/sispm_ctl/doc which is a symbolic link to /usr/local/httpd/sispm_ctl/skin1.
+.P
+The http capabilities of pmctl are limited. 
+Technically speaking, only the first line of each http request is parsed.
+The terminating path component, i.e. file name, is looked up in the repository directory.
+If present the file is parsed and in absence of control sequences sent as is.
+The files must include the http header portion.
+.P
+Control sequences start and end with double dollar `$$'.
+They consist of a command portion separated by a question mark `?' from 
+alternative outputs which are separated by the first colon `:'.
+The command portion is a token followed by an embraced number that references the outlet, e.g.
+.IB $$command(1)?positive:negative$$
+while command is one of 
+.B status
+,
+.B toggle
+,
+.B off
+,
+.B on .
+I strongly recommend to avoid the on/off/toggle commands in pages that may be reloaded.
+Best is to redirect to other pages that only include status requests.
+
+
+.SH EXAMPLES
+Switch off the first outlet of the first SiS-PM and the third outlet of the second SiS-PM:
+.P
+.B pmctl -f 1 -d 1 -f 3
+ 
+Print the status of the forth outlet as zero or one:
+.P
+.B pmctl -nqg 4
+
+Run pmctl on the second device as a web-server:
+.P
+.B pmctl -d 1 -l
+
+You can connect to it from the same machine by pointing to http://localhost:2638 with
+your webbrowser
+ 
+.SH AUTHOR
+.P
+First version by Mondrian Nuessle, nuessle@uni-mannheim.de
+.P
+Web integration and man page by Andreas Neuper, ANeuper-at-web-dot-de

@@ -1,0 +1,64 @@
+SiS-PM Control for Linux 2.2
+
+Overview
+--------
+This projects adds support for the GEMBIRD SIS-PM device to linux.
+Follow the instructions in INSTALL to install the application
+(generic configure && make && make install).
+Call sispmctl (formerly: sispm_ctl) without commandline parameters, 
+it will print the available options to stdout.
+
+Installation
+------------
+
+See the file INSTALLATION for generic installation instructions.
+The following confiure options may be of interest:
+
+--prefix=dif    Set installation directory-prefix (default is /usr/local)
+
+--enable-webless  Disable the builtin webserver. It will not be compiled into
+                  the binary. The commandline options for the web-interface will
+									not be available.
+									
+--with-webdir=directory Install the web-interface file to subdirectories of the
+	                      given directory. A doc linl in this directory will point
+												to skin1. And the path will be default path compiled into
+												the binary.
+												The default without this option is /usr/local/httpd/sispmctl.
+												
+--with-bindaddr=ipaddress Give the IP address (in dotted decimal form, i.e. 127.0.0.1) for
+	                        the default interface that the webserver accepts connections on.
+													The default without this option is to use all available interfaces.
+													
+--with-default-port=portnumber Give the default port number the webserver is listening on.
+                          If you do not specify this option the default is 2638
+
+Dependencies
+------------
+- libusb 0.18 must be installed, libusb-config in $PATH
+
+
+Web-Interface
+------------
+The web interface may be started manually (i.e. sispmctl -l) 
+or using the inittab. Add the following line to your /etc/inittab:
+
+pm:2345:respawn:/usr/local/bin/sispmctl -l
+
+There are three kind of skins between you might select:
+	src/web1/	classic sispm_http style
+	src/web2/	an extended google start page
+	src/web3/	a vertical sized frame
+The skins are installed under
+$(PREFIX)/httpd/sispmctl/skin1..3
+
+The default skin is selected by the symbolic link
+$(PREFIX)/httpd/sispmctl/doc which point to skin1 after
+installation. You can easily select a different skin by
+chaning this symbolic link.
+
+It is quite easy to change one or write a new one. Try it.
+
+Usage
+-----
+See the output of sispmctl when run without parameters and the man page.

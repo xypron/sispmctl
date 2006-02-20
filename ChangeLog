@@ -1,0 +1,14 @@
+09 Feb 2006 -   2.1 clean-up
+	     added some doc, cleaned-up autotool files
+05 Feb 2006	-   1.2  integrated web interface
+			 including three "skins"
+13 Feb 2005	-   1.1a  supporting multiple usb devices
+			 fixing naming conventions
+			 options on output format
+			 added man page
+			 prepared for i(18)n
+24 Feb 2005 - 1.1  bugfixes
+				Fixed small error in configure script, relaxed dependency for libusb 
+				to include version >=0.1.5, added new command line arguments -q and -v
+				added Troubleshooting section
+03 Aug 2004     -   1.0b initial revision, switching of outlets works
