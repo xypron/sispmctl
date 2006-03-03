@@ -8,7 +8,7 @@
 #endif
 
 
-#define HOMEDIR	"/usr/local/httpd/sispmctl/doc"
+#define HOMEDIR	"/usr/local/share/httpd/sispmctl/doc"
 
 const char*answer(char*in);
 void process(int out,char*v,usb_dev_handle *udev);

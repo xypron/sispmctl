@@ -45,8 +45,8 @@ install-data-local:
 	if test ! -e $(datadir)/httpd/$(PACKAGE) ; then \
 	 mkdir  $(datadir)/httpd/$(PACKAGE) ; \
 	fi
-	if test ! -e $(datdir)/httpd/$(PACKAGE)/doc ; then \
-	 ln -s $(datadir)/httpd/$(PACKAGE)/skin1  $(datadir)/httpd/$(PACKAGE)/doc ; \
+	if test ! -e $(datadir)/httpd/$(PACKAGE)/doc ; then \
+	 ln -s $(datadir)/httpd/$(PACKAGE)/doc $(datadir)/httpd/$(PACKAGE)/skin1 ; \
 	fi 
 
 uninstall-local:
