@@ -212,7 +212,7 @@ void process(int out,char*v,usb_dev_handle *udev)
 
 void print_disclaimer(char*name)
 {
-  fprintf(stderr, "\nSiS PM Control for Linux 2.1\n\n"
+  fprintf(stderr, "\nSiS PM Control for Linux 2.2\n\n"
 	 "(C) 2004, 2005, 2006 by Mondrian Nuessle, (C) 2005, 2006 by Andreas Neuper.\n"
 	 "This program is free software.\n"
 	 "%s comes with ABSOLUTELY NO WARRANTY; for details \n"

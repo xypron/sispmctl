@@ -39,20 +39,19 @@ INCLUDES= $(all_includes)
 AM_LDFLAGS = $(all_libraries)
 
 install-data-local:
-	if test ! -e $(datadir)/httpd ; then \
-	 mkdir  $(datadir)/httpd ; \
-	fi
-	if test ! -e $(datadir)/httpd/$(PACKAGE) ; then \
-	 mkdir  $(datadir)/httpd/$(PACKAGE) ; \
-	fi
-	if test ! -e $(datadir)/httpd/$(PACKAGE)/doc ; then \
-	 ln -s $(datadir)/httpd/$(PACKAGE)/doc $(datadir)/httpd/$(PACKAGE)/skin1 ; \
+if WEBLESSCOND
+else
+	test -z "$(DESTDIR)$(datadir)/httpd/$(PACKAGE)" || mkdir -p -- "$(DESTDIR)$(datadir)/httpd/$(PACKAGE)"
+	test -z "$(DESTDIR)$(datadir)/httpd/$(PACKAGE)/skin1" || mkdir -p -- "$(DESTDIR)$(datadir)/httpd/$(PACKAGE)/skin1"
+	if test ! -e $(DESTDIR)$(datadir)/httpd/$(PACKAGE)/doc ; then \
+	 cd $(DESTDIR)$(datadir)/httpd/$(PACKAGE) && ln -s skin1 doc ; \
 	fi 
+endif
 
 uninstall-local:
-	rm $(datadir)/httpd/$(PACKAGE)/doc
-	rm -r $(datadir)/httpd/$(PACKAGE)/skin1
-	rm -r $(datadir)/httpd/$(PACKAGE)/skin2
-	rm -r $(datadir)/httpd/$(PACKAGE)/skin3
-	rm -r $(datadir)/httpd/$(PACKAGE)
+	rm -f $(DESTDIR)$(datadir)/httpd/$(PACKAGE)/doc
+	rm -rf $(DESTDIR)$(datadir)/httpd/$(PACKAGE)/skin1
+	rm -rf $(DESTDIR)$(datadir)/httpd/$(PACKAGE)/skin2
+	rm -rf $(DESTDIR)$(datadir)/httpd/$(PACKAGE)/skin3
+	rm -rf $(DESTDIR)$(datadir)/httpd/$(PACKAGE)
 

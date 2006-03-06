@@ -25,6 +25,8 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <time.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 #include <usb.h>
 #include "socket.h"
