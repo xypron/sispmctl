@@ -1,4 +1,4 @@
-SiS-PM Control for Linux 2.2
+SiS-PM Control for Linux 2.3
 ----------------------------
 (c) 2005,2006 by Mondrian Nuessle et al.
 
@@ -9,6 +9,7 @@ Follow the instructions in INSTALL to install the application
 (generic configure && make && make install).
 Call sispmctl (formerly: sispm_ctl) without commandline parameters, 
 it will print the available options to stdout.
+Since version 2.3 also 1-outlet mSIS-PM devices are supported.
 
 
 Installation
@@ -61,6 +62,8 @@ installation. You can easily select a different skin by
 chaning this symbolic link.
 
 It is quite easy to change one or write a new one. Try it.
+
+The webinterface does not recognize if a mSIS-PM is connected, so always 4 outlets will be displayed.
 
 Usage
 -----
