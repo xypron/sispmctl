@@ -35,6 +35,14 @@
 #include "sispm_ctl.h"
 
 
+extern int verbose;
+
+int get_id( struct usb_device* dev)
+{
+  assert(dev!=0);
+  return dev->descriptor.idProduct;
+}
+
 
 int usb_command(usb_dev_handle *udev, int b1, int b2, int *status )
 {
@@ -101,4 +109,45 @@ usb_dev_handle*get_handle(struct usb_device*dev)
 	exit(-4);
     }
     return udev;
+}
+
+int check_outlet_number(int id, int outlet)
+{
+  if (id==PRODUCT_ID_MSISPM_OLD || id==PRODUCT_ID_MSISPM_FLASH)
+    {
+      if (outlet!=1)
+	{
+	  outlet=1;
+	  if (verbose==1)
+	    fprintf(stderr,"mSIS-PM devices only features one outlet. Number changed to 1\n");
+	}
+    }
+  if (id==PRODUCT_ID_SISPM)
+    {
+      if (outlet>4)
+	{
+	  outlet=1;
+	  if (verbose==1)
+	    fprintf(stderr,"SIS-PM devices only feature 4 outlets. Number changed to 1\n");
+	}
+    }
+  return outlet;
+}
+
+int sispm_switch_on(usb_dev_handle * udev,int id, int outlet)
+{
+  outlet=check_outlet_number(id,outlet);
+  return usb_command( udev, 3*outlet, 0x03, NULL ) ;
+}
+
+int sispm_switch_off(usb_dev_handle * udev,int id, int outlet)
+{
+  outlet=check_outlet_number(id,outlet);
+  return usb_command( udev, 3*outlet, 0x00, NULL );
+}
+
+int sispm_switch_getstatus(usb_dev_handle * udev,int id, int outlet,int *status)	
+{
+  outlet=check_outlet_number(id,outlet);
+  return usb_command( udev, 3*outlet, 0x03, status );
 }

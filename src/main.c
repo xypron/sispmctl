@@ -40,19 +40,16 @@
 #include "socket.h"
 #include "main.h"
 
-#define	BSIZE				65536
-#define MAXGEMBIRD			 32
-#define VENDOR_ID 			 0x04B4
-#define PRODUCT_ID			 0xFD11
-#define USB_DIR_IN                       0x80            /* to host */
-#define USB_DIR_OUT                      0               /* to device */
+#define	BSIZE			 	 65536
 
 char* homedir=0;
 extern int errno;
 int debug=0;
+int verbose=1;
+
 
 #ifndef WEBLESS
-void process(int out,char*v,usb_dev_handle *udev)
+void process(int out,char*v,usb_dev_handle *udev,int id)
 {
     char xbuffer[BSIZE+2];
     char filename[1024],*ptr;
@@ -149,7 +146,7 @@ void process(int out,char*v,usb_dev_handle *udev)
 		    {
 			if(debug)
 			    fprintf(stderr,"\nON(%s)\n",num);
-			if( sispm_switch_on(udev,atoi(num)) !=0)
+			if( sispm_switch_on(udev,id,atoi(num)) !=0)
 			{   send(out,pos,neg-pos-1,0);
 			} else
 			{   send(out,neg,trm-neg,0);
@@ -160,7 +157,7 @@ void process(int out,char*v,usb_dev_handle *udev)
 			assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at final $",(trm[1]=='$')));
 			if(debug)
 			    fprintf(stderr,"\nOFF(%s)\n",num);
-			if( sispm_switch_off(udev,atoi(num)) !=0)
+			if( sispm_switch_off(udev,id,atoi(num)) !=0)
 			{   send(out,pos,neg-pos-1,0);
 			} else
 			{   send(out,neg,trm-neg,0);
@@ -171,8 +168,8 @@ void process(int out,char*v,usb_dev_handle *udev)
 			assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at final $",(trm[1]=='$')));
 			if(debug)
 			    fprintf(stderr,"\nTOGGLE(%s)\n",num);
-			if( sispm_switch_getstatus(udev,atoi(num),&status) == 0)
-			{   sispm_switch_on(udev,atoi(num));
+			if( sispm_switch_getstatus(udev,id,atoi(num),&status) == 0)
+			{   sispm_switch_on(udev,id,atoi(num));
 			    send(out,pos,neg-pos-1,0);
 			} else
 			{   sispm_switch_off(udev,atoi(num));
@@ -184,7 +181,7 @@ void process(int out,char*v,usb_dev_handle *udev)
 			assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at final $",(trm[1]=='$')));
 			if(debug)
 			    fprintf(stderr,"\nSTATUS(%s)\n",num);
-			if( sispm_switch_getstatus(udev,atoi(num),&status) != 0)
+			if( sispm_switch_getstatus(udev,id,atoi(num),&status) != 0)
 			{   send(out,pos,neg-pos-1,0);
 			} else
 			{   send(out,neg,trm-neg,0);
@@ -321,23 +318,26 @@ const char*answer(char*in)
 
 void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev[])
 {
-  int verbose=1;
   int numeric=0;
   int c;
   int i;
   int von=1, bis=4;
   int status;
   usb_dev_handle *udev;
+  unsigned int id; //product id of current device
   char*onoff[] = { "off", "on", "0", "1" };
+#ifndef WEBLESS
   char* bindaddr=0;
+#endif
+  unsigned int outlet;
 
 #ifdef BINDADDR
   if (BINDADDR!="")
     bindaddr=BINDADDR;
 #endif
 
-
   udev = get_handle( dev[0] );
+  id = get_id(dev[0]);
   while( (c=getopt(argc, argv,"i:o:f:b:g:lqvhnsd:u:p:")) != -1 )
   {    
     if( c=='o' || c=='f' || c=='g' )
@@ -376,8 +376,16 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
         case 's':
 	    for(status=0; status<count; status++)
 	    {
-	        printf("Gembird #%d is USB device %s\n",
+	        printf("Gembird #%d is USB device %s.",
 			status,dev[status]->filename);
+		if (id==PRODUCT_ID_SISPM)
+		  {
+		    printf("This device is a 4-socket SiS-PM.\n");
+		  }
+		else
+		  {
+		    printf("This device is a 1-socket mSiS-PM.\n");
+		  }
 	    }
 	    status=0;
 	    break;
@@ -386,6 +394,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 	    status = atoi(optarg);
 	    if(status>=count) status=count-1;
 	    udev = get_handle(dev[status]);
+	    id= get_id(dev[status]);
 	    if(udev==NULL)
 		fprintf(stderr, "No access to Gembird #%d USB device %s\n",
 			status, dev[status]->filename );
@@ -393,16 +402,28 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 	        if(verbose) printf("Accessing Gembird #%d USB device %s\n",
 			status, dev[status]->filename );
 	    break;
-	case 'o':   sispm_switch_on(udev,i);
+	case 'o':   
+	  {
+	    outlet=check_outlet_number(id, i);
+	    sispm_switch_on(udev,id,outlet);
 	    if(verbose) printf("Switched outlet %d %s\n",i,onoff[1+numeric]);
 	    break;
-	case 'f':   sispm_switch_off(udev,i);
+	  }
+	case 'f':   
+	  {
+	    outlet=check_outlet_number(id, i);
+	    sispm_switch_off(udev,id,outlet);
 	    if(verbose) printf("Switched outlet %d %s\n",i,onoff[0+numeric]);
 	    break;
-	case 'g':   sispm_switch_getstatus(udev,i,&status);
+	  }
+	case 'g':   
+	  {
+	    outlet=check_outlet_number(id, i);
+	    sispm_switch_getstatus(udev,id,outlet,&status);
 	    if(verbose) printf("Status of outlet %d:\t",i);
 	    printf("%s\n",onoff[status+numeric]);
 	    break;
+	  }
 #ifndef WEBLESS
 	case 'p':
 	    listenport=atoi(optarg);
@@ -425,7 +446,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 		{
 		    while(1)
 		    {
-			l_listen(s,udev);
+			l_listen(s,udev,id);
 		    }
 		}
 	    }
@@ -470,6 +491,8 @@ int main(int argc, char** argv)
   struct usb_device *dev, *usbdev[MAXGEMBIRD];
   int count=0;
 
+  memset(usbdev,0,sizeof(usbdev));
+
   usb_init();
   usb_find_busses();
   usb_find_devices();
@@ -492,11 +515,24 @@ int main(int argc, char** argv)
   {
     for (dev = bus->devices; dev; dev = dev->next)
     {
-      if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct==PRODUCT_ID)
+      if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct==PRODUCT_ID_SISPM)
       {
 	usbdev[count++] = dev;
-	assert((MAXGEMBIRD>count,"Please recompile for that many devices!"));
       }
+      if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct==PRODUCT_ID_MSISPM_OLD)
+      {
+	usbdev[count++] = dev;
+      }
+      if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct==PRODUCT_ID_MSISPM_FLASH)
+      {
+	usbdev[count++] = dev;
+      }
+      if (count==MAXGEMBIRD)
+	{
+	  fprintf(stderr,"%d devices found. Please recompile if you need to support more devices!\n",count);
+	  break;
+	}
+      
     }
   }
   if(count==0) 

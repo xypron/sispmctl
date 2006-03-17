@@ -26,9 +26,24 @@
 
 */
 
+#ifndef SISPM_CTL_H
+#define SISPM_CTL_H
+
 #define MAXGEMBIRD			 32
+
 #define VENDOR_ID 			 0x04B4
-#define PRODUCT_ID			 0xFD11
+
+/* USB Product IDs for different sis-pm devices*/
+/*#define PRODUCT_ID_SISPM		 0xFD11
+#define PRODUCT_ID_MSISPM_OLD		 0xFD10
+#define PRODUCT_ID_MSISPM_FLASH		 0xFD12
+*/
+
+#define PRODUCT_ID_SISPM		 0xFD10
+#define PRODUCT_ID_MSISPM_OLD		 0xFD11
+#define PRODUCT_ID_MSISPM_FLASH		 0xFD12
+
+
 #define USB_DIR_IN                       0x80            /* to host */
 #define USB_DIR_OUT                      0               /* to device */
 #define cpu_to_le16(a)                   (a)
@@ -38,10 +53,12 @@ int usb_command(usb_dev_handle *udev, int b1, int b2, int *status );
 
 #define sispm_buzzer_on(udev)		usb_command( udev, 1,        0x01, NULL )
 #define sispm_buzzer_off(udev)		usb_command( udev, 1,        0x00, NULL ) 
-#define sispm_switch_on(udev,outlet)	usb_command( udev, 3*outlet, 0x03, NULL ) 
-#define sispm_switch_off(udev,outlet)	usb_command( udev, 3*outlet, 0x00, NULL )
-#define sispm_switch_getstatus(udev,outlet,status)	\
-					usb_command( udev, 3*outlet, 0x03, status )
 
+int get_id( struct usb_device* dev);
+int sispm_switch_on(usb_dev_handle * udev,int id, int outlet);
+int sispm_switch_off(usb_dev_handle * udev,int id, int outlet);
+int sispm_switch_getstatus(usb_dev_handle * udev,int id, int outlet,int *status);
+int check_outlet_number(int id, int outlet);
 
-#include <usb.h>
+#endif
+

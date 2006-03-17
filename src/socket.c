@@ -36,7 +36,7 @@
 int listenport=LISTENPORT;
 
 
-void l_listen(int*sock, usb_dev_handle *udev) {
+void l_listen(int*sock, usb_dev_handle *udev,int id) {
     int i;
     int s;
     int connected=0;
@@ -104,7 +104,7 @@ void l_listen(int*sock, usb_dev_handle *udev) {
 		fprintf(stderr,"Buffer contains: »%s«\n",buffer);
 		send(s,tosend,strlen(tosend),0);
 #else
-		process(s,buffer,udev);
+		process(s,buffer,udev,id);
 #endif
 		memset(buffer,0,BUFFERSIZE);
 		close(s);
