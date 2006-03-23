@@ -13,7 +13,7 @@
 extern int verbose;
 
 const char*answer(char*in);
-void process(int out,char*v,usb_dev_handle *udev);
+void process(int out,char*v,usb_dev_handle *udev,int id);
 extern int debug;
 
 #endif /* ! MAIN_H */

@@ -172,7 +172,7 @@ void process(int out,char*v,usb_dev_handle *udev,int id)
 			{   sispm_switch_on(udev,id,atoi(num));
 			    send(out,pos,neg-pos-1,0);
 			} else
-			{   sispm_switch_off(udev,atoi(num));
+			{   sispm_switch_off(udev,id,atoi(num));
 			    send(out,neg,trm-neg,0);
 			}
 		    } else
@@ -209,7 +209,7 @@ void process(int out,char*v,usb_dev_handle *udev,int id)
 
 void print_disclaimer(char*name)
 {
-  fprintf(stderr, "\nSiS PM Control for Linux 2.2\n\n"
+  fprintf(stderr, "\nSiS PM Control for Linux 2.3a\n\n"
 	 "(C) 2004, 2005, 2006 by Mondrian Nuessle, (C) 2005, 2006 by Andreas Neuper.\n"
 	 "This program is free software.\n"
 	 "%s comes with ABSOLUTELY NO WARRANTY; for details \n"
@@ -223,10 +223,10 @@ void print_usage(char* name)
 {
   print_disclaimer(name);
   fprintf(stderr,"\n"
-		 "pmctl -s\n"
-		 "pmctl [-q] [-l] \n"
-		 "pmctl [-q] [-n] [-d 1...] -b <on|off>\n"
-		 "pmctl [-q] [-n] [-d 1...] -[o|f|g] 1..4|all\n"
+		 "sispmctl -s\n"
+		 "sispmctl [-q] [-l] \n"
+		 "sispmctl [-q] [-n] [-d 1...] -b <on|off>\n"
+		 "sispmctl [-q] [-n] [-d 1...] -[o|f|g] 1..4|all\n"
 	         "   'v'   - print version & copyright\n"
 	         "   'h'   - print this usage information\n"
 		 "   's'   - scan for GEMBIRD 04B4:FD11 devices\n"
