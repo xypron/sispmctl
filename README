@@ -68,3 +68,18 @@ The webinterface does not recognize if a mSIS-PM is connected, so always 4 outle
 Usage
 -----
 See the output of sispmctl when run without parameters and the man page.
+
+Permissions
+-----------
+
+Per default, only root is allowed to use devices directly, therefor the SiS-PM 
+also only works as root. If you use a Linux distribution that is using the 
+ressource manager package (resmgrd), you can add a  line to /etc/resmgr.conf.
+
+The following line is an example for SuSE 10.0. It MAY be different on your system.
+
+add usb:vendor=0x04b4,product=0xfd11 usb
+
+This adds the SiS-PM device to the USB class which can be used by logged in users on SuSE 10.0.
+If you are using a mSiS-PM device you need to use the product ID of 0xFD10 or 0xFD12 (dependant
+on hardware revision, see output of /sbin/lsusb -v).
