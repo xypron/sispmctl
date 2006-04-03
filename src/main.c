@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <signal.h>
 #include <usb.h>
 #include <assert.h>
 #include <sys/types.h>
@@ -39,6 +40,11 @@
 #include "sispm_ctl.h"
 #include "socket.h"
 #include "main.h"
+#include "config.h"
+
+#ifndef MSG_NOSIGNAL
+#include <signal.h>
+#endif
 
 #define	BSIZE			 	 65536
 
@@ -490,6 +496,10 @@ int main(int argc, char** argv)
   struct usb_bus *bus;
   struct usb_device *dev, *usbdev[MAXGEMBIRD];
   int count=0;
+
+#ifndef MSG_NOSIGNAL
+  (void) signal(SIGPIPE, SIG_IGN);
+#endif
 
   memset(usbdev,0,sizeof(usbdev));
 

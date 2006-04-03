@@ -17,7 +17,6 @@
 */
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <net/ethernet.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -27,6 +26,14 @@
 #include <time.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include "config.h"
+#ifdef HAVE_SYS_ETHERNET_H
+#include <sys/ethernet.h>
+#endif
+#ifdef HAVE_NET_ETHERNET_H
+#include <net/ethernet.h>
+#endif
+
 
 #include <usb.h>
 #include "socket.h"
@@ -67,12 +74,12 @@ void l_listen(int*sock, usb_dev_handle *udev,int id) {
 	if(debug) fprintf(stderr, "Provider connected.\n");
 	connected=1;
 	while(connected) {
-	    if((recv(s, oob, 32, MSG_OOB | MSG_DONTWAIT | MSG_NOSIGNAL) > 0)
+	    if((recv(s, oob, 32, MSG_OOB | MSG_DONTWAIT) > 0)
 	       && strncmp(oob, "flush", 5)) {
 		    fprintf(stderr,"OUT-OF-BAND MESSAGE 1");
 	    }
 
-	    i = recv(s, buffer, BUFFERSIZE, MSG_NOSIGNAL);
+	    i = recv(s, buffer, BUFFERSIZE, 0);
 	    if(i == -1 || i == 0) {
 		if((i == -1) && (errno != EAGAIN) && (errno != EINTR)) {
 		    if(junk != 0) {

@@ -51,7 +51,7 @@ fi
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h netinet/in.h stdlib.h string.h sys/socket.h unistd.h])
+AC_CHECK_HEADERS([fcntl.h netinet/in.h stdlib.h string.h sys/socket.h unistd.h net/ethernet.h sys/ethernet.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -60,10 +60,16 @@ AC_TYPE_UID_T
 
 # Checks for library functions.
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([memset socket strchr strdup strerror strncasecmp strrchr])
+AC_CHECK_FUNCS([memset strchr strdup strerror strncasecmp strrchr])
+
+AC_CHECK_DECL(MSG_NOSIGNAL)
+AC_CHECK_FUNC(nanosleep, [true], [AC_CHECK_LIB(rt, nanosleep)])
+AC_CHECK_FUNC(inet_pton, [true], [AC_CHECK_LIB(nsl, inet_pton)])
+AC_CHECK_FUNC(socket, [true], [AC_CHECK_LIB(socket, socket)])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
+AC_CONFIG_HEADERS([src/config.h])
 AC_OUTPUT
 echo ""
 echo "Good - your configure finished. Start make now"

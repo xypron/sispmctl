@@ -83,3 +83,14 @@ add usb:vendor=0x04b4,product=0xfd11 usb
 This adds the SiS-PM device to the USB class which can be used by logged in users on SuSE 10.0.
 If you are using a mSiS-PM device you need to use the product ID of 0xFD10 or 0xFD12 (dependant
 on hardware revision, see output of /sbin/lsusb -v).
+
+
+Solaris 10 and later come with sufficient libusb support; the ugen (generic USB) driver
+needs to be associated with the SIS-PM devices by issueing the following command
+before plugging in the device:
+
+    for SIS-PM:
+	update_drv -a -i '"usb4b4,fd11"' ugen
+    for mSIS-PM:
+	update_drv -a -i '"usb4b4,fd10"' ugen
+	update_drv -a -i '"usb4b4,fd12"' ugen

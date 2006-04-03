@@ -22,6 +22,10 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#ifndef MSG_NOSIGNAL
+#define	MSG_NOSIGNAL 0
+#endif
+
 /* 
  * Write len bytes from buf to the socket.
  * Returns the return value from send()
