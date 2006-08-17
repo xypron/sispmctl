@@ -3,7 +3,7 @@
  
   Controls the GEMBIRD Silver Shield PM USB outlet device
  
-  (C) 2004, Mondrian Nuessle, Computer Architecture Group, University of Mannheim, Germany
+  (C) 2004,2005,2006 Mondrian Nuessle, Computer Architecture Group, University of Mannheim, Germany
   (C) 2005, Andreas Neuper, Germany
 
   This program is free software; you can redistribute it and/or modify
@@ -55,13 +55,15 @@ int verbose=1;
 
 
 #ifndef WEBLESS
-void process(int out,char*v,usb_dev_handle *udev,int id)
+void process(int out,char*v,struct usb_device *dev,int devnum)
 {
     char xbuffer[BSIZE+2];
     char filename[1024],*ptr;
     FILE*in=NULL;
     long length=0,lastpos,remlen=0;
     int status;
+    usb_dev_handle *udev;
+    unsigned int id; //product id of current device
 
     if(debug)
 	fprintf(stderr,"\nRequested is (%s)\n",v);
@@ -106,6 +108,17 @@ void process(int out,char*v,usb_dev_handle *udev,int id)
 	send(out,xbuffer,strlen(xbuffer),0);
 	return;
     }
+
+    /* get device-handle/-id */
+    udev = get_handle(dev);
+    id = get_id(dev);
+    if(udev==NULL)
+	fprintf(stderr, "No access to Gembird #%d USB device %s\n",
+	    devnum, dev->filename );
+    else 
+	if(verbose) printf("Accessing Gembird #%d USB device %s\n",
+	    devnum, dev->filename );
+ 
     lastpos=ftell(in);
     fgets(xbuffer,BSIZE-1,in);
     remlen=length=ftell(in)-lastpos;
@@ -209,13 +222,14 @@ void process(int out,char*v,usb_dev_handle *udev,int id)
 	remlen=length=ftell(in)-lastpos;
 	lastpos=ftell(in);
     }
+    if(udev!=NULL) usb_close (udev);
     return;
 }
 #endif
 
 void print_disclaimer(char*name)
 {
-  fprintf(stderr, "\nSiS PM Control for Linux 2.3a\n\n"
+  fprintf(stderr, "\nSiS PM Control for Linux 2.4a\n\n"
 	 "(C) 2004, 2005, 2006 by Mondrian Nuessle, (C) 2005, 2006 by Andreas Neuper.\n"
 	 "This program is free software.\n"
 	 "%s comes with ABSOLUTELY NO WARRANTY; for details \n"
@@ -230,7 +244,6 @@ void print_usage(char* name)
   print_disclaimer(name);
   fprintf(stderr,"\n"
 		 "sispmctl -s\n"
-		 "sispmctl [-q] [-l] \n"
 		 "sispmctl [-q] [-n] [-d 1...] -b <on|off>\n"
 		 "sispmctl [-q] [-n] [-d 1...] -[o|f|g] 1..4|all\n"
 	         "   'v'   - print version & copyright\n"
@@ -245,6 +258,7 @@ void print_usage(char* name)
 		 "   'q'   - quiet mode, no explanations - but errors\n\n"
 #ifndef WEBLESS
 	         "Webinterface features:\n"
+		 "sispmctl [-q] [-i <ip>] [-p <#port>] [-u <path>] -l\n"
 		 "   'l'   - start port listener\n"
 	         "   'i'   - bind socket on interface with given IP (dotted decimal, i.e. 192.168.1.1)\n"
 		 "   'p'   - port number for listener (%d)\n"
@@ -329,8 +343,9 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
   int i;
   int von=1, bis=4;
   int status;
-  usb_dev_handle *udev;
-  unsigned int id; //product id of current device
+  int devnum=0;
+  usb_dev_handle *udev=NULL;
+  unsigned int id=0; //product id of current device
   char*onoff[] = { "off", "on", "0", "1" };
 #ifndef WEBLESS
   char* bindaddr=0;
@@ -342,8 +357,6 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
     bindaddr=BINDADDR;
 #endif
 
-  udev = get_handle( dev[0] );
-  id = get_id(dev[0]);
   while( (c=getopt(argc, argv,"i:o:f:b:g:lqvhnsd:u:p:")) != -1 )
   {    
     if( c=='o' || c=='f' || c=='g' )
@@ -362,6 +375,17 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 		"Expected: 1, 2, 3, 4, or all.\nTerminating.\n",optarg);
 	    print_disclaimer( argv[0] );
 	    exit(-6);
+	}
+	/* get device-handle/-id if it wasn't done already */
+	if(udev==NULL){
+	    udev = get_handle(dev[devnum]);
+	    id = get_id(dev[devnum]);
+	    if(udev==NULL)
+		fprintf(stderr, "No access to Gembird #%d USB device %s\n",
+		    devnum, dev[devnum]->filename );
+	    else 
+		if(verbose) printf("Accessing Gembird #%d USB device %s\n",
+		    devnum, dev[devnum]->filename );
 	}
     } else
     {
@@ -384,6 +408,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 	    {
 	        printf("Gembird #%d is USB device %s.",
 			status,dev[status]->filename);
+		id = get_id(dev[status]);
 		if (id==PRODUCT_ID_SISPM)
 		  {
 		    printf("This device is a 4-socket SiS-PM.\n");
@@ -393,20 +418,11 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 		    printf("This device is a 1-socket mSiS-PM.\n");
 		  }
 	    }
-	    status=0;
 	    break;
 	case 'd': // replace previous (first is default) device by selected one
-            if(udev!=NULL) usb_close (udev);
-	    status = atoi(optarg);
-	    if(status>=count) status=count-1;
-	    udev = get_handle(dev[status]);
-	    id= get_id(dev[status]);
-	    if(udev==NULL)
-		fprintf(stderr, "No access to Gembird #%d USB device %s\n",
-			status, dev[status]->filename );
-	    else 
-	        if(verbose) printf("Accessing Gembird #%d USB device %s\n",
-			status, dev[status]->filename );
+	    if(udev!=NULL) usb_close (udev);
+	    devnum = atoi(optarg);
+	    if(devnum>=count) devnum=count-1;
 	    break;
 	case 'o':   
 	  {
@@ -452,7 +468,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 		{
 		    while(1)
 		    {
-			l_listen(s,udev,id);
+			l_listen(s,dev[devnum],devnum);
 		    }
 		}
 	    }

@@ -1,0 +1,18 @@
+#!/bin/bash
+if [ $# != 2 ] || [ ! -r $2 ] ; then
+	echo "Usage  : $0 contenttype file"
+	echo "Example: $0 image/png status.png"
+	exit 1
+fi
+
+# output header ...
+echo HTTP/1.0 200 OK
+echo Server: sispm_http
+echo Date: `date -R`
+echo Content-Type: $1
+echo Connection: close
+echo
+
+# ... and file
+cat $2
+echo

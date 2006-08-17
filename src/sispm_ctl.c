@@ -3,7 +3,7 @@
  
   Controls the GEMBIRD Silver Shield PM USB outlet device
  
-  (C) 2004, Mondrian Nuessle, Computer Architecture Group, University of Mannheim, Germany
+  (C) 2004,2005,2006 Mondrian Nuessle, Computer Architecture Group, University of Mannheim, Germany
   (C) 2005, Andreas Neuper, Germany
 
   This program is free software; you can redistribute it and/or modify
@@ -57,9 +57,10 @@ int usb_command(usb_dev_handle *udev, int b1, int b2, int *status )
 	reqtype|=USB_DIR_IN;
 	req=0x01;
   }
-
+  /*printf("value: %x\n,",(0x03<<8) | b1);*/
   if ( usb_control_msg(udev /* handle*/,
-		       reqtype, req,
+		       reqtype,
+		       req,
 		       (0x03<<8) | b1,
 		       0 /*index*/,
 		       buffer /*bytes*/ ,

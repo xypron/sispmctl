@@ -1,4 +1,4 @@
-SiS-PM Control for Linux 2.3
+SiS-PM Control for Linux 2.4
 ----------------------------
 (c) 2005,2006 by Mondrian Nuessle et al.
 
@@ -9,7 +9,10 @@ Follow the instructions in INSTALL to install the application
 (generic configure && make && make install).
 Call sispmctl (formerly: sispm_ctl) without commandline parameters, 
 it will print the available options to stdout.
-Since version 2.3 also 1-outlet mSIS-PM devices are supported.
+Since version 2.3 also 1-outlet mSIS-PM devices are supported; this is still
+alpha, probably not working and needs testers/developers.
+Since version 2.4 a GUI is available in the extra sub-directory. See the 
+README there.
 
 
 Installation
@@ -84,7 +87,8 @@ This adds the SiS-PM device to the USB class which can be used by logged in user
 If you are using a mSiS-PM device you need to use the product ID of 0xFD10 or 0xFD12 (dependant
 on hardware revision, see output of /sbin/lsusb -v).
 
-
+Solaris Support
+---------------
 Solaris 10 and later come with sufficient libusb support; the ugen (generic USB) driver
 needs to be associated with the SIS-PM devices by issueing the following command
 before plugging in the device:

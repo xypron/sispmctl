@@ -1,0 +1,32 @@
+sispmapplet.py
+--------------
+
+(C)2006 Mondrian Nuessle
+
+
+This is a python script implementing a GUI for sispmctl.
+This is just a demonstration what you can do with sispmctl. No Makefile & 
+automatic installation is implemented!
+
+To make this work you need the following:
+
+- installed Python
+- installed Python bindings of qt AND KDE
+
+Then you need to do the following:
+
+- run
+	# pyuic -o $@ $<
+	# cat "from kdeui import *" >>$@
+  in the current directory
+
+- run
+	#chmod +x sispmapplet.py
+
+- you should be able to start the GUI by running
+	# ./sispmapplet.py
+
+- Have Fun!
+
+Questions please to nuessle@uni-mannheim.de
+

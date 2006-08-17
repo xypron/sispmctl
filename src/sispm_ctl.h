@@ -3,7 +3,7 @@
  
   Controls the GEMBIRD Silver Shield PM USB outlet device
  
-  (C) 2004, Mondrian Nuessle, Computer Architecture Group, University of Mannheim, Germany
+  (C) 2004,2005,2006 Mondrian Nuessle, Computer Architecture Group, University of Mannheim, Germany
   (C) 2005, Andreas Neuper, Germany
 
   This program is free software; you can redistribute it and/or modify
