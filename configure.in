@@ -28,13 +28,13 @@ AC_SUBST(BINDADDR)
 dnl check for libusb-config
 AC_PATH_PROG(HAVELIBUSB, libusb-config, $PATH)
 
-if test ! -z "$HAVELIBUSB"; then
+if test -e "$HAVELIBUSB"; then
    dnl   LIBUSB_CFLAGS=`$HAVELIBUSB --cflags`
    LIBUSB_LIBS=`$HAVELIBUSB --libs`
    CFLAGS="$CFLAGS $LIBUSB_CFLAGS"
    LIBS="$LIBS $LIBUSB_LIBS"
 else
-   AC_MSG_ERROR([*** libusb-config not found. You need a working libusb installation.])
+   AC_MSG_ERROR([*** libusb-config not found. You need a working libusb installation. Version >=0.1.7])
 fi
 
 dnl check for version of libusb
