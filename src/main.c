@@ -564,6 +564,7 @@ int main(int argc, char** argv)
   if(count==0) 
   {
     fprintf(stderr, "No GEMBIRD SiS-PM found. Check USB connections, please!\n");
+    return 1;
   } else
   {
     /* do the real work here */
