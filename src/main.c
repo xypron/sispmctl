@@ -358,39 +358,44 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 #endif
 
   while( (c=getopt(argc, argv,"i:o:f:b:g:lqvhnsd:u:p:")) != -1 )
-  {    
-    if( c=='o' || c=='f' || c=='g' )
-    {
-	if((strncmp(optarg,"all",strlen("all"))==0)
-	|| (atoi(optarg)==7) )
-	{ //switch on all outlets
-	    von=1;
-	    bis=4;
-	} else
-        {
-	    von = bis = atoi(optarg);
+    {    
+      if( c=='o' || c=='f' || c=='g' )
+	{
+	  if((strncmp(optarg,"all",strlen("all"))==0)
+	     || (atoi(optarg)==7) )
+	    { //switch on all outlets
+	      von=1;
+	      bis=4;
+	    } else
+	      {
+		von = bis = atoi(optarg);
+	      }
+	  if (von<1 || bis>4)
+	    {   
+	      fprintf(stderr,"Invalid outlet number given: %s\n"
+		      "Expected: 1, 2, 3, 4, or all.\nTerminating.\n",optarg);
+	      print_disclaimer( argv[0] );
+	      exit(-6);
+	    }
 	}
-	if (von<1 || bis>4)
-	{   fprintf(stderr,"Invalid outlet number given: %s\n"
-		"Expected: 1, 2, 3, 4, or all.\nTerminating.\n",optarg);
-	    print_disclaimer( argv[0] );
-	    exit(-6);
+      else
+	{
+	  von = bis = 0;
 	}
-	/* get device-handle/-id if it wasn't done already */
-	if(udev==NULL){
+      if( c=='o' || c=='f' || c=='g' || c=='b' ) //we need a device handle for these commands
+	{
+	  /* get device-handle/-id if it wasn't done already */
+	  if(udev==NULL){
 	    udev = get_handle(dev[devnum]);
 	    id = get_id(dev[devnum]);
 	    if(udev==NULL)
-		fprintf(stderr, "No access to Gembird #%d USB device %s\n",
-		    devnum, dev[devnum]->filename );
+	      fprintf(stderr, "No access to Gembird #%d USB device %s\n",
+		      devnum, dev[devnum]->filename );
 	    else 
-		if(verbose) printf("Accessing Gembird #%d USB device %s\n",
-		    devnum, dev[devnum]->filename );
+	      if(verbose) printf("Accessing Gembird #%d USB device %s\n",
+				 devnum, dev[devnum]->filename );
+	  }    
 	}
-    } else
-    {
-	von = bis = 0;
-    }
     // using first available device 
     for (i=von;i<=bis;i++) 
     {
