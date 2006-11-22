@@ -341,7 +341,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
   int numeric=0;
   int c;
   int i;
-  int von=1, bis=4;
+  int from=1, upto=4;
   int status;
   int devnum=0;
   usb_dev_handle *udev=NULL;
@@ -364,13 +364,13 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 	  if((strncmp(optarg,"all",strlen("all"))==0)
 	     || (atoi(optarg)==7) )
 	    { //switch on all outlets
-	      von=1;
-	      bis=4;
+	      from=1;
+	      upto=4;
 	    } else
 	      {
-		von = bis = atoi(optarg);
+		from = upto = atoi(optarg);
 	      }
-	  if (von<1 || bis>4)
+	  if (from<1 || upto>4)
 	    {   
 	      fprintf(stderr,"Invalid outlet number given: %s\n"
 		      "Expected: 1, 2, 3, 4, or all.\nTerminating.\n",optarg);
@@ -380,7 +380,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 	}
       else
 	{
-	  von = bis = 0;
+	  from = upto = 0;
 	}
       if( c=='o' || c=='f' || c=='g' || c=='b' ) //we need a device handle for these commands
 	{
@@ -397,7 +397,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 	  }    
 	}
     // using first available device 
-    for (i=von;i<=bis;i++) 
+    for (i=from;i<=upto;i++) 
     {
 #ifdef WEBLESS
       if (c=='l' || c=='i' || c=='p' || c=='u' )

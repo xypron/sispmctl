@@ -45,8 +45,10 @@
 usb_dev_handle*get_handle(struct usb_device*dev);
 int usb_command(usb_dev_handle *udev, int b1, int b2, int *status );
 
-#define sispm_buzzer_on(udev)		usb_command( udev, 1,        0x01, NULL )
-#define sispm_buzzer_off(udev)		usb_command( udev, 1,        0x00, NULL ) 
+//#define sispm_buzzer_on(udev)		usb_command( udev, 1,        0x01, NULL )
+//#define sispm_buzzer_off(udev)		usb_command( udev, 1,        0x00, NULL ) 
+#define sispm_buzzer_on(udev)		usb_command( udev, 0x02,        0x00, NULL )
+#define sispm_buzzer_off(udev)		usb_command( udev, 0x02,        0x04, NULL ) 
 
 int get_id( struct usb_device* dev);
 int sispm_switch_on(usb_dev_handle * udev,int id, int outlet);
