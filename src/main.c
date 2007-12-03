@@ -508,6 +508,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
       }
     }
   }
+  if (udev!=NULL) usb_close(udev);
   return;
 }
 
