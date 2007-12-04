@@ -223,6 +223,7 @@ void process(int out,char*v,struct usb_device *dev,int devnum)
 	lastpos=ftell(in);
     }
     if(udev!=NULL) usb_close (udev);
+    fclose(in);
     return;
 }
 #endif
