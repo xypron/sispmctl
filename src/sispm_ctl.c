@@ -37,12 +37,48 @@
 
 extern int verbose;
 
+char serial_id[15];
+
 int get_id( struct usb_device* dev)
 {
   assert(dev!=0);
   return dev->descriptor.idProduct;
 }
 
+// for identification: reqtype=a1, request=01, b1=0x01, size=5
+char* get_serial(usb_dev_handle *udev)
+{
+   int  reqtype=0xa1; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /*request type*/,
+  int  req=0x01;
+  char buffer[6];
+
+  //buffer[0]=b1;
+  //buffer[1]=b2;
+  /* if(status!=NULL) */
+/*   { */
+/* 	reqtype|=USB_DIR_IN; */
+/* 	req=0x01; */
+/*   } */
+  /*printf("value: %x\n,",(0x03<<8) | b1);*/
+  if ( usb_control_msg(udev /* handle*/,
+		       reqtype,
+		       req,
+		       (0x03<<8) | 1,
+		       0 /*index*/,
+		       buffer /*bytes*/ ,
+		       5, //1 /*size*/,
+		       500) < 0 )
+  {
+      fprintf(stderr,"Error performing requested action\n"
+	          "Libusb error string: %s\nTerminating\n",usb_strerror());
+      usb_close (udev);
+      exit(-5);
+  }
+  /*printf("%s\n",usb_strerror()); */
+  sprintf(serial_id, "%02x:%02x:%02x:%02x:%02x", buffer[0],buffer[1],
+	  buffer[2],buffer[3],buffer[4]);
+  return serial_id;
+}
 
 int usb_command(usb_dev_handle *udev, int b1, int b2, int *status )
 {
@@ -144,8 +180,26 @@ int sispm_switch_off(usb_dev_handle * udev,int id, int outlet)
   return usb_command( udev, 3*outlet, 0x00, NULL );
 }
 
+int sispm_toggle(usb_dev_handle * udev,int id, int outlet)
+{
+  int status=0;
+  if (sispm_switch_getstatus(udev,id,outlet,&status)==0) //on
+    {
+      sispm_switch_on(udev,id,outlet);
+      return 1;
+    }
+  else
+    {    
+      sispm_switch_off(udev,id,outlet);
+      return 0;
+    }
+  
+  return 0;
+}
+
+
 int sispm_switch_getstatus(usb_dev_handle * udev,int id, int outlet,int *status)	
 {
   outlet=check_outlet_number(id,outlet);
-  return usb_command( udev, 3*outlet, 0x03, status );
+  return usb_command( udev, 3*outlet, 0x03, &status );
 }

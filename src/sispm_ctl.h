@@ -54,10 +54,11 @@ int usb_command(usb_dev_handle *udev, int b1, int b2, int *status );
 #define sispm_buzzer_off(udev)		usb_command( udev, 0x02,        0x04, NULL ) 
 
 int get_id( struct usb_device* dev);
+char* get_serial(usb_dev_handle *udev);
 int sispm_switch_on(usb_dev_handle * udev,int id, int outlet);
 int sispm_switch_off(usb_dev_handle * udev,int id, int outlet);
 int sispm_switch_getstatus(usb_dev_handle * udev,int id, int outlet,int *status);
 int check_outlet_number(int id, int outlet);
-
+int sispm_toggle(usb_dev_handle * udev,int id, int outlet);
 #endif
 

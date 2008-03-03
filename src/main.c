@@ -230,8 +230,8 @@ void process(int out,char*v,struct usb_device *dev,int devnum)
 
 void print_disclaimer(char*name)
 {
-  fprintf(stderr, "\nSiS PM Control for Linux 2.5\n\n"
-	 "(C) 2004, 2005, 2006 by Mondrian Nuessle, (C) 2005, 2006 by Andreas Neuper.\n"
+  fprintf(stderr, "\nSiS PM Control for Linux 2.6\n\n"
+	 "(C) 2004, 2005, 2006, 2007, 2008 by Mondrian Nuessle, (C) 2005, 2006 by Andreas Neuper.\n"
 	 "This program is free software.\n"
 	 "%s comes with ABSOLUTELY NO WARRANTY; for details \n"
 	 "see the file INSTALL. This is free software, and you are welcome\n"
@@ -246,13 +246,14 @@ void print_usage(char* name)
   fprintf(stderr,"\n"
 		 "sispmctl -s\n"
 		 "sispmctl [-q] [-n] [-d 1...] -b <on|off>\n"
-		 "sispmctl [-q] [-n] [-d 1...] -[o|f|g] 1..4|all\n"
+		 "sispmctl [-q] [-n] [-d 1...] -[o|f|t|g] 1..4|all\n"
 	         "   'v'   - print version & copyright\n"
 	         "   'h'   - print this usage information\n"
-		 "   's'   - scan for GEMBIRD 04B4:FD11 devices\n"
+		 "   's'   - scan for supported GEMBIRD devices\n"
 		 "   'b'   - switch buzzer on or off\n"
 		 "   'o'   - switch outlet(s) on\n"
 		 "   'f'   - switch outlet(s) off\n"
+		 "   't'   - toggle outlet(s) on/off\n"
 		 "   'g'   - get status\n"
 		 "   'd'   - apply to device\n"
 		 "   'n'   - show result numerically\n"
@@ -342,10 +343,12 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
   int numeric=0;
   int c;
   int i;
+  int result;
   int from=1, upto=4;
   int status;
   int devnum=0;
   usb_dev_handle *udev=NULL;
+  usb_dev_handle *sudev=NULL; //scan device
   unsigned int id=0; //product id of current device
   char*onoff[] = { "off", "on", "0", "1" };
 #ifndef WEBLESS
@@ -358,9 +361,9 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
     bindaddr=BINDADDR;
 #endif
 
-  while( (c=getopt(argc, argv,"i:o:f:b:g:lqvhnsd:u:p:")) != -1 )
+  while( (c=getopt(argc, argv,"i:o:f:t:b:g:lqvhnsd:u:p:")) != -1 )
     {    
-      if( c=='o' || c=='f' || c=='g' )
+      if( c=='o' || c=='f' || c=='g' || c=='t')
 	{
 	  if((strncmp(optarg,"all",strlen("all"))==0)
 	     || (atoi(optarg)==7) )
@@ -383,7 +386,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 	{
 	  from = upto = 0;
 	}
-      if( c=='o' || c=='f' || c=='g' || c=='b' ) //we need a device handle for these commands
+      if( c=='o' || c=='f' || c=='g' || c=='b' || c=='t') //we need a device handle for these commands
 	{
 	  /* get device-handle/-id if it wasn't done already */
 	  if(udev==NULL){
@@ -423,6 +426,17 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 		  {
 		    printf("This device is a 1-socket mSiS-PM.\n");
 		  }
+		sudev = get_handle(dev[status]);
+		id = get_id(dev[status]);
+		if(udev==NULL)
+		  fprintf(stderr, "No access to Gembird #%d USB device %s\n",
+			  devnum, dev[devnum]->filename );
+		else 
+		  if(verbose) printf("Accessing Gembird #%d USB device %s\n",
+				     devnum, dev[devnum]->filename );
+	        
+		printf("This device has a serial number of %s\n",get_serial(sudev));
+		usb_close(sudev);
 	    }
 	    break;
 	case 'd': // replace previous (first is default) device by selected one
@@ -442,6 +456,13 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 	    outlet=check_outlet_number(id, i);
 	    sispm_switch_off(udev,id,outlet);
 	    if(verbose) printf("Switched outlet %d %s\n",i,onoff[0+numeric]);
+	    break;
+	  }
+	case 't':   
+	  {
+	    outlet=check_outlet_number(id, i);
+	    result=sispm_toggle(udev,id,outlet);
+	    if(verbose) printf("Toggled outlet %d %s\n",i,onoff[result]);
 	    break;
 	  }
 	case 'g':   
@@ -517,8 +538,8 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 int main(int argc, char** argv)
 {
   struct usb_bus *bus;
-  struct usb_device *dev, *usbdev[MAXGEMBIRD];
-  int count=0;
+  struct usb_device *dev, *usbdev[MAXGEMBIRD], *usbdevtemp;
+  int count=0, found = 0, i=1;
 
 #ifndef MSG_NOSIGNAL
   (void) signal(SIGPIPE, SIG_IGN);
@@ -582,6 +603,20 @@ int main(int argc, char** argv)
     return 1;
   } else
   {
+    /* bubble sort them first, thnx Ingo Flaschenberger */
+    if (count > 1) {
+      do {
+        found = 0;
+        for (i=1; i< count; i++) {
+          if (usbdev[i]->devnum < usbdev[i-1]->devnum) {
+            usbdevtemp = usbdev[i];
+            usbdev[i] = usbdev[i-1];
+            usbdev[i-1] = usbdevtemp;
+            found = 1;
+          }
+        }
+      } while (found != 0);
+    }
     /* do the real work here */
     if (argc<=1)
       print_usage(argv[0]);
