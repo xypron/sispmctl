@@ -230,7 +230,7 @@ void process(int out,char*v,struct usb_device *dev,int devnum)
 
 void print_disclaimer(char*name)
 {
-  fprintf(stderr, "\nSiS PM Control for Linux 2.4a\n\n"
+  fprintf(stderr, "\nSiS PM Control for Linux 2.5\n\n"
 	 "(C) 2004, 2005, 2006 by Mondrian Nuessle, (C) 2005, 2006 by Andreas Neuper.\n"
 	 "This program is free software.\n"
 	 "%s comes with ABSOLUTELY NO WARRANTY; for details \n"
@@ -415,7 +415,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 	        printf("Gembird #%d is USB device %s.",
 			status,dev[status]->filename);
 		id = get_id(dev[status]);
-		if (id==PRODUCT_ID_SISPM)
+		if (id==PRODUCT_ID_SISPM || id==PRODUCT_ID_SISPM_FLASH_NEW)
 		  {
 		    printf("This device is a 4-socket SiS-PM.\n");
 		  }
@@ -543,21 +543,29 @@ int main(int argc, char** argv)
 
   // initialize by setting device pointers to zero
   for ( count=0; count< MAXGEMBIRD; count++) usbdev[count]=NULL; count=0;
-  //first search for GEMBIRD SiS-PM device
+  //first search for GEMBIRD (m)SiS-PM devices
   for (bus = usb_busses; bus; bus = bus->next)
   {
     for (dev = bus->devices; dev; dev = dev->next)
     {
       if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct==PRODUCT_ID_SISPM)
       {
+	//printf("Found (classic) SIS-PM device.\n");
 	usbdev[count++] = dev;
       }
       if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct==PRODUCT_ID_MSISPM_OLD)
       {
+	//printf("Found mSIS-PM device.\n");
 	usbdev[count++] = dev;
       }
       if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct==PRODUCT_ID_MSISPM_FLASH)
       {
+	//printf("Found msispm flash device.\n");
+	usbdev[count++] = dev;
+      }
+      if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct==PRODUCT_ID_SISPM_FLASH_NEW)
+      {
+	//printf("Found new sispm device (id 0xFD13)\n");
 	usbdev[count++] = dev;
       }
       if (count==MAXGEMBIRD)

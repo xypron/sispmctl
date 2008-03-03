@@ -37,6 +37,9 @@
 #define PRODUCT_ID_SISPM		 0xFD11
 #define PRODUCT_ID_MSISPM_OLD		 0xFD10
 #define PRODUCT_ID_MSISPM_FLASH		 0xFD12
+#define PRODUCT_ID_SISPM_FLASH_NEW		 0xFD13
+
+
 
 #define USB_DIR_IN                       0x80            /* to host */
 #define USB_DIR_OUT                      0               /* to device */

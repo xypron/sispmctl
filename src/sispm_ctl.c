@@ -120,7 +120,7 @@ int check_outlet_number(int id, int outlet)
 	fprintf(stderr,"mSIS-PM devices only features one outlet. Number changed to 1\n");
       return 0;
     }
-  if (id==PRODUCT_ID_SISPM)
+  if (id==PRODUCT_ID_SISPM || id==PRODUCT_ID_SISPM_FLASH_NEW)
     {
       if (outlet>4)
 	{
