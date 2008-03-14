@@ -46,19 +46,18 @@
 #define cpu_to_le16(a)                   (a)
 
 usb_dev_handle*get_handle(struct usb_device*dev);
-int usb_command(usb_dev_handle *udev, int b1, int b2, int *status );
+int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected );
 
-//#define sispm_buzzer_on(udev)		usb_command( udev, 1,        0x01, NULL )
-//#define sispm_buzzer_off(udev)		usb_command( udev, 1,        0x00, NULL ) 
-#define sispm_buzzer_on(udev)		usb_command( udev, 0x02,        0x00, NULL )
-#define sispm_buzzer_off(udev)		usb_command( udev, 0x02,        0x04, NULL ) 
+#define sispm_buzzer_on(udev)		usb_command( udev, 0x02,        0x00, 0 )
+#define sispm_buzzer_off(udev)		usb_command( udev, 0x02,        0x04, 0 ) 
 
 int get_id( struct usb_device* dev);
 char* get_serial(usb_dev_handle *udev);
 int sispm_switch_on(usb_dev_handle * udev,int id, int outlet);
 int sispm_switch_off(usb_dev_handle * udev,int id, int outlet);
-int sispm_switch_getstatus(usb_dev_handle * udev,int id, int outlet,int *status);
+int sispm_switch_getstatus(usb_dev_handle * udev,int id, int outlet);
+int sispm_get_power_supply_status(usb_dev_handle * udev,int id, int outlet);
 int check_outlet_number(int id, int outlet);
-int sispm_toggle(usb_dev_handle * udev,int id, int outlet);
+int sispm_switch_toggle(usb_dev_handle * udev,int id, int outlet);
 #endif
 

@@ -61,7 +61,6 @@ void process(int out,char*v,struct usb_device *dev,int devnum)
     char filename[1024],*ptr;
     FILE*in=NULL;
     long length=0,lastpos,remlen=0;
-    int status;
     usb_dev_handle *udev;
     unsigned int id; //product id of current device
 
@@ -187,7 +186,7 @@ void process(int out,char*v,struct usb_device *dev,int devnum)
 			assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at final $",(trm[1]=='$')));
 			if(debug)
 			    fprintf(stderr,"\nTOGGLE(%s)\n",num);
-			if( sispm_switch_getstatus(udev,id,atoi(num),&status) == 0)
+			if( sispm_switch_getstatus(udev,id,atoi(num)) == 0)
 			{   sispm_switch_on(udev,id,atoi(num));
 			    send(out,pos,neg-pos-1,0);
 			} else
@@ -200,7 +199,7 @@ void process(int out,char*v,struct usb_device *dev,int devnum)
 			assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at final $",(trm[1]=='$')));
 			if(debug)
 			    fprintf(stderr,"\nSTATUS(%s)\n",num);
-			if( sispm_switch_getstatus(udev,id,atoi(num),&status) != 0)
+			if( sispm_switch_getstatus(udev,id,atoi(num)) != 0)
 			{   send(out,pos,neg-pos-1,0);
 			} else
 			{   send(out,neg,trm-neg,0);
@@ -245,8 +244,8 @@ void print_usage(char* name)
   print_disclaimer(name);
   fprintf(stderr,"\n"
 		 "sispmctl -s\n"
-		 "sispmctl [-q] [-n] [-d 1...] -b <on|off>\n"
-		 "sispmctl [-q] [-n] [-d 1...] -[o|f|t|g] 1..4|all\n"
+		 "sispmctl [-q] [-n] [-m] [-d 1...] -b <on|off>\n"
+		 "sispmctl [-q] [-n] [-m] [-d 1...] -[o|f|t|g] 1..4|all\n"
 	         "   'v'   - print version & copyright\n"
 	         "   'h'   - print this usage information\n"
 		 "   's'   - scan for supported GEMBIRD devices\n"
@@ -255,6 +254,7 @@ void print_usage(char* name)
 		 "   'f'   - switch outlet(s) off\n"
 		 "   't'   - toggle outlet(s) on/off\n"
 		 "   'g'   - get status\n"
+	         "   'm'   - get power supply status on/off\n"
 		 "   'd'   - apply to device\n"
 		 "   'n'   - show result numerically\n"
 		 "   'q'   - quiet mode, no explanations - but errors\n\n"
@@ -350,7 +350,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
   usb_dev_handle *udev=NULL;
   usb_dev_handle *sudev=NULL; //scan device
   unsigned int id=0; //product id of current device
-  char*onoff[] = { "off", "on", "0", "1" };
+  char* onoff[] = { "off", "on", "0", "1" };
 #ifndef WEBLESS
   char* bindaddr=0;
 #endif
@@ -361,13 +361,13 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
     bindaddr=BINDADDR;
 #endif
 
-  while( (c=getopt(argc, argv,"i:o:f:t:b:g:lqvhnsd:u:p:")) != -1 )
+  while( (c=getopt(argc, argv,"i:o:f:t:b:g:lqvhnmsd:u:p:")) != -1 )
     {    
       if( c=='o' || c=='f' || c=='g' || c=='t')
 	{
 	  if((strncmp(optarg,"all",strlen("all"))==0)
 	     || (atoi(optarg)==7) )
-	    { //switch on all outlets
+	    { //use all outlets
 	      from=1;
 	      upto=4;
 	    } else
@@ -386,7 +386,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 	{
 	  from = upto = 0;
 	}
-      if( c=='o' || c=='f' || c=='g' || c=='b' || c=='t') //we need a device handle for these commands
+      if( c=='o' || c=='f' || c=='g' || c=='b' || c=='t' || c=='m') //we need a device handle for these commands
 	{
 	  /* get device-handle/-id if it wasn't done already */
 	  if(udev==NULL){
@@ -428,15 +428,16 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 		  }
 		sudev = get_handle(dev[status]);
 		id = get_id(dev[status]);
-		if(udev==NULL)
+		if(sudev==NULL)
 		  fprintf(stderr, "No access to Gembird #%d USB device %s\n",
-			  devnum, dev[devnum]->filename );
+			  status, dev[status]->filename );
 		else 
 		  if(verbose) printf("Accessing Gembird #%d USB device %s\n",
-				     devnum, dev[devnum]->filename );
+				     status, dev[status]->filename );
 	        
 		printf("This device has a serial number of %s\n",get_serial(sudev));
 		usb_close(sudev);
+		printf("\n");
 	    }
 	    break;
 	case 'd': // replace previous (first is default) device by selected one
@@ -461,16 +462,24 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 	case 't':   
 	  {
 	    outlet=check_outlet_number(id, i);
-	    result=sispm_toggle(udev,id,outlet);
+	    result=sispm_switch_toggle(udev,id,outlet);
 	    if(verbose) printf("Toggled outlet %d %s\n",i,onoff[result]);
 	    break;
 	  }
 	case 'g':   
 	  {
 	    outlet=check_outlet_number(id, i);
-	    sispm_switch_getstatus(udev,id,outlet,&status);
+	    result=sispm_switch_getstatus(udev,id,outlet); 
 	    if(verbose) printf("Status of outlet %d:\t",i);
-	    printf("%s\n",onoff[status+numeric]);
+	    printf("%s\n",onoff[ result +numeric]); 
+	    break;
+	  }
+	case 'm':   
+	  {
+	    outlet=check_outlet_number(id, 1);
+	    result=sispm_get_power_supply_status(udev,id,outlet);
+	    if(verbose) printf("Power supply status is:\t");
+	    printf("%s\n",onoff[ result +numeric]); //take bit 1, which gives the relais status
 	    break;
 	  }
 #ifndef WEBLESS

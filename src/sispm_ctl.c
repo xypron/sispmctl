@@ -49,17 +49,9 @@ int get_id( struct usb_device* dev)
 char* get_serial(usb_dev_handle *udev)
 {
    int  reqtype=0xa1; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /*request type*/,
-  int  req=0x01;
-  char buffer[6];
+   int  req=0x01;
+   char buffer[6];
 
-  //buffer[0]=b1;
-  //buffer[1]=b2;
-  /* if(status!=NULL) */
-/*   { */
-/* 	reqtype|=USB_DIR_IN; */
-/* 	req=0x01; */
-/*   } */
-  /*printf("value: %x\n,",(0x03<<8) | b1);*/
   if ( usb_control_msg(udev /* handle*/,
 		       reqtype,
 		       req,
@@ -74,13 +66,13 @@ char* get_serial(usb_dev_handle *udev)
       usb_close (udev);
       exit(-5);
   }
-  /*printf("%s\n",usb_strerror()); */
+
   sprintf(serial_id, "%02x:%02x:%02x:%02x:%02x", buffer[0],buffer[1],
 	  buffer[2],buffer[3],buffer[4]);
   return serial_id;
 }
 
-int usb_command(usb_dev_handle *udev, int b1, int b2, int *status )
+int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected )
 {
   int  reqtype=0x21; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /*request type*/,
   int  req=0x09;
@@ -88,12 +80,11 @@ int usb_command(usb_dev_handle *udev, int b1, int b2, int *status )
 
   buffer[0]=b1;
   buffer[1]=b2;
-  if(status!=NULL)
+  if(return_value_expected!=0)
   {
 	reqtype|=USB_DIR_IN;
 	req=0x01;
   }
-  /*printf("value: %x\n,",(0x03<<8) | b1);*/
   if ( usb_control_msg(udev /* handle*/,
 		       reqtype,
 		       req,
@@ -108,10 +99,8 @@ int usb_command(usb_dev_handle *udev, int b1, int b2, int *status )
       usb_close (udev);
       exit(-5);
   }
-  /*printf("%s\n",usb_strerror()); */
 
-  if(status!=NULL) *status=(buffer[1]!=0)?1:0;
-  return (buffer[1]!=0)?1:0;
+  return buffer[1];//(buffer[1]!=0)?1:0;
 }
 
 
@@ -171,19 +160,18 @@ int check_outlet_number(int id, int outlet)
 int sispm_switch_on(usb_dev_handle * udev,int id, int outlet)
 {
   outlet=check_outlet_number(id,outlet);
-  return usb_command( udev, 3*outlet, 0x03, NULL ) ;
+  return usb_command( udev, 3*outlet, 0x03, 0 ) ;
 }
 
 int sispm_switch_off(usb_dev_handle * udev,int id, int outlet)
 {
   outlet=check_outlet_number(id,outlet);
-  return usb_command( udev, 3*outlet, 0x00, NULL );
+  return usb_command( udev, 3*outlet, 0x00, 0 );
 }
 
-int sispm_toggle(usb_dev_handle * udev,int id, int outlet)
+int sispm_switch_toggle(usb_dev_handle * udev,int id, int outlet)
 {
-  int status=0;
-  if (sispm_switch_getstatus(udev,id,outlet,&status)==0) //on
+  if (sispm_switch_getstatus(udev,id,outlet)==0) //on
     {
       sispm_switch_on(udev,id,outlet);
       return 1;
@@ -197,9 +185,18 @@ int sispm_toggle(usb_dev_handle * udev,int id, int outlet)
   return 0;
 }
 
-
-int sispm_switch_getstatus(usb_dev_handle * udev,int id, int outlet,int *status)	
+int sispm_switch_getstatus(usb_dev_handle * udev,int id, int outlet)	
 {
+  int result;
   outlet=check_outlet_number(id,outlet);
-  return usb_command( udev, 3*outlet, 0x03, &status );
+  result=(usb_command( udev, 3*outlet, 0x03, 1 ) & 1); //take bit 1, which gives the relais status
+  return result;
+}
+
+int sispm_get_power_supply_status(usb_dev_handle * udev,int id, int outlet)	
+{
+  int result;
+  outlet=check_outlet_number(id,outlet);
+  result=(usb_command( udev, 3*outlet, 0x03, 1 ) >>1); //take bit 0, which gives the power supply status
+  return result & 1;
 }
