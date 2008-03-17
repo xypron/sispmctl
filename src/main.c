@@ -244,8 +244,8 @@ void print_usage(char* name)
   print_disclaimer(name);
   fprintf(stderr,"\n"
 		 "sispmctl -s\n"
-		 "sispmctl [-q] [-n] [-m] [-d 1...] -b <on|off>\n"
-		 "sispmctl [-q] [-n] [-m] [-d 1...] -[o|f|t|g] 1..4|all\n"
+		 "sispmctl [-q] [-n] [-d 1...] -b <on|off>\n"
+		 "sispmctl [-q] [-n] [-d 1...] -[o|f|t|g|m] 1..4|all\n"
 	         "   'v'   - print version & copyright\n"
 	         "   'h'   - print this usage information\n"
 		 "   's'   - scan for supported GEMBIRD devices\n"
@@ -253,8 +253,8 @@ void print_usage(char* name)
 		 "   'o'   - switch outlet(s) on\n"
 		 "   'f'   - switch outlet(s) off\n"
 		 "   't'   - toggle outlet(s) on/off\n"
-		 "   'g'   - get status\n"
-	         "   'm'   - get power supply status on/off\n"
+		 "   'g'   - get status of outlet(s)\n"
+	         "   'm'   - get power supply status outlet(s) on/off\n"
 		 "   'd'   - apply to device\n"
 		 "   'n'   - show result numerically\n"
 		 "   'q'   - quiet mode, no explanations - but errors\n\n"
@@ -361,9 +361,9 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
     bindaddr=BINDADDR;
 #endif
 
-  while( (c=getopt(argc, argv,"i:o:f:t:b:g:lqvhnmsd:u:p:")) != -1 )
+  while( (c=getopt(argc, argv,"i:o:f:t:b:g:m:lqvhnsd:u:p:")) != -1 )
     {    
-      if( c=='o' || c=='f' || c=='g' || c=='t')
+      if( c=='o' || c=='f' || c=='g' || c=='t' || c=='m')
 	{
 	  if((strncmp(optarg,"all",strlen("all"))==0)
 	     || (atoi(optarg)==7) )
@@ -476,7 +476,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 	  }
 	case 'm':   
 	  {
-	    outlet=check_outlet_number(id, 1);
+	    outlet=check_outlet_number(id, i);
 	    result=sispm_get_power_supply_status(udev,id,outlet);
 	    if(verbose) printf("Power supply status is:\t");
 	    printf("%s\n",onoff[ result +numeric]); //take bit 1, which gives the relais status

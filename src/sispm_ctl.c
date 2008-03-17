@@ -189,14 +189,14 @@ int sispm_switch_getstatus(usb_dev_handle * udev,int id, int outlet)
 {
   int result;
   outlet=check_outlet_number(id,outlet);
-  result=(usb_command( udev, 3*outlet, 0x03, 1 ) & 1); //take bit 1, which gives the relais status
-  return result;
+  result=(usb_command( udev, 3*outlet, 0x03, 1 ) ); //take bit 1, which gives the relais status
+  return result & 1;
 }
 
 int sispm_get_power_supply_status(usb_dev_handle * udev,int id, int outlet)	
 {
   int result;
   outlet=check_outlet_number(id,outlet);
-  result=(usb_command( udev, 3*outlet, 0x03, 1 ) >>1); //take bit 0, which gives the power supply status
-  return result & 1;
+  result=(usb_command( udev, 3*outlet, 0x03, 1 ) ); //take bit 0, which gives the power supply status
+  return (result >>1 )& 1;
 }
