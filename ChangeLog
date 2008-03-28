@@ -1,3 +1,7 @@
+28 Mar 2008 2.7
+		   -m switch for power status added, some other small additions, experimental support for ids
+03 Mar 2008 2.6
+			 msis-pm (single socket) and sis-pm with new device id of 0xfd13 supported. Bugfixes.
 03 Dez 2007 - 2.5
 		   some (small) bug-fixes
 17 Aug 2006 - 2.4
