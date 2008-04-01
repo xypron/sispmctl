@@ -38,13 +38,13 @@ else
 fi
 
 dnl check for version of libusb
-AC_MSG_CHECKING([if libusb version is >= 0.1.7])
-libusb_version_needed="1007"
+AC_MSG_CHECKING([if libusb version is >= 0.1.9])
+libusb_version_needed="1009"
 libusb_version=`$HAVELIBUSB --version | sed -e "s/libusb //" | awk 'BEGIN { FS = "."; } { printf "%d", ($''1 * 1000 + $''2) * 1000 + $''3;}'`
 
 if test $libusb_version -lt $libusb_version_needed; then
    AC_MSG_RESULT(no)
-   AC_MSG_ERROR([*** libusb is too old ($libusb_version). You need a libusb installation newer or equal to 0.1.7.])
+   AC_MSG_ERROR([*** libusb is too old ($libusb_version). You need a libusb installation newer or equal to 0.1.9.])
 else
    AC_MSG_RESULT(yes)
 fi

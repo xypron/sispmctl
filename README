@@ -42,7 +42,7 @@ The following confiure options may be of interest:
 
 Dependencies
 ------------
-- libusb 0.18 must be installed, libusb-config in $PATH
+- libusb 0.19+ must be installed, libusb-config in $PATH
 
 
 Web-Interface
