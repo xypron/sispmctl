@@ -50,7 +50,7 @@ char* get_serial(usb_dev_handle *udev)
 {
    int  reqtype=0xa1; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /*request type*/,
    int  req=0x01;
-   char buffer[6];
+   unsigned char buffer[6];
 
   if ( usb_control_msg(udev /* handle*/,
 		       reqtype,
