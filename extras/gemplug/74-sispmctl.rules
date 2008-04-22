@@ -1,0 +1,20 @@
+### Gembirds (power outlets controlled by sispmctl):
+#
+# See gemplug(1), section "UDEV RULE" for an explanation.
+#
+
+# Standard rule:
+# make all Gembird devices world R/W:
+
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="04b4", ATTRS{idProduct}=="fd1[0-3]", MODE="0666"
+
+# Alternative rule:
+# make all Gembirds available to a group of users
+#
+# In order to get there, add the users to group "sispm" (don't forget
+# to create the group and to add yourself there).  Make the rule above
+# into a comment and un-comment the rule below.  Also note that added
+# users need to go through a new login for the changes to take
+# effect:
+
+# SUBSYSTEMS=="usb", ATTRS{idVendor}=="04b4", ATTRS{idProduct}=="fd1[0-3]", GROUP="sispm", MODE="0660"
