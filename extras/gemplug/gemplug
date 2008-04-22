@@ -1,0 +1,1179 @@
+#!/bin/bash
+
+# gemplug
+#
+time_stamp="Time-stamp: <2008-04-22 09:59:50 hcz>"
+version="gemplug version 42.03"
+
+#
+# Control multiple Gembird power outlets via sispmctl
+#
+# (c) Heike C. Zimmerer <hcz@hczim.de>
+#
+# This program is licensed as follows:
+#
+LICENSE="\
+    This program is free software: you can redistribute it and/or
+    modify it under the terms of the GNU General Public License,
+    version 3, as published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>."
+
+# TODO: x The same pos and/or serial can be placed into different 
+#         sections (really a problem?).
+#       Don't allow "ALL" for device or outlet names.
+#       Never put intermediate files into /etc (?? buys nothing?).
+
+# History:
+#   2008-04-??   v42.0?  first public release
+#      listOneOutlet: section was listed twice
+#      rc file: tried to write inte /etc when rc file was located there
+#      $_h/$_x: hour in interval spec was messed up
+#      more permission cleanup when run with config in /etc/gemplug
+#      don't allow the same pos|serial to be referenced more than onec
+
+usage(){
+    echo "\
+Usage:
+  $pname [-opts] [<outlet-name>]
+     lists available outlets along with their state
+  $pname [-opts]  <outlet-name> <state>
+     Switch Gembird power outlets
+  $pname [-opts]  <outlet-name> <state>  [at|after <spec>] [until|for <spec>]
+     Switch Gembird outlets to <state> and reverse at specified times
+
+  Time specifications must be enclosed in quotes if they contain
+    white space.
+  'at' and 'until' expect time-of-day specifications.  Any format
+    which is acceptable by the 'date -d' command may be used.
+  'after' and 'for' expect a time imterval: days, hours and minutes in
+    descending order, with at least one element marked as being d[ay],
+    h[our], m[inute] or a ':' (separator between hours and minutes).
+    Elements may be omitted as long as their order is preserved.
+
+opts:
+  job-related:
+   -j [<outlet-name> [...]]  list pending jobs (default: all)
+   -k <outlet-name> [...]    kill pending jobs (outlet-name=ALL kills all)
+   -p <job-num> [...]    kill pending jobs by job number
+   -a   new jobs are to be added to already pending jobs
+   -r   remove pending jobs
+   -t   test: don't actually start jobs
+  output control:
+   -l [<outlet-name> [...]]  list states of named outlets
+   -d [<outlet-name> [...]]  dump configuration data
+   -c   don't use colors in output
+   -n   report states numerical (0, 1 instead of off, on)
+   -q   quiet operation: just results and errors
+   -g <outlet-name>  set exit code to 0 if outlet active, else 1
+  misc:
+   -f   force reconfiguration (redisplay non-fatal errors)
+   -v   verbose reporting
+   -C   set world R/W permissions on all devices (requires root privileges)
+   -T   write templates for unconfigured devices to stdout
+   -TW  append templates for unconfigured devices to configuration file
+   -L   
+   -x   script debug (set -x)
+   -L, --license  display license information
+   --version      display version info
+   -h, --help     display this help
+
+Examples:
+$pname laser 1 for 1:00h                # switch on now, 1 hour later off
+$pname laser 1 at 12:00 for 10min       # switch on at 12:00, off 12:10
+$pname laser 0 after 12min for '2d 12h' # off +12min, on now+(2d 12h 12min)
+$pname laser 0 until 'Mon 7:00'         # off now until next Monday 7:00"
+    exit
+}
+
+## global settings
+dev_bus_usb="/dev/bus/usb"      # start of USB device node tree
+at_queue='d'                    # at Queue (higher letters mean less priority)
+
+sispmctl="/usr/local/bin/sispmctl"
+my_name="gemplug"              # name for this program (to be used in at jobs)
+my_rc_file="gemplugrc"
+my_compiled_rc_file="compiled_rc"
+
+sudo=                       # prefix sispmctl commands by that
+last_sispmctl_S="last_sispmctl_S"
+
+rcdirs=("$HOME/.$my_name" "/etc/$my_name")
+if [ -d "$HOME/.config" ]; then
+    rcdirs=("$HOME/.config/$my_name" "${rcdirs[@]}")
+fi
+
+default_HOME="/root"  # If there's no $HOME, try if /root is writable
+## end global settings
+
+# some regexp shortcuts:
+_s='[ 	]'                       # space TAB
+_S='[^ 	]'                       # not space TAB
+_c='(^|[ 	])[;#]'                         # comment start chars
+_nl=$'\n'
+_h='h(o(u(rs?)?)?)?'             # adds 3 round brackets into regex
+_m='m(i(n(u(t(es?)?)?)?)?)?'     # +5
+_d='d(a(ys?)?)?'                 # +2
+_n='[0-9]+'
+_x='[0-9a-f]+'
+_s='[ 	]'
+
+abort(){
+    needColors
+    echo >&2 "$color_bold_red$pname: $*$color_reset"
+    [ "${#at_registered_dates[@]}" -gt 0 ] && echo >&2 "No scheduled action activated"
+    kill $$                     # abort from subshells too (kill main)
+    sleep 1
+    exit 126                    # (usually) not reached
+}
+
+vCmd(){
+    echo >&2 ": $*"
+    "$@"
+}
+
+getColors(){
+    have_colors=1
+    bold=$(tput bold)
+    color_reset=$(tput op)$(tput sgr0) # Reset color + attribs
+    for color in "black 0" "red 1" "green 2" "brown 3" \
+        "blue 4" "magenta 5" "cyan 6" "grey 7"; do
+        set -- $color
+        eval $export color_$1='$(tput setaf $2)'
+        eval $export color_$1_bg='$(tput setab $2)'
+        eval $export color_bold_$1="\$bold\$color_$1"
+        # eval $export color_bold_$1_bg="\$bold\$color_${1}_bg"
+    done
+    
+} 2>/dev/null
+
+needColors(){
+    [ -z "$TERM$have_term" ] || [ "$have_colors$opt_c" ] || getColors
+}
+
+get_usb_pos(){
+    # (This duplicates functionality which is also found elsewhere, e,g,
+    # in udevinfo, and may be replaced by grepping its output once the
+    # application interface there stablizes.  Until then, asking sysfs
+    # directly seems safer against future changes. -2007-11-12 hcz)
+
+    # regular expressions for the IDs we want the topological position
+    # of:
+    idProduct_re='^fd1[0-3]$'
+    idVendor_re='^04b4$'
+
+    # max. recursion level:
+    maxlevel=6                      # hubs can be daisy chained up to 5 max.
+
+    # pattern for trees to be traversed (a '*' will be appended):
+    sys_bus_usb_devices_usb="/sys/bus/usb/devices/usb"
+
+    traverse()(
+        # Syntax: traverse cur_recursion_level cd_to
+        cd "$2"
+        if [[ "$(< idVendor)" =~ $idVendor_re ]] \
+            && [[ "$(< idProduct)" =~ $idProduct_re ]]; then
+            printf "%03d/%03d %s\n"  \
+                    "$(<busnum)" "$(<devnum)" \
+                    "${2##*/}"
+        fi
+        for dir in [0-9]*; do
+            if [[ "$dir" =~ ^[-0-9.]+$ ]] && [ "$1" -le "$maxlevel" ]; then
+                traverse  $((level+1)) "$dir"
+            fi
+        done
+    )
+
+    for dir in "$sys_bus_usb_devices_usb"*; do
+        [ -d "$dir" ] && traverse 0 "$dir"
+    done
+}
+
+getGemdevArray(){
+    # Calls 'sispmctl -S and fills the following arrays:
+    #  gemdev_pos
+    #  gemdev_bus_dev
+    #  gemdev_serial
+    #  gemdev_max_outlet
+    #  gemdev_gembird_no
+    #  gemdev_usb_pos
+    # unsets gemdev_used[]
+    # Same index belongs to same device.  The index itself has no
+    # special meaning (currently identical to gemdev_gembird_no).
+    local linepos bus_dev idx usb_traversed
+
+    sispmctl_S="$($vCmd $sudo "$sispmctl" -S)" || abort "sispmctl -S failed"
+    idx=-1
+    while IFS= read line; do
+        [[ "$line" =~ ^$_s*$ ]] && continue
+        [[ "$line" =~ ^'Accessing' ]] && continue
+        if [[ "$line" =~ 'Gembird #'($_n).*'bus/device '($_n/$_n)'.'.*($_n)'-socket' ]]; then
+            # Gembird #3 is USB bus/device 004/046. This device is a 4-socket SiS-PM.
+            : $((idx++))
+            unset gemdev_used[idx]
+            gemdev_gembird_no[idx]="${BASH_REMATCH[1]}"
+            gemdev_bus_dev[idx]="${BASH_REMATCH[2]}"
+            gemdev_max_outlet[idx]="${BASH_REMATCH[3]}"
+        elif [[ "$line" =~ "serial number of "($_S+) ]]; then
+            # This device has a serial number of 01:ffffff97:ffffffa8:ffffffdb:41
+            gemdev_serial[idx]="${BASH_REMATCH[1]}"
+        else
+            abort "Unknown response from $sispmctl -S: '$line'"
+        fi
+    done <<EOF
+$sispmctl_S
+EOF
+    usb_traversed=$(get_usb_pos)
+    while read bus_dev pos; do
+        unset found
+        for ((idx = 0; idx < ${#gemdev_bus_dev}; idx++)); do
+            if [ "${gemdev_bus_dev[idx]}" = "$bus_dev" ]; then
+                gemdev_usb_pos[idx]="$pos"
+            fi
+        done
+    done <<EOF
+$usb_traversed
+EOF
+}
+
+findIdx(){
+    # Syntax: findIdx <array_name> <element>
+    # returns on stdout the index into <array_name> of <element>, empty if none.
+    local idx
+    eval max_idx='"${#'$1'[@]}"'
+    for ((idx = 0; idx < max_idx; idx++)); do
+        if eval [ '"${'$1'[idx]}"' = '"$2"' ]; then
+            echo "$idx"
+            return
+        fi
+    done
+}
+
+
+# indices into the elements of a single outlets[] line (rarely used)
+# index:                          position after 'set -- $outlet':
+i_usbpos=0                      # $1
+i_busdev=1                      # $2
+i_gemno=2                       # $3
+i_serial=3                      # $4
+i_max_outlet_no=4               # $6
+i_outlet_no=5                   # $6
+i_section=6                     # $7
+i_outlet_name=7                 # $8
+i_aliases=8                     # $9
+
+readRcFile(){
+    # readRcFile
+    #
+    # interprets the rc file.
+    #
+    # result: outlets[]:  Each array element is a string describing 1 outlet:
+    #
+    #    1      2    3 4 5 6           7 ....
+    # "4-2.2 004/005 01:0b:a4:c9:45 0 4 2 Peripherals Scanner ..."
+    #  ^^^^^ ^^^^^^^ ^^^^^^^^^^^^^^ ^ ^   ^^^^^^^^^^^ ^^^^^^^^^^^-
+    #    |      |    |              | | | |           |
+    #    |      |    |              | | | |           + ---#8 [#9 ..] Outlet name and aliases
+    #    |      |    |              | | | +-#7  The device's name (the [ section ])
+    #    |      |    |              | | +---#6: The individual outlets' number within this device
+    #    |      |    |              | +-----#5: The total number of outlets on this device
+    #    |      |    |              +-------#4: The Gembird's number for sispmctl command
+    #    |      |    +----------------------#3: The Gembird's serial number
+    #    |      +----------- #2: The USB Bus/device as reorted by get-usb-pos and sispmctl -S
+    #    +------------------ #1: The topological pos position as reportet by get-usb-pos
+
+    # results:
+    #  outlets[]
+    #  all_names: space-separated list of all encountered outlet names and aliases
+    #  all_sections:   -"-                                section names
+    local idx idx_new line fatal rc_file
+    perr(){
+        # Syntax: perr [-skip] [-fatal] text
+        while [[ "$1" == -* ]]; do
+            case "$1" in
+                -skip) skip_sect=1;;
+                -fatal) fatal=1;;
+                *) abort "${FUNCNAME[1]}: internal error";;
+            esac
+            shift 1
+        done
+        [ "$errtext" ] && printf "%s\n" "$errtext"
+        printf "  %s:\n" "$*"
+        if [ "$have_sect" ]; then
+            printf "  line %d, section [%s]: '%s'\n" "$lineno" "$section" "$orig_line"
+        else
+            printf "  line %d: '%s'\n" "$lineno"  "$orig_line"
+        fi
+        unset errtext
+    } >&2
+
+    # get bus mapping
+    getGemdevArray
+
+    section="1st"
+    l_section=0
+    l_outlet=9
+    findRcFile "$my_rc_file" "${rcdirs[@]}" \
+     || abort "Internal: Cannot open $my_rc_file" # should habe been recognized earlier
+    errtext="$pname: in file '$rc_file':"
+    while read line; do
+        : $((++lineno))
+        orig_line="$line"
+            # strip comments off
+        if [[ " $line" =~ ^(.*)$_c.*$ ]]; then
+            $vEcho "stripping comment: '$line' -> '${BASH_REMATCH[1]}'"
+            line="${BASH_REMATCH[1]}"
+        fi
+
+            # strip leading & trailing whitespace, skip (now) empty lines
+        [[ "$line" =~ ^$_s*($_S+($_s+$_S+)*)$_s*$ ]] || continue # empty
+        line="${BASH_REMATCH[1]}"
+
+        if [ -z "$skip_sect" ]; then
+            if [[ "$line" =~ ([0-9])$_s*=$_s*(($_S+)($_s+$_S+)*)$_s*$ ]]; then
+                # found "3 = Laser OKI"
+                len="${#BASH_REMATCH[3]}" # outlet name len
+                outlet_no=${BASH_REMATCH[1]}
+                names=${BASH_REMATCH[2]}
+                for name in $names; do
+                    case "$all_names" in
+                        *" $name "*)
+                            perr "duplicate name: '$name'"
+                            names="${names/ $name } "
+                            ;;
+                    esac
+                done
+                if [ -z "$idx" ]; then
+                    perr -fatal -skip "need preceding 'pos' or 'serial' statement"
+                else
+                    if [ "$skip_sect" ]; then
+                        echo >&2 "(This error will not be reported again until configuration is changed.)"
+                        continue
+                    else
+                        if [ " ${gemdev_max_outlet[idx]}" -lt "$outlet_no" ]; then
+                            skip_sect=1
+                            perr -fatal "Outlet number is $outlet_no but only $n_outlets outlets are available"
+                            continue
+                        fi
+                        [ "$len" -gt "$l_outlet" ] && l_outlet=$len # max outlet name len
+                        cur_outlet="${gemdev_usb_pos[idx]} ${gemdev_bus_dev[idx]} ${gemdev_gembird_no[idx]} ${gemdev_serial[idx]} ${gemdev_max_outlet[idx]} $outlet_no $section $names"
+                        outlets[${#outlets[@]}]="$cur_outlet"
+                        all_names="$all_names $names "
+                        $vEcho "parse: outlet: '$line' -> $cur_outlet"
+                    fi
+                fi
+            elif [[ "$line" =~ "pos"$_s*=$_s*($_S+($_s+$_S+)*)$_s*$ ]]; then
+                # found "pos = 4-2.2"
+                [ "$pos" ] && perr -fatal "duplicate pos statement"
+                pos="${BASH_REMATCH[1]}"
+                idx_new=$(findIdx gemdev_usb_pos "$pos")
+                [ "$idx_new" ] || perr -skip "There's no Gembird at USB position '$pos'"
+                [[ " $all_pos " == *" $pos "* ]] && perr -fatal "duplicate position: '$pos'"
+                all_pos="$all_pos $pos"
+                $vEcho "parse: pos: '$line' -> $pos -> $idx"
+            elif [[ "$line" =~ "serial"$_s*=$_s*($_x:$_x:$_x:$_x:$_x)$_s* ]]; then
+                # found "serial = 01:ffffff9a:ffffffa9:ffffffdb:41
+                [ "$serial" ] && perr -fatal "duplicate serial statement in section [ $section ]"
+                serial="${BASH_REMATCH[1]}"
+                idx_new=$(findIdx gemdev_serial "$serial")
+                [ "$idx_new" ] || perr -skip "Unknown serial '$serial'"
+                [[ " $all_serials " == *" $serial "* ]] && perr -fatal "duplicate serial #: '$serial'"
+                all_serials="$all_serials $serial"
+                $vEcho "parse: serial: '$line' -> $serial -> $idx"
+            elif [ -z "$skip_sect" ]; then
+                gotcha=no
+            fi
+            if [ "$idx_new" ]; then
+                if [ "$idx" ] && [ "$idx" -ne "$idx_new" ]; then
+                    perr -fatal "Conflicting pos ('$pos') and serial ('$serial') statements"
+                else
+                    idx="$idx_new"
+                    gemdev_used[idx]=1
+                fi
+                unset idx_new
+            fi
+            [ "$skip_sect" ] && echo >&2 "Skipping the rest of the offending '[ $section ]' section."
+        fi   # if [ -z $skip_sect ]
+        if [[ "$line" =~ ^'['$_s*($_S+)$_s*']'$ ]]; then
+                # found "[ Peripherals ]"
+            section="${BASH_REMATCH[1]}"
+            len=${#section}
+            [ "$len" -gt "$l_section" ] && l_section=$len
+            have_sect=1
+            all_sections="$all_sections $section "
+            unset skip_sect idx pos serial gotcha
+            $vEcho "parse: section: '$line' -> '$section'"
+        fi
+        if [ "$gotcha" ]; then
+            perr -fatal "Not a valid line"
+            abort "Errors in configuration file"
+        fi            
+    done < "$rc_file"
+    [ "$fatal" ] && abort "Errors in configuration file, Aborting."
+    [ -z "$errtext" ] && echo >&2
+    # Now check if there are any Gembirds left out:
+    for ((idx=0; idx < "${#gemdev_usb_pos[@]}"; idx++)); do
+        if [ "${gemdev_used[idx]}" != "1" ]; then
+            printf >&2 "\
+* Note: unconfigured Gembird found at bus/device %s 
+    pos = %s
+    serial = %s\n" \
+    "${gemdev_bus_dev[idx]}" "${gemdev_usb_pos[idx]}" "${gemdev_serial[idx]}"
+        fi
+    done
+}
+
+template_hdr="\
+# Configuration template for $my_name
+#
+# Created $(date -Imin) for $USER ${HOSTNAME:+on $HOSTNAME}
+
+# This file describes the mapping from individual outlet names of
+# Gembird USB-conrolled power switches to the position of their
+# devices on the USB and/or to their serial number.
+
+### Some syntax rules:
+#
+#   Comments                     
+#       '#' and ':' at the start of a word (i.e. after white space or a
+#       newline) start a comment.  All text up to the end of the line will be
+#       ignored.
+#
+#   Case
+#       All matching is done without regard to case (case-insensitive).
+#
+#   Names (outlet and Gembird device identifiers)
+#       Names can be made of any non-whitespace characters.  They are allowed
+#       to include anything but the following:
+#        - They cannot start with a comment character ('#', ';')
+#        - White space cannot be embedded as it is a delimiter,
+#        - In device (=section) names '[' and ']' cannot be used (delimiters)
+#
+#   Indenting
+#       Indenting is not mandatory; leading white space is always ignored.  Use
+#       it as you like, In all places where white space is allowed/required,
+#       any amount can be used.
+#
+#   Key elements
+#       All the descriptions of the key elements below are preceded by an
+#       example line demonstrating their use.
+#
+#       [ Gebird_name ]
+#            Starts a device section, giving the device and the section the name
+#            within the brackets.  Any white space between brackets and device
+#            name is optional.
+#
+#        pos = 3.1
+#            Names the topological position of the device on the USB as reported
+#            by gemplug -d <one-of-its-outlets>.
+#
+#        serial = 01:02:03:04:05
+#            Names the Gembird's serial number as reported by gemplug -d <one-
+#            of-its-outlets> or sispmctl -S.
+#
+#        1 = Outlet-name [Alias ...]
+#            Number, '=', Name Aliases ...  names the individual plug outlets.
+#            It can only be used if at least one of pos or serial are given
+#            before and in the same section.  If both are given, they are
+#            required to match the same device.  Outlet numbers (the numbers in
+#            the first column) count from number 1 upwards per device.
+
+###  An example for a device entry:
+#
+# [ Peripherals ]
+#    pos = 4-2.2
+#    1 = Scanner
+#    2 = Printer Laser
+#    3 = DVB-T DVBT Telly
+#    4 = Backup1 ICY ext_ATA
+
+
+# Here we go:
+
+"
+
+addOneTemplate(){
+    # Syntax: addOneTemplate <index into gemdev_*>
+    while :; do
+        sect="Gembird-$((++template_section_idx))"
+        [[ "$all_sections" != *" $sect "* ]] && break;
+    done
+    printf "\n[ $sect ]\n" "$1"
+    printf "  pos = %s      # currently at bus/device %s\n" "${gemdev_usb_pos[$1]}" "${gemdev_bus_dev[$1]}"
+    printf "  serial = %s   # you may remove either pos or serial\n" "${gemdev_serial[$1]}"
+    for ((outlet=1; outlet <=  "${gemdev_max_outlet[$1]}"; outlet++)); do
+        while :; do
+            out="OUT-$((template_out_idx++))"
+            [[ "$all_names" != *" $out "* ]] && break;
+        done
+        printf "  %d = %s\n" "$outlet" "$out"
+    done
+}
+
+addTemplate(){
+    # Syntax: addTemplate <index into gemdev_*>
+    # Adds a template.  Creates rc file if needed.
+    local touch_result idx written
+    if ! findRcFile "$my_rc_file" "${rcdirs[@]}" \
+       || ! [ -w "$rc_file" ]; then  # set rc_file        
+        for rc_dir in "${rcdirs[@]}"; do
+            rc_file="$rc_dir/$my_rc_file"
+            touch_result="$touch_result$_nl$(touch 2>&1 "$rc_file")" && break
+        done
+        if [ $? != 0 ]; then
+            echo "$touch_result"
+            abort "Cannot create configuration file"
+        fi
+        [ "$opt_W" ] && echo "$template_hdr" > "$rc_file" || abort "Cannot write template"
+    fi
+    getGemdevArray
+    echo >&2 "Checking current configuration ..."
+    readRcFile
+    [ "$opt_W" ] && exec >> "$rc_file"
+    for idx in ${!gemdev_usb_pos[@]}; do
+        if [ "${gemdev_used[idx]}" != 1 ]; then
+            [ "$opt_W" ] && printf >&2 "Writing template for unconfigured Gembird at %s\n"\
+                             "${gemdev_bus_dev[idx]}"
+            addOneTemplate "$idx"
+            written=1
+        fi
+    done
+    if  [ "$written" ]; then
+        if [ "$opt_W" ]; then
+            echo >&2 "
+'$rc_file' written.
+You may now want to edit it and give the items meaningful names."
+        fi
+    else
+        echo >&2 "Nothing to write (no new Gembird found)."
+    fi
+        
+}
+
+
+findRcFile(){
+    # Syntax: findRcFile <fnam> <dir1> <dir2> ....
+    # returns first file <fnam> from dirs which is readable
+    # Result in $rc_file (empty if none), true/false
+    local rc_dir
+    for rc_dir in "$@" ""; do
+        rc_file="$rc_dir/$1"
+        [ -r "$rc_file" ] && [ -f "$rc_file" ] && return
+    done
+    return 1
+}
+
+findRcDir_RW(){
+    # Syntax: findRcFile <path1> <path2> ....
+    # returns first dir from "$@" which is r/w-able
+    # Result in $rc_dir (empty if none), true/false
+    for rc_dir in "$@" ""; do
+        [ -w "$rc_dir" ] && [ -r "$dir" ] && [ -d "$rc_dir" ] && return
+    done
+    return 1
+}
+
+initialize(){
+    local compiled_rc need_update rc_file rc_dir
+    
+    # Find first rc file along $rcdirs[]
+    if findRcFile "$my_compiled_rc_file" "${rcdirs[@]}"; then  # set rc_file
+        compiled_conf="$rc_file"
+    else
+        need_update=1           # none
+    fi
+
+    # find first directory which is wrteable along rcdirs[]
+    # first, try directory of current rc
+    rc_dir="${rc_file#/*}"
+    if [ ! -w "${rc_file#/*}" ]; then
+        # we don't have write permissions in the rc file's directory
+        if ! findRcDir_RW "${rcdirs[@]}"; then
+                # we have to create our rc directory
+            for rc_dir in "${rcdirs[@]}"; do
+                md_result="$md_result$_nl$(mkdir -m 0755 -p "$rc_dir" 2>&1)" && break
+            done
+            if [ $? != 0 ]; then
+                echo "$md_result"
+                abort "Cannot write compiled configuration file"
+            fi
+        fi
+    fi        
+    compiled_rc="$rc_dir/$my_compiled_rc_file"
+    last_sispmctl_S="$rc_dir/$last_sispmctl_S"
+
+    # check if sispmctl -S reports a different config than last time
+    sispmctl_S="$($vCmd $sudo "$sispmctl" -S)" || abort "$sispmctl -S failed"
+    if [ ! -r "$last_sispmctl_S" ] || [ "$sispmctl_S" != "$(<"$last_sispmctl_S")" ]; then
+        need_update=1
+        echo "$sispmctl_S" > "$last_sispmctl_S"
+    fi
+
+
+    if ! findRcFile "$my_rc_file" "${rcdirs[@]}"; then  # set rc_file
+        # None found.
+        echo "No configuration file found.  This is where I've looked for one:"
+        for rc_dir in "${rcdirs[@]}"; do
+            echo " $rc_dir/$my_rc_file"
+        done
+        echo "You may try again using the -T or -TW option to create a template."
+        abort "Can't proceed."
+    fi
+
+    # re-compute outlets[] if needed
+    if [ "$need_update$opt_f" ] \
+        || [ "$rc_file" -nt "$compiled_conf" ]; then
+
+        $vEcho "Parsing '$rc_file'"
+        readRcFile
+
+        if [ -e "$compiled_rc" ]; then
+            chmod 0600 "$compiled_rc" || abort "Can't set permissions of '$compiled_rc'"
+        fi
+        printf > "$compiled_rc" "%s\n" "\
+# Compiled configuration, generated by $pname at $(date '+%Y-%m-%d %H:%M')
+#                       *** DO NOT EDIT ***"
+        declare -p outlets l_section l_outlet ${!gemdev_*} >> "$compiled_rc"
+        getColors
+        colors_TERM="$TERM"
+        declare -p ${!color_*} colors_TERM have_colors >> "$compiled_rc"
+        $vEcho "$compiled_rc written."
+        chmod 0400 "$compiled_rc" || abort "Can't set permissions of '$compiled_rc'"
+    fi
+}
+
+
+getCurDevStates(){
+    # Syntax: getCurDevStates [-f] <sis_dev>
+    # opt: -f: force read (ignore cached data)
+    # Result in cur_dev_states[] = (sisdev, state0, state 1, ..)
+    if [ "$1" = "-f" ]; then
+        shift
+        unset states_cache[$1] cur_dev_states
+    else
+        [ "$1" -eq "${cur_dev_states[0]:--1}" ] && return
+    fi
+    if [ -z "${states_cache[$1]}" ]; then
+        states_cache[$1]="$1 $($vCmd $sudo $sispmctl -q -d $1 -g all)"
+    fi
+    cur_dev_states=(${states_cache[$1]})
+}
+
+findOutletByName(){
+    # Sytnax: findPlugByName <Start_of_name>
+    # Returns: line from outlets[] in stdout
+    local res srch="$1" found
+    for outlet in "${outlets[@]}"; do
+        set -- $outlet
+        shift 7                 # skip to 1st name
+        while [ "$1" ]; do
+            case "$1" in
+                $srch*)
+                    res="$outlet"                    
+                    found[${#found[@]}]="$1"
+                    break
+                    ;;
+            esac
+            shift
+        done
+    done
+    if [ "${#found[@]}" -gt 2 ]; then
+        abort "Ambiguous matches for '$srch': ${found[*]}"
+    elif [ -z "$res" ]; then
+        abort "No match for '$srch'"
+    fi
+    echo "$res"
+}
+
+getState(){
+    # Sytax: getState [-noabort] <text>
+    # returns 0 or 1 on stdout
+    # with 2 Arguments, returns empty string on error, else aborts
+    case "${2:-$1}" in
+        0|off) echo "0";;
+        1|on) echo "1";;
+        *) [ "$#" != 2 ] && abort "Can't set to illegal state '$1'";;
+    esac
+}
+
+setOutlet(){
+    # Syntax: setOutlet "<outlet line from outlets[]>" state
+    local state=$2
+    set -- $1
+    case "$(getState "$state")" in
+        0) st="off"; opt="-f";;
+        1) st="on"; opt="-o";;
+    esac
+    if [ "$opt_t" ]; then
+        printf "Outlet '%s'< not set to '%s' because of -t option\n" "$8" "$st"
+    else
+        $vCmd $sudo "$sispmctl" -q -d "$3" $opt "$6"
+        getCurDevStates -f "$3"
+        if [ "${cur_dev_states[$6]}" != "$st" ]; then
+            abort "Gembird device '$7', outlet '$8' doesn't report back the new setting"
+        fi
+    fi
+}
+
+dumpOutlet(){
+    # Syntax: dumpOutlet <outlet-line>
+    
+    local idx cur=($1) line
+    echo
+    printf "Outlet name:       %s\n" "${cur[i_outlet_name]}"
+    printf "Alias(es):        "
+    for ((idx=i_aliases; idx < ${#cur[@]}; idx++)); do
+        printf " %s" "${cur[idx]}"
+    done
+    echo
+    printf "USB position:      %s\n" "${cur[i_usbpos]}"
+    printf "Bus/Device:        %s\n" "${cur[i_busdev]}"
+    printf "Gembird#:          %s\n" "${cur[i_gemno]}"
+    printf "Serial #:          %s\n" "${cur[i_serial]}"
+    printf "Number of outlets: %s\n" "${cur[i_max_outlet_no]}"
+    printf "outlet #:          %s\n" "${cur[i_outlet_no]}"
+    printf "Section name:      [ %s ]\n" "${cur[i_section]}"
+    stat --printf "%A\n%a\n%U\n%u\n%G\n%g\n$'\x04'" /dev/bus/usb/"${cur[i_busdev]}" \
+    | (
+        IFS="$_nl" read -d  $'\x04' access access_octal  owner owner_id group group_id
+        if [[ "$access_octal" =~ ^..[67]$ ]]; then
+            printf "Access rights:     %s (%s)\n" "World read and write permissions" "$access"
+        else
+            printf "Access rights:     %s\n" "$access"
+                printf "  World:           no write permission\n"
+            if [[ "$access_octal" =~ ^.[67].$ ]]; then
+                printf "  Group:           %s (read and write permissions)\n" "$group"
+            elif ! [[ "$access_octal" =~ ^.[67].$ ]]; then
+                printf "  Group:           %s (no write permission)\n"  "$group"
+            fi
+            if [[ "$access_octal" =~ ^[67]..$ ]]; then
+                printf "  Owner:           %s (read and write permissions)\n" "$owner"
+            else
+                printf "  Owner:           %s (no write permission)\n" "$owner"
+            fi
+        fi
+    )
+        
+}
+
+listOneOutlet(){
+    # Syntax: listOneOutlet "<outlet line from outlets[]>"
+    local r state
+    needColors
+    set -- $outlet
+    getCurDevStates "$3"
+    state="(${cur_dev_states[$6]})"
+    if [ "$opt_g" ]; then
+        [ "$state" = "(on)" ]
+        exit
+    fi
+    if [ "$opt_d" ]; then
+        dumpOutlet "$outlet"
+    else
+        if [ "$state" = "(on)" ]; then
+            [ "$opt_n" ] && state=1
+            printf "%s" "$color_green"
+        else
+            [ "$opt_n" ] && state=0
+            printf "%s" "$color_red"
+        fi
+        if [ "$opt_q" ]; then
+            echo "$state"
+        else
+            printf "%-5s%s %-*s" "$state" "$color_reset" "$l_section" "$7"
+            shift 7
+            printf " %s\n" "$*$color_reset"
+        fi
+    fi
+}
+
+listOutlets(){
+    local cur_sisdev=-1
+    for outlet in "${outlets[@]}"; do
+        listOneOutlet "$outlet"
+    done
+}
+
+
+############### Jobs and the like
+
+getIntervalSpec(){
+    # Syntax: getIntervalSpec "<timespec>"
+    # interpret $1 as time interval (duration) starting from $cur_sec
+    # (date in s since epoch, which must be defined).
+    # sets global "cur_date" to a time strimg suitable for feeding to the "at" command.
+    # sets global 'cur_sec' to reflect the new date (in secs since epoch)
+    local days=0 hrs=0 min=0 target
+    [ "$cur_sec" ] || cur_sec=$(date '+%s') || abort "Ooops: can't get current date/time"
+    if ! [[ "$1" =~ [hmd:] ]]; then
+        abort "'$1': need a unit specification (d[ays], h[our], m[in], ':')"
+    elif ! [[ "$1" =~ $_n ]]; then
+        abort "'$1': need a number in interval specification"
+    elif [[ "$1" =~ ^$_s*(($_n)$_s*$_d)?$_s*(($_n)(($_s*$_h$_s*)|$_s|:))?(:?($_n)$_s*($_m)?)?$_s*$ ]]; then
+        # declare -p BASH_REMATCH
+        days="10#${BASH_REMATCH[2]:-0}"
+        hrs="10#${BASH_REMATCH[6]:-0}"
+        min="10#${BASH_REMATCH[13]:-0}"
+    else
+        abort "Can't interpret '$1' as a time interval"
+    fi
+    target=$(( ((days * 24 + hrs) * 60 + min) * 60))
+    : $((cur_sec += target + 30))
+    cur_date=$(date -d "1970-01-01 00:00:00 UTC + $cur_sec sec" '+%H:%M %Y-%m-%d')
+    [ "$opt_v" ] && printf "time interval '%s' -> %d days %d:%d, target date: %s\n" \
+        "$1" "$((days))" "$((hrs))" "$((min))" "$cur_date"
+}
+
+getTimestampSpec(){
+    # Syntax: getIntervalSpec "<datespec>"
+    # interpret $1 as time stamp (date)
+    # sets global "cur_date" to a time strimg suitable for feeding to the "at" command.
+    # sets global 'cur_sec' to reflect the new date (in secs since epoch)
+    local target
+    target=$(date -d "$1" "+%s") || abort "Invalid date/time specification: '$1'"
+    if [ "$target" -lt "$now" ]; then
+        : $((target += 24 * 3600))
+        if [ "$target"  -gt "$now" ]; then
+            [ "$opt_v" ] && echo "Time in the past - using tomorrow's time"
+        else
+            abort "date in the past: '$1'"
+        fi
+    fi
+    cur_sec="$target"
+    if [ "$1" = "now" ]; then
+        cur_date="now"
+    else
+        cur_date=$(date -d "1970-01-01 00:00:00 UTC + $target sec" '+%H:%M %Y-%m-%d')
+    fi
+}
+
+getJobs(){
+    # Syntax: getJobs [<outlet>]
+    # returns on stdout "jobno: date: command"
+    local srch err res
+    if [ "$1" ]; then
+        set -- $outlet
+        srch="$8"
+    else
+        srch=".*"
+    fi
+    atq -q "$at_queue" \
+    | while read jobno time; do
+         time="${time% $at_queue *}" # remove queue indicator and user name
+         res=$(
+             at -q S -c "$jobno" | sed -n '/^cd /,$'"{/^[^ ]*$my_name $srch /p}"
+             [ "${PIPESTATUS[0]}" -ne 0 ] && abort "Error reading job $jobno"
+         )
+         [ "$res" ] && printf "%s: %s - %s\n" "$jobno" "$time" "$res"
+      done
+    [ "${PIPESTATUS[0]}" -ne 0 ] && abort "Error reading at-queue"
+}
+
+listJobs(){
+    # Syntax: listJobs [<outlet>]
+    getJobs "$1" | sed 's/#.*$//'
+}
+
+num='([0-9]+)'
+fillPending_jobs(){
+    # Syntax: fillPending_jobs [<outlet>]
+    # fills the pending_jobs_* arrays
+    local joblist idx
+
+    joblist="$(getJobs "$1")"
+    idx="${#pending_jobs_job[@]}" # add if there's already somthing inside
+    while IFS= read line; do
+        [ "$line" ] || break
+        if [[ "$line" =~ ^$num:" "+([^-]+)" - ".*"$my_name "([^ ]+)" "*([01])" "*#" "*now=$num" "+at=$num ]]; then
+            #declare -p BASH_REMATCH
+            pending_jobs_job[idx]="${BASH_REMATCH[1]}"
+            pending_jobs_date[idx]="${BASH_REMATCH[2]}"
+            pending_jobs_device[idx]="${BASH_REMATCH[3]}"
+            pending_jobs_state[idx]="${BASH_REMATCH[4]}"
+            pending_jobs_now_sec[idx]="${BASH_REMATCH[5]}"
+            pending_jobs_at_sec[idx]="${BASH_REMATCH[6]}"
+            : $((idx++))
+            have_pending_jobs=$idx
+        else
+            printf "Unknown job spec: '%s'\n" "$line"
+        fi
+    done <<EOF
+$joblist
+EOF
+    #[ "$have_pending_jobs" ] && declare -p ${!pending_jobs_*}
+}
+
+killPending_jobs(){
+    # Syntax: killPendingJobs
+    # removes all jobs currently on pending_jobs_job[]
+    local n_jobs job_S
+    n_jobs="${#pending_jobs_job[@]}"
+    if [ "$n_jobs" -gt 0 ]; then
+        job_S="jobs"; [ "$n_jobs" -eq 1 ] && job_S="job"
+        if [ "$opt_t" ]; then
+            echo "Not removing $job_S jobs (because of -t option)."
+        else
+            [ "$opt_q" ] || printf "removing %d %s\n"  "$n_jobs" "$job_S"
+            atrm "${pending_jobs_job[@]}"
+        fi
+        unset ${!pending_jobs_*}
+    else
+        [ "$opt_q" ] || printf "no jobs in queue.\n"
+    fi
+}
+
+execAtCmds(){
+    local idx result cmd at_cmd date
+    for ((idx=0; idx < ${#at_registered_dates[@]}; idx++)); do
+        date="${at_registered_dates[idx]}"
+        cmd="${at_registered_cmds[idx]}"
+        if [ "$date" = "now" ]; then
+            # 'at now' sometimes enqueues commands instead of executing them now
+            # so we better run the command on our own:
+            ${cmd%#*}
+        else
+            at_cmd=(at -q "$at_queue" "${at_registered_dates[idx]}")
+            result=$(
+                echo "${at_registered_cmds[idx]}  # now=$now at=$cur_sec" \
+                    | LC_ALL=C "${at_cmd[@]}" 2>&1
+                declare -p PIPESTATUS
+                )
+            if ! [[ "$result" =~ "declare -a PIPESTATUS='([0]=\"0\" [1]=\"0\")" ]]; then
+                echo "$result"
+                abort "command '${at_cmd[*]}' failed."
+            fi
+        fi
+    done
+}
+
+registerAtCmd(){
+    # Syntax: execAt "<date>" "<date in s since epoch>" "<outlet line>" "0|1"
+    local date="$1" date_sec="$2" state="$4" cmd
+    set -- $3
+    cmd="$my_name $8 $state # now=$now at=$date_sec"
+    idx=${#at_registered_dates[@]}
+    at_registered_dates[idx]="$date"
+    at_registered_cmds[idx]="$cmd"
+    [ "$opt_q" ] || echo "scheduling: $date: ${cmd%#*}"
+}
+
+assembleAt(){
+    # Syntax: assembleAt "<DateSpec>" "0|1" "<outlet line>"
+    getTimestampSpec "$1"
+    registerAtCmd "$cur_date" "$cur_sec" "$3" "$2"
+}
+
+assembleAfter(){
+    # Syntax: assembleAfter "<TimeSpec>" "0|1" "<outlet line>"
+    getIntervalSpec "$1"
+    registerAtCmd "$cur_date" "$cur_sec" "$3" "$2"
+}
+
+runInterpreter(){
+    # Syntax: doInterpret "$@"
+    target_state="$(getState "$2")"
+    now=$(date '+%s') || abort "Oops: can't get current date/time"
+    fillPending_jobs "$outlet"
+    if [ "$have_pending_jobs" ] && [ -z "$opt_a" ]; then
+        (
+            summary="are $have_pending_jobs pending jobs"
+            [ "$have_pending_jobs" -eq 1 ] && summary="is 1 pending job"
+            set -- $outlet
+            if [ "$opt_t" ]; then
+                [ -z "$opt_a$opt_r" ] \
+                    && printf "Note: there $summary for '$8'.
+You'll need to specify either -a or -r when you remove the -t (test) option.\n"
+            else
+                abort "There $summary for '$8'.
+Either choose '-r' to replace them or '-a' to add new jobs."
+            fi
+        )
+    fi
+    shift 2
+    while [ "$#" -gt 0 ]; do
+        if [ -z "$cur_sec" ]; then
+            # no previous action.  Check if we have to switch now,
+            case "$1" in
+                for|until) assembleAt "now" "$target_state" "$outlet";;
+            esac
+        fi
+        case "$1" in
+            at) assembleAt "$2" "$target_state" "$outlet"; shift 2;;
+            after) assembleAfter "$2" "$target_state" "$outlet"; shift 2;;
+            until) assembleAt "$2" "$(( ! target_state))" "$outlet"; shift 2;;
+            for) assembleAfter "$2" "$(( ! target_state))" "$outlet"; shift 2;;
+            *) abort "Unknown element on command line: '$1'";;
+        esac
+    done
+
+     # If we've made it here, we now can execute our 'at' commands:
+     if [ "$opt_t" ]; then
+         [ "$opt_q" ] || echo "Scheduled jobs not activated (-t)"
+     else
+         execAtCmds
+     fi
+}
+
+################ misc
+
+version(){
+    echo "\
+$version
+(C) 2008 Heike C. Zimmerer
+This software is licensed under the GNU Public License (GPL), version 3."
+}
+
+
+
+makeWorldReadWritable(){
+    local bus_dev
+    for bus_dev in "${gemdev_bus_dev[@]}"; do
+        chmod a+rw "$dev_bus_usb/$bus_dev" || abort "Can't set permissions"
+    done
+    echo "$pname: Permissions done."
+}    
+
+
+execMode(){
+    # Syntax: execMode <mode(char)> "$@"
+    # Execute special modes
+    mode="$1"
+    shift
+    case "$mode" in
+        C) makeWorldReadWritable ;;
+        L) version; echo "$LICENSE";;
+        T) addTemplate 0;;
+        p) 
+            for jobno; do
+                if atrm "$jobno"; then
+                    echo "job $jobno purged"
+                else
+                    err=1
+                fi
+            done
+            [ "$err" ] && abort "Not all jobs could be removed."
+            ;;
+        l|d)
+            [ "$#" -eq 0 ] && listOutlets
+            for dev; do
+                outlet=$(findOutletByName "$dev")
+                listOneOutlet "$outlet"
+            done
+            ;;
+        k)
+            [ "$#" -lt 1 ] && abort "'-k': Not enough arguments"
+            if [ "$1" = "ALL" ]; then
+                fillPending_jobs
+            else
+                for dev; do
+                    outlet=$(findOutletByName "$dev")
+                    fillPending_jobs "$outlet"
+                done
+            fi
+            killPending_jobs
+            ;;
+        j)
+            [ "$#" -eq 0 ] && listJobs
+            for dev; do
+                outlet=$(findOutletByName "$dev")
+                listJobs "$outlet"
+            done
+            ;;
+    esac
+}
+
+doGetopts(){
+    # Syntax: doGetopts "$@"
+    # (note: doesn't shift options out)
+    doGetoptsLong(){
+        case "$OPTARG" in
+            l*) doGetopts 'L';;
+            c*) doGetopts "C";;
+            t*) doGetopts "T";;
+            V*) echo "$time_stamp"; version; exit;;
+            v*) version; exit;;
+            h*) usage;;
+            *) echo "unknown option '--$OPTARG'"; exit 127;;
+        esac
+    }
+
+    while getopts vx-:lhrtnqjkidarcygfLCTWp argv; do
+        case "$argv" in
+            p|j|k|l|d|i|C|T|L) [ "$mode" ] && abort "'-$argv' and '-$mode' are mutually exclusive options"
+                mode="$argv";;
+        esac
+        case "$argv" in
+            d|p|f|q|g|t|n|l|j|k|a|r|c|i|y|C|T|W|L) eval opt_$argv=1;;
+            v) vEcho="echo : "; vCmd=vCmd; opt_v=1;;
+            x) set -x;;
+            -) doGetoptsLong "$argv" "$OPTARG";;
+            *) usage;;
+        esac
+    done
+}
+#### main
+
+pname=${0##*/}
+[ -t 1 ] && have_term=1
+export HOME=${HOME:-/$default_HOME}
+
+# get command line options
+vEcho=:
+cmdline=("$0" "$@")
+doGetopts "$@"
+shift $((OPTIND-1))
+cmdargs=("$@")
+
+shopt -s nocasematch            # from now on we're case insensitive
+
+# Templates need to be written before initialization
+if [ "$mode" = 'T' ]; then
+    addTemplate
+    exit
+fi
+
+####  Initialize: get configuration (assemble it if required)
+
+# Make sure core variables are clean at this point:
+unset outlets l_section l_outlet ${!gemdev_*} ${!color_*} colors_TERM have_colors
+
+# Assemble core variables from scrath if required.  If not, read them
+# in from saved state:
+initialize
+[ "$outlets" ] || . "$compiled_conf"
+
+# clean out old colors it $TERM has changed or none are required:
+if [ "$colors_TERM" != "$TERM" ] \
+   || [ "$opt_c" ] \
+   || [ -z "$have_term" ]; then
+    unset ${!color_*} have_colors
+fi
+
+### Now go do some useful work:
+if [ "$mode" ]; then
+    # 'mode' commands differ in syntax, so they are recognized and
+    # treated separately:
+    execMode "$mode" "$@"
+else
+    # standard syntax: [outlet [state [commands ...]]]
+    [ "$#" -ge 1 ] && outlet=$(findOutletByName "$1")
+    if [ "$opt_r" ]; then
+        fillPending_jobs "$outlet"
+        killPending_jobs
+        unset ${!pending_jobs_*} have_pending_jobs
+    fi
+
+    case "$#" in
+        0) listOutlets;;
+        1) listOneOutlet "$outlet";;
+        2) setOutlet "$outlet" "$2";;
+        *) runInterpreter "$@";;
+    esac
+fi
+exit 0
