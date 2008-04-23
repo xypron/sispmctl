@@ -2,7 +2,7 @@
 
 # gemplug
 #
-time_stamp="Time-stamp: <2008-04-22 09:59:50 hcz>"
+time_stamp="Time-stamp: <2008-04-23 16:26:20 hcz>"
 version="gemplug version 42.03"
 
 #
@@ -293,6 +293,7 @@ readRcFile(){
     #  all_names: space-separated list of all encountered outlet names and aliases
     #  all_sections:   -"-                                section names
     local idx idx_new line fatal rc_file
+    all_names=" ALL "           # illegal name
     perr(){
         # Syntax: perr [-skip] [-fatal] text
         while [[ "$1" == -* ]]; do
@@ -374,6 +375,7 @@ readRcFile(){
                 pos="${BASH_REMATCH[1]}"
                 idx_new=$(findIdx gemdev_usb_pos "$pos")
                 [ "$idx_new" ] || perr -skip "There's no Gembird at USB position '$pos'"
+                idx="$idx_new"
                 [[ " $all_pos " == *" $pos "* ]] && perr -fatal "duplicate position: '$pos'"
                 all_pos="$all_pos $pos"
                 $vEcho "parse: pos: '$line' -> $pos -> $idx"
@@ -383,6 +385,7 @@ readRcFile(){
                 serial="${BASH_REMATCH[1]}"
                 idx_new=$(findIdx gemdev_serial "$serial")
                 [ "$idx_new" ] || perr -skip "Unknown serial '$serial'"
+                idx="$idx_new"
                 [[ " $all_serials " == *" $serial "* ]] && perr -fatal "duplicate serial #: '$serial'"
                 all_serials="$all_serials $serial"
                 $vEcho "parse: serial: '$line' -> $serial -> $idx"
