@@ -2,8 +2,8 @@
 
 # gemplug
 #
-time_stamp="Time-stamp: <2008-04-23 16:26:20 hcz>"
-version="gemplug version 42.03"
+time_stamp="Time-stamp: <2008-04-25 11:47:28 hcz>"
+version="gemplug version 42.04"
 
 #
 # Control multiple Gembird power outlets via sispmctl
@@ -25,18 +25,19 @@ LICENSE="\
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>."
 
-# TODO: x The same pos and/or serial can be placed into different 
-#         sections (really a problem?).
-#       Don't allow "ALL" for device or outlet names.
-#       Never put intermediate files into /etc (?? buys nothing?).
-
 # History:
-#   2008-04-??   v42.0?  first public release
+#   2008-04-23   v42.03 hcz first public release
 #      listOneOutlet: section was listed twice
 #      rc file: tried to write inte /etc when rc file was located there
 #      $_h/$_x: hour in interval spec was messed up
 #      more permission cleanup when run with config in /etc/gemplug
 #      don't allow the same pos|serial to be referenced more than onec
+#   2008-04-24   v42.94 hcz
+#      "path =" statement added
+#      Changes to rcfile updates
+
+# TODO: parser: general solution for 'item = ['"]item["']
+#       parser: allow empty outlets (will not be shown)
 
 usage(){
     echo "\
@@ -96,13 +97,20 @@ $pname laser 0 until 'Mon 7:00'         # off now until next Monday 7:00"
 dev_bus_usb="/dev/bus/usb"      # start of USB device node tree
 at_queue='d'                    # at Queue (higher letters mean less priority)
 
+# user-editable config
+my_rc_file="gemplugrc"
+
+# local config files
+last_sispmctl_S="last_sispmctl_S"
+my_compiled_rc_file="compiled_rc"
+lockdir="/var/lock/gemplug"
+pidfile="$lockdir/pid"
+
+# more locals
 sispmctl="/usr/local/bin/sispmctl"
 my_name="gemplug"              # name for this program (to be used in at jobs)
-my_rc_file="gemplugrc"
-my_compiled_rc_file="compiled_rc"
 
-sudo=                       # prefix sispmctl commands by that
-last_sispmctl_S="last_sispmctl_S"
+sudo=              # prefix sispmctl commands by that (default: empty)
 
 rcdirs=("$HOME/.$my_name" "/etc/$my_name")
 if [ -d "$HOME/.config" ]; then
@@ -124,14 +132,6 @@ _n='[0-9]+'
 _x='[0-9a-f]+'
 _s='[ 	]'
 
-abort(){
-    needColors
-    echo >&2 "$color_bold_red$pname: $*$color_reset"
-    [ "${#at_registered_dates[@]}" -gt 0 ] && echo >&2 "No scheduled action activated"
-    kill $$                     # abort from subshells too (kill main)
-    sleep 1
-    exit 126                    # (usually) not reached
-}
 
 vCmd(){
     echo >&2 ": $*"
@@ -155,6 +155,59 @@ getColors(){
 
 needColors(){
     [ -z "$TERM$have_term" ] || [ "$have_colors$opt_c" ] || getColors
+}
+
+
+abort(){
+    rmLock
+    needColors
+    echo >&2 "$color_bold_red$pname: $*$color_reset"
+    [ "${#at_registered_dates[@]}" -gt 0 ] && echo >&2 "No scheduled action activated"
+    kill $$                     # abort from subshells too (kill main)
+    sleep 1
+    exit 126                    # (usually) not reached
+}
+
+rmLock(){
+    # Syntax: rmLock
+    # removes lock only if it's ours
+    if [ "$(cat 2>/dev/null "$pidfile")" = "$$" ]; then
+        #needColors
+        #echo "${color_bold_grey}${color_magenta_bg}Removing lock$color_reset"
+        rm -rf "$lockdir"
+    fi
+}
+
+needLock(){
+    # Syntax: needLock <number of seconds to wait>
+    # get a lock before executing sispmctl if we don't own it already
+    #  Note: sets global 'have_lock' - so make sure this isn't 
+    #  called from within a subshell
+    local n_tries pid name fail n_retries=${1:-6}
+   # set -x
+    if [ -z "$have_lock" ]; then
+        if [ ! -w "${lockdir%/*}" ]; then
+            needColors
+            printf >&2 "${color_red}Can't lock ('%s/' not writable)${color_reset}\n" "${lockdir%/*}"
+            return 1
+        fi
+        trap "rmLock" EXIT      # safe because it removes the lock only if it is ours
+        while ! mkdir 2>/dev/null "$lockdir"; do
+            pid=$(cat 2>/dev/null "$pidfile") || break          # dead lock
+            name=$(cat 2>/dev/null /proc/$pid/cmdline) || break # dito
+            [ "${name##*/}" != "$pname" ] && break              # dito
+            if [ $((++n_tries)) -gt "$n_retries" ]; then
+                needColors
+                printf >&2 "$color_red%s$color_reset\n" "Giving up on lock '$lockdir'"
+                return 1           # means: try it anyway
+            fi
+            sleep .1
+        done
+        mkdir -p "$lockdir"     # (on dying lock)
+        echo "$$" > "$pidfile"
+        have_lock=1
+    fi
+    return 0
 }
 
 get_usb_pos(){
@@ -282,7 +335,7 @@ readRcFile(){
     #    |      |    |              | | | |           + ---#8 [#9 ..] Outlet name and aliases
     #    |      |    |              | | | +-#7  The device's name (the [ section ])
     #    |      |    |              | | +---#6: The individual outlets' number within this device
-    #    |      |    |              | +-----#5: The total number of outlets on this device
+    #    |      |    |              | +-----#5: The total number of outlets
     #    |      |    |              +-------#4: The Gembird's number for sispmctl command
     #    |      |    +----------------------#3: The Gembird's serial number
     #    |      +----------- #2: The USB Bus/device as reorted by get-usb-pos and sispmctl -S
@@ -292,7 +345,7 @@ readRcFile(){
     #  outlets[]
     #  all_names: space-separated list of all encountered outlet names and aliases
     #  all_sections:   -"-                                section names
-    local idx idx_new line fatal rc_file
+    local idx idx_new line fatal rc_file cur_gem
     all_names=" ALL "           # illegal name
     perr(){
         # Syntax: perr [-skip] [-fatal] text
@@ -323,21 +376,56 @@ readRcFile(){
     findRcFile "$my_rc_file" "${rcdirs[@]}" \
      || abort "Internal: Cannot open $my_rc_file" # should habe been recognized earlier
     errtext="$pname: in file '$rc_file':"
-    while read line; do
+    while IFS= read -r line; do
         : $((++lineno))
         orig_line="$line"
             # strip comments off
-        if [[ " $line" =~ ^(.*)$_c.*$ ]]; then
+        while [[ " $line" =~ ^(.*)$_c.*$ ]]; do
             $vEcho "stripping comment: '$line' -> '${BASH_REMATCH[1]}'"
             line="${BASH_REMATCH[1]}"
-        fi
+        done
 
             # strip leading & trailing whitespace, skip (now) empty lines
         [[ "$line" =~ ^$_s*($_S+($_s+$_S+)*)$_s*$ ]] || continue # empty
         line="${BASH_REMATCH[1]}"
-
+        
         if [ -z "$skip_sect" ]; then
-            if [[ "$line" =~ ([0-9])$_s*=$_s*(($_S+)($_s+$_S+)*)$_s*$ ]]; then
+            if [[ "$line" =~ ^"pos"$_s*=$_s*($_S+($_s+$_S+)*)$_s*$ ]]; then
+                # found "pos = 4-2.2"
+                [ "$pos" ] && perr -fatal "duplicate pos statement"
+                pos="${BASH_REMATCH[1]}"
+                idx_new=$(findIdx gemdev_usb_pos "$pos")
+                [ "$idx_new" ] || perr -skip "There's no Gembird at USB position '$pos'"
+                [[ " $all_pos " == *" $pos "* ]] && perr -fatal "duplicate position: '$pos'"
+                all_pos="$all_pos $pos"
+                $vEcho "parse: pos: '$line' -> $pos -> $idx"
+            elif [[ "$line" =~ ^"serial"$_s*=$_s*($_x:$_x:$_x:$_x:$_x)$_s* ]]; then
+                # found "serial = 01:ffffff9a:ffffffa9:ffffffdb:41
+                [ "$serial" ] && perr -fatal "duplicate serial statement in section [ $section ]"
+                serial="${BASH_REMATCH[1]}"
+                idx_new=$(findIdx gemdev_serial "$serial")
+                [ "$idx_new" ] || perr -skip "Unknown serial '$serial'"
+                [[ " $all_serials " == *" $serial "* ]] && perr -fatal "duplicate serial #: '$serial'"
+                all_serials="$all_serials $serial"
+                $vEcho "parse: serial: '$line' -> $serial -> $idx"
+            elif [[ "$line" =~ ^path$_s*=$_s*(($_S+)($_s+$_S+)*)$_s*$ ]]; then
+                # found 'path = /x/y/z'
+                if [ -z "$cur_outlet" ]; then
+                    perr -fatal -skip "need preceding outlet definition"
+                else
+                    path="${BASH_REMATCH[1]}"
+                    if [[ "$path" =~ ^'"'[^\"]+'"'$ ]]; then
+                        # strip double quotes
+                        path="${BASH_REMATCH[1]}"
+                    elif [[ "$path" =~ ^"'"[^\']+"'"$ ]]; then
+                        # strip single quotes
+                        path="${BASH_REMATCH[1]}"
+                    fi
+                    cur_gem="${gemdev_gembird_no[idx]}"
+                    eval 'gemdev_'${cur_gem}'_path['$outlet_no"]='$path'"
+                    $vEcho "parse: path: '$line' -> $gemdev_${section}_path[$outlet_no]=|$path|"
+                fi
+            elif [[ "$line" =~ ^([0-9])$_s*=$_s*(($_S+)($_s+$_S+)*)$_s*$ ]]; then
                 # found "3 = Laser OKI"
                 len="${#BASH_REMATCH[3]}" # outlet name len
                 outlet_no=${BASH_REMATCH[1]}
@@ -365,32 +453,14 @@ readRcFile(){
                         [ "$len" -gt "$l_outlet" ] && l_outlet=$len # max outlet name len
                         cur_outlet="${gemdev_usb_pos[idx]} ${gemdev_bus_dev[idx]} ${gemdev_gembird_no[idx]} ${gemdev_serial[idx]} ${gemdev_max_outlet[idx]} $outlet_no $section $names"
                         outlets[${#outlets[@]}]="$cur_outlet"
+                        cur_gem="${gemdev_gembird_no[idx]}"
+                        eval 'gemdev_'${cur_gem}'_path['$outlet_no"]="
                         all_names="$all_names $names "
                         $vEcho "parse: outlet: '$line' -> $cur_outlet"
                     fi
                 fi
-            elif [[ "$line" =~ "pos"$_s*=$_s*($_S+($_s+$_S+)*)$_s*$ ]]; then
-                # found "pos = 4-2.2"
-                [ "$pos" ] && perr -fatal "duplicate pos statement"
-                pos="${BASH_REMATCH[1]}"
-                idx_new=$(findIdx gemdev_usb_pos "$pos")
-                [ "$idx_new" ] || perr -skip "There's no Gembird at USB position '$pos'"
-                idx="$idx_new"
-                [[ " $all_pos " == *" $pos "* ]] && perr -fatal "duplicate position: '$pos'"
-                all_pos="$all_pos $pos"
-                $vEcho "parse: pos: '$line' -> $pos -> $idx"
-            elif [[ "$line" =~ "serial"$_s*=$_s*($_x:$_x:$_x:$_x:$_x)$_s* ]]; then
-                # found "serial = 01:ffffff9a:ffffffa9:ffffffdb:41
-                [ "$serial" ] && perr -fatal "duplicate serial statement in section [ $section ]"
-                serial="${BASH_REMATCH[1]}"
-                idx_new=$(findIdx gemdev_serial "$serial")
-                [ "$idx_new" ] || perr -skip "Unknown serial '$serial'"
-                idx="$idx_new"
-                [[ " $all_serials " == *" $serial "* ]] && perr -fatal "duplicate serial #: '$serial'"
-                all_serials="$all_serials $serial"
-                $vEcho "parse: serial: '$line' -> $serial -> $idx"
             elif [ -z "$skip_sect" ]; then
-                gotcha=no
+                barf=yes
             fi
             if [ "$idx_new" ]; then
                 if [ "$idx" ] && [ "$idx" -ne "$idx_new" ]; then
@@ -410,10 +480,10 @@ readRcFile(){
             [ "$len" -gt "$l_section" ] && l_section=$len
             have_sect=1
             all_sections="$all_sections $section "
-            unset skip_sect idx pos serial gotcha
+            unset skip_sect idx pos serial barf cur_outlet
             $vEcho "parse: section: '$line' -> '$section'"
         fi
-        if [ "$gotcha" ]; then
+        if [ "$barf" ]; then
             perr -fatal "Not a valid line"
             abort "Errors in configuration file"
         fi            
@@ -522,39 +592,45 @@ addOneTemplate(){
 addTemplate(){
     # Syntax: addTemplate <index into gemdev_*>
     # Adds a template.  Creates rc file if needed.
-    local touch_result idx written
-    if ! findRcFile "$my_rc_file" "${rcdirs[@]}" \
-       || ! [ -w "$rc_file" ]; then  # set rc_file        
-        for rc_dir in "${rcdirs[@]}"; do
-            rc_file="$rc_dir/$my_rc_file"
-            touch_result="$touch_result$_nl$(touch 2>&1 "$rc_file")" && break
-        done
-        if [ $? != 0 ]; then
-            echo "$touch_result"
-            abort "Cannot create configuration file"
-        fi
-        [ "$opt_W" ] && echo "$template_hdr" > "$rc_file" || abort "Cannot write template"
-    fi
+    local touch_result idx written need_update
     getGemdevArray
     echo >&2 "Checking current configuration ..."
     readRcFile
-    [ "$opt_W" ] && exec >> "$rc_file"
+    for idx in ${!gemdev_usb_pos[@]}; do
+        if [ "${gemdev_used[idx]}" != 1 ]; then
+            need_update=1
+            break
+        fi
+    done
+    if [ -z "$need_update" ]; then
+        echo >&2 "Nothing to write (no unconfigured Gembird found)."
+        return
+    fi
+    if [ "$opt_W" ]; then
+        if ! findRcFile "$my_rc_file" "${rcdirs[@]}"; then
+            for rc_dir in "${rcdirs[@]}"; do
+                rc_file="$rc_dir/$my_rc_file"
+                touch_result="$touch_result$_nl$(touch 2>&1 "$rc_file")" && break
+            done
+            if [ $? != 0 ]; then
+                echo "$touch_result"
+                abort "Cannot create configuration file"
+            fi
+            echo "$template_hdr" > "$rc_file" || abort "Cannot write template"
+        fi
+        exec >> "$rc_file" || abort "Can't write template file '$rc_file'"
+    fi
     for idx in ${!gemdev_usb_pos[@]}; do
         if [ "${gemdev_used[idx]}" != 1 ]; then
             [ "$opt_W" ] && printf >&2 "Writing template for unconfigured Gembird at %s\n"\
                              "${gemdev_bus_dev[idx]}"
             addOneTemplate "$idx"
-            written=1
         fi
     done
-    if  [ "$written" ]; then
-        if [ "$opt_W" ]; then
-            echo >&2 "
-'$rc_file' written.
-You may now want to edit it and give the items meaningful names."
-        fi
-    else
-        echo >&2 "Nothing to write (no new Gembird found)."
+    if [ "$opt_W" ]; then
+        echo >&2 "
+Configuration  written to '$rc_file'.
+You may now want to edit it and give the items there meaningful names."
     fi
         
 }
@@ -656,22 +732,42 @@ getCurDevStates(){
     # Syntax: getCurDevStates [-f] <sis_dev>
     # opt: -f: force read (ignore cached data)
     # Result in cur_dev_states[] = (sisdev, state0, state 1, ..)
+    local path idx i path_array
+
     if [ "$1" = "-f" ]; then
         shift
-        unset states_cache[$1] cur_dev_states
+        unset states_cache[sisdev] cur_dev_states
     else
         [ "$1" -eq "${cur_dev_states[0]:--1}" ] && return
     fi
-    if [ -z "${states_cache[$1]}" ]; then
-        states_cache[$1]="$1 $($vCmd $sudo $sispmctl -q -d $1 -g all)"
+    sisdev="$1"
+    if [ -z "${states_cache[sisdev]}" ]; then
+        states_cache[sisdev]="$1 $($vCmd $sudo "$sispmctl" -n -q -d $sisdev -g all)"
+        set -- ${states_cache[sisdev]}
+        shift
+        # Notify for external program(s)
+        eval 'path_array=( "${'gemdev_${sisdev}_path'[@]}" )'
+        for ((i=0; i < "${#path_array[@]}"; i++)); do
+            path="${path_array[i]}"
+            if [ "$path" ]; then
+                mkdir -p "${path%/*}"
+                if [ "$1" != "$(< "$path")" ]; then
+                    echo "$1" > "$path"
+                    touch "$path.chgd"
+                    echo $(($(<"$path.chgd") + 1)) > "$path.chgd"
+                fi
+            fi
+            shift
+        done
     fi
-    cur_dev_states=(${states_cache[$1]})
+    cur_dev_states=(${states_cache[sisdev]})
 }
 
 findOutletByName(){
     # Sytnax: findPlugByName <Start_of_name>
     # Returns: line from outlets[] in stdout
     local res srch="$1" found
+    shopt -s nocasematch            # from now on we're case insensitive
     for outlet in "${outlets[@]}"; do
         set -- $outlet
         shift 7                 # skip to 1st name
@@ -710,8 +806,8 @@ setOutlet(){
     local state=$2
     set -- $1
     case "$(getState "$state")" in
-        0) st="off"; opt="-f";;
-        1) st="on"; opt="-o";;
+        0) st="0"; opt="-f";;
+        1) st="1"; opt="-o";;
     esac
     if [ "$opt_t" ]; then
         printf "Outlet '%s'< not set to '%s' because of -t option\n" "$8" "$st"
@@ -761,7 +857,7 @@ dumpOutlet(){
                 printf "  Owner:           %s (no write permission)\n" "$owner"
             fi
         fi
-    )
+    )    
         
 }
 
@@ -771,23 +867,23 @@ listOneOutlet(){
     needColors
     set -- $outlet
     getCurDevStates "$3"
-    state="(${cur_dev_states[$6]})"
+    state="${cur_dev_states[$6]}"
     if [ "$opt_g" ]; then
-        [ "$state" = "(on)" ]
+        [ "$state" -ne 1 ]
         exit
     fi
     if [ "$opt_d" ]; then
         dumpOutlet "$outlet"
     else
-        if [ "$state" = "(on)" ]; then
-            [ "$opt_n" ] && state=1
-            printf "%s" "$color_green"
+        if [ "$state" = "1" ]; then
+            [ "$opt_n" ] || state="(On)"
+            printf "%s" "$color_green_bg$color_bold_grey"
         else
-            [ "$opt_n" ] && state=0
-            printf "%s" "$color_red"
+            [ "$opt_n" ] || state="(Off)"
+            printf "%s" "$color_red_bg$color_bold_grey"
         fi
         if [ "$opt_q" ]; then
-            echo "$state"
+            echo "$state$color_reset"
         else
             printf "%-5s%s %-*s" "$state" "$color_reset" "$l_section" "$7"
             shift 7
@@ -1096,7 +1192,7 @@ doGetopts(){
     # (note: doesn't shift options out)
     doGetoptsLong(){
         case "$OPTARG" in
-            l*) doGetopts 'L';;
+            li*) doGetopts 'L';;
             c*) doGetopts "C";;
             t*) doGetopts "T";;
             V*) echo "$time_stamp"; version; exit;;
@@ -1133,7 +1229,6 @@ doGetopts "$@"
 shift $((OPTIND-1))
 cmdargs=("$@")
 
-shopt -s nocasematch            # from now on we're case insensitive
 
 # Templates need to be written before initialization
 if [ "$mode" = 'T' ]; then
@@ -1145,6 +1240,9 @@ fi
 
 # Make sure core variables are clean at this point:
 unset outlets l_section l_outlet ${!gemdev_*} ${!color_*} colors_TERM have_colors
+
+# get an exclusive lock for sispmctrl and our files
+needLock
 
 # Assemble core variables from scrath if required.  If not, read them
 # in from saved state:

@@ -1,6 +1,6 @@
 .\"     Title: gemplug
 .\"    Author: Heike C. Zimmerer <hcz@hczim.de>
-.\"      Date: Time-stamp: <2008-04-21 16:57:17 hcz>
+.\"      Date: Time-stamp: <2008-04-24 20:50:32 hcz>
 .\"    Manual: gemplug
 .\"    Source: gemplug
 .\"
@@ -47,6 +47,9 @@ nearest minute.
 .PP
 For a quick start, scroll down to the section named "QUICK START".
 .SH "OPTIONS"
+Outlet names may always be abbreviated to the right (need to match
+only the beginning of a name) as long as the resulting substring is
+still unique.
 .SS "Job related"
 .PP
 gemplug's jobs are passed to the 'at' command for timed execution.
@@ -442,13 +445,14 @@ Starting with sispmctl 2.7, the serial number of Gembird devices is
 reported back.  If you identify your Gembirds by serial number, the
 same physical device will keep its name wherever it is plugged on to
 the USB.  You cannot exchange Gembirds, but you can change your
-cabling as you like.
+cabling as you like.  NOTE: As of the time of this writing, this
+interface doesn't always yield stable serial numbers and
+is therefore not yet recommended.
 .SH "CONFIGURATION FILE SYNTAX"
 The configuration file's syntax will be written as an initial comment
 to the configuration file when a template is created from scratch
-(i.e., in the absence of a configuration file and \fBgemplug
-\-TW\fR) together with a syntactically correct template file ready to
-edit.
+(i.e., in the absence of a configuration file and \fBgemplug \-TW\fR)
+together with a syntactically correct template file ready to edit.
 .PP
 The syntax rules are repeated here for reference.
 .PP
