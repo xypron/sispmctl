@@ -1,6 +1,6 @@
 .\"     Title: gemplug
 .\"    Author: Heike C. Zimmerer <hcz@hczim.de>
-.\"      Date: Time-stamp: <2008-04-24 20:50:32 hcz>
+.\"      Date: Time-stamp: <2008-04-28 21:13:37 hcz>
 .\"    Manual: gemplug
 .\"    Source: gemplug
 .\"
@@ -456,6 +456,12 @@ together with a syntactically correct template file ready to edit.
 .PP
 The syntax rules are repeated here for reference.
 .PP
+.SS Continuation lines
+A backslash immediately before end of line causes the next line to be
+appended (made part of the current line).  The sequence \fB\\n\\\fR
+causes a newline to be inserted before the next line is appended.
+This is only really useful with pre-on, pre-off, post-on and post-off
+lines.
 .SS "Comments"
 \'#' and \':' at the start of a word (i.e. after white space or a
 newline) start a comment.  All text up to the end of the line will be
@@ -503,9 +509,18 @@ Names the Gembird's serial number as reported by \fBgemplug -d <one-of-its-outle
 .\"
 Number, '=', Name Aliases ...  names the individual plug outlets.  It
 can only be used if at least one of \fBpos\fR or \fBserial\fR are
-given before and in the same section.  If both are given, they are required
-to match the same device.  Outlet numbers (the numbers in the first
-column) count from number 1 upwards per device.
+given before and in the same section.  If both are given, they are
+required to match the same device.  Outlet numbers (the numbers in the
+first column) count from number 1 upwards per device.  
+.TP 4
+\fBpre-on = <your_commands>\fR, also \fBpost-on\fR, \fBpre-off\fR, \fBpost-off\fR
+.\"
+The part after the equals sign is fed to \fB$SHELL -c\fR (or, if
+empty, \fB/bin/sh -c\fR) before resp. after switching on resp. off.
+This allows you to build timed sequences for powering up or shutdown.
+If you include gemplug commands there, beware of recursive loops
+before they eat up all your resources.  Also always include the -L (no
+locking) option if you place a gemplug command there.
 .SH "FILES"
 .PP
 .TP 4
@@ -606,6 +621,12 @@ will activate the external Backup for exactly 24 hours until the same
 time of day tomorrow.
 .PP
 See the \fBUSAGE\fR chapter for a few more examples.
+.SH BUGS
+There are, yes.  Helpful hints are welcome at hcz@hczim.de.  Include
+the magic word \fBgemplug\fR somewhere in your subject line.
+.PP
+sispmctl's output seems not always stable.  Therefore, all calls are
+re-checked.
 .SH "THANKS TO"
 \fBMondrian Nuessle\fR <nuessle@uni-mannheim.de> for writing \fBsispmctl\fR
 and maintaining it.  \fBsispmctl\fR is the basic hardware interface gemplug
