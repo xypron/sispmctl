@@ -2,7 +2,7 @@
 
 # gemplug
 #
-time_stamp="Time-stamp: <2008-04-28 21:13:37 hcz>"
+time_stamp="Time-stamp: <2008-04-29 14:47:20 hcz>"
 version="gemplug version 42.04"
 
 #
@@ -38,8 +38,7 @@ LICENSE="\
 #   2008-04-28   v42.05 hcz
 #      -m, -L, pre-off, post-off, pre-on, post-on
 
-# TODO: parser: general solution for 'item = ['"]item["']
-#       parser: allow empty outlets (will not be shown)
+# TODO:        parser: allow empty outlets (will not be shown)
 
 usage(){
     echo "\
@@ -71,6 +70,7 @@ opts:
   output control:
    -l [<outlet-name> [...]]  list multiple outlets
    -d [<outlet-name> [...]]  dump configuration data
+   -v[v[v]]                  verbose reporting
    -c   don't use colors in output
    -n   report states numerical (0, 1 instead of off, on)
    -q   quiet operation: just results and errors
@@ -78,7 +78,6 @@ opts:
   misc:
    -m <outlet-name> [<outlet-name>...] 0|1|on|off    set multiple outlets
    -f   force reconfiguration (redisplay non-fatal errors)
-   -v   verbose reporting
    -C   set world R/W permissions on all devices (requires root privileges)
    -T   write templates for unconfigured devices to stdout
    -TW  append templates for unconfigured devices to configuration file
@@ -449,7 +448,7 @@ readRcFile(){
             orig_line="$line"
             # strip comments off
             while [[ " $line" =~ ^(.*)$_c.*$ ]]; do
-                $vEcho "stripping comment: '$line' -> '${BASH_REMATCH[1]}'"
+                $v2Echo "stripping comment: '$line' -> '${BASH_REMATCH[1]}'"
                 line="${BASH_REMATCH[1]}"
             done
 
@@ -469,7 +468,7 @@ readRcFile(){
                             [ "$idx_new" ] || perr -skip "There's no Gembird at USB position '$arg'"
                             assertUnique "$arg" all_pos || perr -fatal "Duplicate position"
                             getIdx "$idx_new"
-                            $vEcho "parse: pos: '$line' -> $pos -> $idx"
+                            $v2Echo "parse: pos: '$line' -> $pos -> $idx"
                             ;;
                         serial)
                       # found "serial = 01:ffffff9a:ffffffa9:ffffffdb:41
@@ -479,14 +478,14 @@ readRcFile(){
                             [ "$idx_new" ] || perr -skip "Unknown serial '$serial'"
                             assertUnique "$arg" all_serials || perr -fatal "Duplicate serial number"
                             getIdx "$idx_new"
-                            $vEcho "parse: serial: '$line' -> $serial -> $idx"
+                            $v2Echo "parse: serial: '$line' -> $serial -> $idx"
                             ;;
                         path|pre-on|pre-off|post-on|post-off)
                             chkIdx
                             cur_gem="${gemdev_gembird_no[idx]}"
                             var="gemdev_${cur_gem}_${config_item//-/_}"
                             eval $var[outlet_no]='"$arg"'
-                            $vEcho "parse: $config_item: '$line' -> $var[$outlet_no]='$arg'"
+                            $v2Echo "parse: $config_item: '$line' -> $var[$outlet_no]='$arg'"
                             ;;
                         *)
                             perr -fatal "Unknown statement '$config_item'"
@@ -511,7 +510,7 @@ readRcFile(){
                         outlets[${#outlets[@]}]="$cur_outlet"
                         cur_gem="${gemdev_gembird_no[idx]}"
                         #eval 'gemdev_'${cur_gem}'_path['$outlet_no"]="
-                        $vEcho "parse: outlet: '$line' -> $cur_outlet"
+                        $v2Echo "parse: outlet: '$line' -> $cur_outlet"
                     fi
                 elif [ -z "$skip_sect" ]; then
                     barf=yes
@@ -526,7 +525,7 @@ readRcFile(){
                 have_sect=1
                 assertUnique "$section" all_sections || perr -fatal "Duplicate section"
                 unset skip_sect idx pos serial barf cur_outlet
-                $vEcho "parse: section: '$line' -> '$section'"
+                $v2Echo "parse: section: '$line' -> '$section'"
             fi
             if [ "$barf" ]; then
                 perr -fatal "Not a valid line"
@@ -757,7 +756,7 @@ initialize(){
     if [ "$need_update$opt_f" ] \
         || [ "$rc_file" -nt "$compiled_conf" ]; then
 
-        $vEcho "Parsing '$rc_file'"
+        $v2Echo "Parsing '$rc_file'"
         readRcFile
 
         if [ -e "$compiled_rc" ]; then
@@ -896,17 +895,29 @@ setOutlet(){
     execPrePost post
 }
 
+getOutlet(){
+    # Syntax: getOutlet <outlet-line>
+    # returns state in $state
+    local idx cur=($1)
+    getCurDevStates "${cur[i_gemno]}"
+    state="${cur_dev_states[${cur[i_outlet_no]}]}"
+}
+
 dumpOutlet(){
     # Syntax: dumpOutlet <outlet-line>
     
     local idx cur=($1) line
+    getOutlet "$1"
+    [ "$state" -eq 0 ] && state="0 (Off)" || state="1 (on)"
     echo
     printf "Outlet name:       %s\n" "${cur[i_outlet_name]}"
+
     printf "Alias(es):        "
     for ((idx=i_aliases; idx < ${#cur[@]}; idx++)); do
         printf " %s" "${cur[idx]}"
     done
     echo
+    
     printf "USB position:      %s\n" "${cur[i_usbpos]}"
     printf "Bus/Device:        %s\n" "${cur[i_busdev]}"
     printf "Gembird#:          %s\n" "${cur[i_gemno]}"
@@ -934,37 +945,44 @@ dumpOutlet(){
             fi
         fi
     )    
+    printf "current state:     %s\n" "$state"
         
 }
+
 
 listOneOutlet(){
     # Syntax: listOneOutlet "<outlet line from outlets[]>"
     local r state
-    needColors
-    set -- $outlet
-    getCurDevStates "$3"
-    state="${cur_dev_states[$6]}"
     if [ "$opt_g" ]; then
+        getOutlet "$1"
         [ "$state" -ne 1 ]
         exit
-    fi
-    if [ "$opt_d" ]; then
+    elif [ "$opt_d" ]; then
         dumpOutlet "$outlet"
     else
-        if [ "$state" = "1" ]; then
-            [ "$opt_n" ] || state="(On)"
-            printf "%s" "$color_green_bg$color_bold_grey"
-        else
-            [ "$opt_n" ] || state="(Off)"
-            printf "%s" "$color_red_bg$color_bold_grey"
+        if [ -z "$opt_qq" ]; then
+            # State
+            getOutlet "$1"
+            needColors
+            if [ "$state" = "1" ]; then
+                [ "$opt_n" ] || state="(On)"
+                printf "%s" "$color_green_bg$color_bold_grey"
+            else
+                [ "$opt_n" ] || state="(Off)"
+                printf "%s" "$color_red_bg$color_bold_grey"
+            fi
+            printf "%-5s" "$state"
+            printf "%s " "$color_reset"
         fi
-        if [ "$opt_q" ]; then
-            echo "$state$color_reset"
-        else
-            printf "%-5s%s %-*s" "$state" "$color_reset" "$l_section" "$7"
-            shift 7
-            printf " %s\n" "$*$color_reset"
-        fi
+        set -- $1
+        # section
+        [ -n "$opt_v" ] && printf "%-*s " "$l_section" "$7"
+         # Name
+        ( [ "$opt_qq" ] || [ -z "$opt_q" ] ) && printf "%s" "$8"
+        # Aliases
+        shift 8
+        ( [ -z "$opt_qq" ] && [ -z "$opt_q" ]) && printf " %s" "$*"
+        echo
     fi
 }
 
@@ -1273,20 +1291,6 @@ execMode(){
 }
 
 doGetopts(){
-    # Syntax: doGetopts "$@"
-    # (note: doesn't shift options out)
-    doGetoptsLong(){
-        case "$OPTARG" in
-            li*) version; echo "$LICENSE"; exit 0;;
-            c*) doGetopts "C";;
-            t*) doGetopts "T";;
-            V*) echo "$time_stamp"; version; exit;;
-            v*) version; exit;;
-            h*) usage;;
-            *) echo "unknown long option '--$OPTARG'"; exit 127;;
-        esac
-    }
-
     while getopts vx-:lhrtnqjkidarcygfLCTWpXm argv; do
         case "$argv" in
             p|j|k|l|d|i|C|T|m)
@@ -1294,15 +1298,33 @@ doGetopts(){
                 mode="$argv";;
         esac
         case "$argv" in
-            d|p|f|q|g|t|n|l|m|j|k|a|r|c|i|y|C|T|W|X|L) eval opt_$argv=1;;
-            v) vEcho="echo : "; vCmd=vCmd; opt_v=1;;
+            d|p|f|g|t|n|l|m|j|k|a|r|c|i|y|C|T|W|X|L) eval opt_$argv=1;;
             x) set -x;;
-            -) doGetoptsLong "$argv" "$OPTARG";;
+            q) [ "$opt_q" ] && opt_qq=1; opt_q=1;;
+            v) 
+                case $((++opt_v)) in
+                    1) vEcho="echo";;
+                    2) v2Echo="echo :+ "; vCmd=vCmd;;
+                    3) v3Echo="echo :* ";;
+                esac
+                ;;        
+            -*) 
+                case "$OPTARG" in
+                    li*) version; echo "$LICENSE"; exit 0;;
+                    c*) doGetopts "C";;
+                    t*) doGetopts "T";;
+                    V*) echo "$time_stamp"; version; exit;;
+                    v*) version; exit;;
+                    h*) usage;;
+                    *) echo "unknown long option '--$OPTARG'"; exit 127;;
+                esac
+                ;;
             *) usage;;
         esac
     done
 }
-#### main
+
+###################### main
 
 pname=${0##*/}
 [ -t 1 ] && have_term=1
@@ -1310,6 +1332,7 @@ export HOME=${HOME:-/$default_HOME}
 
 # get command line options
 vEcho=:
+v2Echo=:
 cmdline=("$0" "$@")
 doGetopts "$@"
 shift $((OPTIND-1))

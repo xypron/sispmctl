@@ -1,6 +1,6 @@
 .\"     Title: gemplug
 .\"    Author: Heike C. Zimmerer <hcz@hczim.de>
-.\"      Date: Time-stamp: <2008-04-28 21:13:37 hcz>
+.\"      Date: Time-stamp: <2008-04-29 21:46:54 hcz>
 .\"    Manual: gemplug
 .\"    Source: gemplug
 .\"
@@ -396,16 +396,18 @@ devices and outlets more meaningful names and to remove either the
 below).  If you did use sudo, \fBchown(1)\fR that file to be owned by
 you before editing.
 .PP
-To solve permission problems, have a glance at the section "UDEV RULE"
+To solve permission problems, have a glance at the section "HELPER FILES"
 below.
 .PP
-.SH "UDEV RULE"
+.SH "HELPER FILES"
+.SS "udev rule"
 While the \fB-C\fR option has been included to allow you to make your
-Gembird devices world-writable without the need to know their exact
-\fB/dev/\fR path, the preferred way is to use an udev rule for that.
-A sample file, \fB74-sispmctl.rules\fR is included in the distribution,
-which accomplishes this task if copied over to the
-\fB/etc/udev/rules.d\fR directory.
+Gembird devices world-writable without the need to know their
+exact \fB/dev/\fR path (and there may be distribution-dependent ways
+to achieve the same, e.g. an USB group), the preferred way is to use an
+udev rule for that.  A sample file, \fB74-sispmctl.rules\fR, is
+included in the distribution, which accomplishes this task if copied
+over to the \fB/etc/udev/rules.d\fR directory.
 .PP
 In its default form, it makes all Gembird devices world writable when
 they are encountered during the boot process or when added later.
@@ -414,6 +416,15 @@ If you prefer to make your Gembirds only available to a subset of
 users, an alternative rule is provided.  De-comment it, en-comment the
 original rule and follow the advice in the file's comment to create a
 new group and to add the users in question to it.
+.PP
+.SS "Bash completion"
+The file \fBgemplug-completion.sh\fR, when put into your
+/etc/bash_completion.d directory, allows bash to automagically
+complete outlet names.  Two usage examples: To have all outlet names
+listed, type \fBgemplug <TAB> <TAB>\fR.  Typing \fBgemplug t<TAB>\fR
+will complete the unambigous part of all outlet names which start
+in 'T' or 't'.  If more than one name matches, a second \fB<TAB>\fR
+will display all of them.
 .SH "SELECTING FROM MULIPLE DEVICES"
 .PP
 gemplug was developed in the frist place since there was no way to
@@ -609,11 +620,11 @@ the commands
 and
 .TP 4
 \fBgemplug scanner 1\fR
-will switch your scanner on,
+will switch your scanner on immediately
 .TP 4
 \fBgemplug DVBT 1 for 30min\fR
 .\"
-activates the DVB receiver for 30 minutes (note there's no white spce
+activates the DVB receiver for 30 minutes (note there's no white space
 within the time specification, else it must be enclosed in quotes), and
 .TP 4
 \fBgemplug Backup1 until tomorrow\fR
@@ -625,17 +636,17 @@ See the \fBUSAGE\fR chapter for a few more examples.
 There are, yes.  Helpful hints are welcome at hcz@hczim.de.  Include
 the magic word \fBgemplug\fR somewhere in your subject line.
 .PP
-sispmctl's output seems not always stable.  Therefore, all calls are
-re-checked.
+sispmctl's output seems not always stable under any USB condition.
+Therefore, all calls are re-checked for a stable readout and/or a
+successful change of state.
 .SH "THANKS TO"
 \fBMondrian Nuessle\fR <nuessle@uni-mannheim.de> for writing \fBsispmctl\fR
 and maintaining it.  \fBsispmctl\fR is the basic hardware interface gemplug
 relies on.
 .SH "HELP"
 A user forum can be found at
-http://sourceforge.net/projects/sispmctl .  New versions of this
-program will be announced there.  You can contact the author at
-hcz@hczim.de.  Don't forget to include the output of \fBgemplug
+http://sourceforge.net/projects/sispmctl .  You can contact the author
+at hcz@hczim.de.  Don't forget to include the output of \fBgemplug
 --version\fR.
 .SH "AUTHOR"
 (C)2008 by Heike C. Zimmerer.  This program is licensed under the GNU
