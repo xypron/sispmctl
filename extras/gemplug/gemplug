@@ -2,8 +2,8 @@
 
 # gemplug
 #
-time_stamp="Time-stamp: <2008-04-29 14:47:20 hcz>"
-version="gemplug version 42.04"
+time_stamp="Time-stamp: <2008-05-23 16:48:15 hcz>"
+version="gemplug version 42.07"
 
 #
 # Control multiple Gembird power outlets via sispmctl
@@ -37,6 +37,15 @@ LICENSE="\
 #      Changes to rcfile updates
 #   2008-04-28   v42.05 hcz
 #      -m, -L, pre-off, post-off, pre-on, post-on
+#   2008-05-07   v42.06 hcz
+#      any sispcmtl command is no re-checked and re-executed (if needed).
+#       (Don't know if the spurious errors I'm enconutering are caused
+#        by flaky Hardware here or if its is a more basic problem with
+#        sispmctl or one of its libs.)
+#      Included gemplug version number into file last_sispmctl_S so any
+#      version change will trigger a rebuild of the configuration data.
+#   2008-05-23  v42.07 hcz
+#      Locking code revised.  Re-execute sispmctl on error return.
 
 # TODO:        parser: allow empty outlets (will not be shown)
 
@@ -171,6 +180,14 @@ abort(){
     exit 126                    # (usually) not reached
 }
 
+min(){
+    local min="$1" i
+    for i; do
+        [ "$i" -lt "$min" ] && min="$i"
+    done
+    echo "$i"
+}
+
 rmLock(){
     # Syntax: rmLock
     # removes lock only if it's ours
@@ -186,9 +203,12 @@ needLock(){
     # get a lock before executing sispmctl if we don't own it already
     #  Note: sets global 'have_lock' - so make sure this isn't 
     #  called from within a subshell
-    local n_tries pid name fail n_retries=${1:-6}
-   # set -x
+    local n_tries pid name fail n_retries=${1:-6} bash cmd args
+    RANDOM=$$                   # seed RNG
+    #set -x
+    $v3Echo "Need Lock."
     if [ -z "$have_lock" ]; then
+        $v3Echo "Acquiring Lock ---"
         if [ ! -w "${lockdir%/*}" ]; then
             needColors
             printf >&2 "${color_red}Can't lock ('%s/' not writable)${color_reset}\n" "${lockdir%/*}"
@@ -196,23 +216,50 @@ needLock(){
         fi
         trap "rmLock" EXIT      # safe because it removes the lock only if it is ours
         while ! mkdir 2>/dev/null "$lockdir"; do
-            pid=$(cat 2>/dev/null "$pidfile") || break          # dead lock
-            name=$(cat 2>/dev/null /proc/$pid/cmdline) || break # dito
-            [ "${name##*/}" != "$pname" ] && break              # dito
+            pid=$(cat 2>/dev/null "$pidfile")
+            if [ "$pid" ]; then
+                # check if the PID still belongs to a gemplug process
+                read bash cmd args <<EOF
+$(tr 2>/dev/null '\000' ' ' < /proc/$pid/cmdline) 
+EOF
+                [ "${cmd##*/}" != "$pname" ] && break # no.
+            fi
             if [ $((++n_tries)) -gt "$n_retries" ]; then
                 needColors
                 printf >&2 "$color_red%s$color_reset\n" "Giving up on lock '$lockdir'"
-                return 1           # means: try it anyway
+                break
             fi
-            sleep .1
+            while :; do
+                rnd="$RANDOM"
+                [ "$rnd" -gt 100 ] && break
+            done
+            rnd="$((${rnd:2:1}/4)).${rnd:1:1}"
+            $v3Echo "Locked by another process, sleeping for $rnd secs"
+            sleep "$rnd"
         done
         mkdir -p "$lockdir"     # (on dying lock)
         echo "$$" > "$pidfile"
         have_lock=1
+        $v3Echo "Got Lock."
+    else
+        $v3Echo "Already have one"
     fi
+    #set +x
     return 0
 }
 
+trap 'sispmctl_err=1' USR1
+execSispmctl(){
+    local n_tries=3 res
+    while [ $((--n_tries)) -gt 0 ]; do
+        $vCmd "$sispmctl" "$@" && break
+    done
+    res=$?
+    [ "$res" != 0 ] && kill -USR1 $$
+    return "$res"
+}
+
+    
 assertUnique(){
     # Syntax: assertUnique string <array-name>
     #  Assserts that name (i.e. no spaces) $1 is not yet in array $2
@@ -263,17 +310,23 @@ get_usb_pos(){
     done
 }
 
-getSipmctlS(){
+getSispmctlS(){
     # reads in sispmctl -S into $sispmctl_S
     # Due to spurious errors reading is done multiple times
-    local i sistmp="-" sistmp1
-
+    local i sistmp err tries=0
     [ "$sispmctl_S" ] && return
-    while [ "$sistmp" != "$sispmctl_S" ] || [ "$sistmp1" != "$sispmctl_S" ]; do
-        sistmp1="$sistmp"
+    while [ $((++tries)) -le 3 ]; do
         sistmp="$sispmctl_S"
-        sispmctl_S="$($vCmd $sudo "$sispmctl" -S)" || abort "sispmctl -S failed"
+        sispmctl_S="$(execSispmctl -S)" || err=1
+        if [ -n "$sistmp" ] && [ "$sistmp" != "$sispmctl_S" ]; then
+            $vEcho "$pname: Inconsistent readout from 'sispmctl -S'"
+            tries=0
+        fi
+        [ $((++tries)) -gt 10 ] && abort "Can't get a consistent answer from 'sispmctl -S' after $tries tries"
     done
+    if [ "$err" ];then
+        finale_furioso="$finale_furioso$_nl${color_red}Note: we had serious errors${color_reset}"
+    fi
 }
 
 getGemdevArray(){
@@ -289,7 +342,7 @@ getGemdevArray(){
     # special meaning (currently identical to gemdev_gembird_no).
     local linepos bus_dev idx usb_traversed sistmp="-"
 
-    getSipmctlS
+    getSispmctlS
     idx=-1
     while IFS= read line; do
         [[ "$line" =~ ^$_s*$ ]] && continue
@@ -735,10 +788,10 @@ initialize(){
 
     # check if sispmctl -S reports a different config than last time
     
-    getSipmctlS
-    if [ ! -r "$last_sispmctl_S" ] || [ "$sispmctl_S" != "$(<"$last_sispmctl_S")" ]; then
+    getSispmctlS
+    if [ ! -r "$last_sispmctl_S" ] || [ "$version$_nl$sispmctl_S" != "$(<"$last_sispmctl_S")" ]; then
         need_update=1
-        echo "$sispmctl_S" > "$last_sispmctl_S"
+        echo "$version$_nl$sispmctl_S" > "$last_sispmctl_S"
     fi
 
 
@@ -759,18 +812,22 @@ initialize(){
         $v2Echo "Parsing '$rc_file'"
         readRcFile
 
-        if [ -e "$compiled_rc" ]; then
-            chmod 0600 "$compiled_rc" || abort "Can't set permissions of '$compiled_rc'"
-        fi
-        printf > "$compiled_rc" "%s\n" "\
+        if [ -z "$sispmctl_err" ]; then
+            if [ -e "$compiled_rc" ]; then
+                chmod 0600 "$compiled_rc" || abort "Can't set permissions of '$compiled_rc'"
+            fi
+            printf > "$compiled_rc" "%s\n" "\
 # Compiled configuration, generated by $pname at $(date '+%Y-%m-%d %H:%M')
 #                       *** DO NOT EDIT ***"
-        declare -p outlets l_section l_outlet ${!gemdev_*} >> "$compiled_rc"
-        getColors
-        colors_TERM="$TERM"
-        declare -p ${!color_*} colors_TERM have_colors >> "$compiled_rc"
-        $vEcho "$compiled_rc written."
-        chmod 0400 "$compiled_rc" || abort "Can't set permissions of '$compiled_rc'"
+            declare -p outlets l_section l_outlet ${!gemdev_*} >> "$compiled_rc"
+            getColors
+            colors_TERM="$TERM"
+            declare -p ${!color_*} colors_TERM have_colors >> "$compiled_rc"
+            $vEcho "$compiled_rc written."
+            chmod 0400 "$compiled_rc" || abort "Can't set permissions of '$compiled_rc'"
+        else
+            $vEcho "$compiled_rc NOT written because of sispmctl errors"            
+        fi
     fi
 }
 
@@ -779,7 +836,7 @@ getCurDevStates(){
     # Syntax: getCurDevStates [-f] <sis_dev>
     # opt: -f: force read (ignore cached data)
     # Result in cur_dev_states[] = (sisdev, state0, state 1, ..)
-    local path idx i path_array sispm_result sispm_old i
+    local path idx i path_array sispm_result sispm_old i err=0
 
     if [ "$1" = "-f" ]; then
         shift
@@ -790,9 +847,15 @@ getCurDevStates(){
     sisdev="$1"
     if [ -z "${states_cache[sisdev]}" ]; then
         while [ $((++i)) -lt 2 ]; do # -lt 2: agrees 3 times: 0, 1, 2
+            [ "$err" -gt 10 ] && abort "Can't read Gembird #$sisdev"
             sispm_old="$sispm_result"
-            sispm_result="$($vCmd $sudo "$sispmctl" -n -q -d $sisdev -g all)"
-            [ "$sispm_result" != "$sispm_old" ] && i=0
+            sispm_result="$(execSispmctl -n -q -d $sisdev -g all)" || : $((++err))
+            [ "$err" -gt 20 ] && abort "Can't get a consistent readout from '$sispmctl -n -q -d $sisdev -g all' after $err tries"
+            if [ -n "$sispm_old" ] && [ "$sispm_result" != "$sispm_old" ]; then
+                $vEcho "Unstable readout (was: '"$sispm_old"', is: '"$sispm_result"')from command '$sispmctl -n -q -d $sisdev -g all'"
+                : $((++err))
+                i=0
+            fi
         done
         states_cache[sisdev]="$1 $sispm_result"
         set -- ${states_cache[sisdev]}
@@ -854,8 +917,8 @@ getState(){
 }
 
 setOutlet(){
-    # Syntax: setOutlet "<outlet line from outlets[]>" state
-    local state=$2 t_echo dev port cmd on_off dev_name
+    # Syntax: setOutlet "<outlet line from outlets[]>" state [recursion_level}
+    local outlet="$1" state="$2" recursion_level="${3:-0}" t_echo dev port cmd on_off dev_name 
 
     execPrePost(){
         # Syntax: execPrePost pre|post
@@ -886,11 +949,16 @@ setOutlet(){
     if [ "$opt_t" ]; then
         $t_echo "Outlet '$8' set to '$on_off"
     else
-        $vCmd $sudo "$sispmctl" -q -d "$3" $opt "$6"
+        execSispmctl -q -d "$3" $opt "$6"
     fi
     getCurDevStates -f "$3"
     if [ "${cur_dev_states[$6]}" != "$st" ]; then
-        abort "Gembird device '$7', outlet '$8' doesn't report back the new setting"
+        if [ "$recursion_level" -lt 3 ]; then
+            $vEcho "$pname: State not reported back.  Trying again."
+            setOutlet "$outlet" "$state" $((recursion_level+1))
+        else
+            abort "Gembird device '$7', outlet '$8' doesn't report back the new setting after $recursion_level retries"
+        fi
     fi
     execPrePost post
 }
@@ -980,8 +1048,9 @@ listOneOutlet(){
          # Name
         ( [ "$opt_qq" ] || [ -z "$opt_q" ] ) && printf "%s" "$8"
         # Aliases
-        shift 8
+        shift $(min 8 $#)
         ( [ -z "$opt_qq" ] && [ -z "$opt_q" ]) && printf " %s" "$*"
+        # finale
         echo
     fi
 }
@@ -1123,12 +1192,14 @@ killPending_jobs(){
 
 execAtCmds(){
     local idx result cmd at_cmd date
+    $v2Echo "Installing schedule"
     for ((idx=0; idx < ${#at_registered_dates[@]}; idx++)); do
         date="${at_registered_dates[idx]}"
         cmd="${at_registered_cmds[idx]}"
         if [ "$date" = "now" ]; then
             # 'at now' sometimes enqueues commands instead of executing them now
             # so we better run the command on our own:
+            cmd="${cmd/ / -L }" # dont't aquire lock
             ${cmd%#*}
         else
             at_cmd=(at -q "$at_queue" "${at_registered_dates[idx]}")
@@ -1329,10 +1400,11 @@ doGetopts(){
 pname=${0##*/}
 [ -t 1 ] && have_term=1
 export HOME=${HOME:-/$default_HOME}
-
+unset IFS
 # get command line options
 vEcho=:
 v2Echo=:
+v3Echo=:
 cmdline=("$0" "$@")
 doGetopts "$@"
 shift $((OPTIND-1))
@@ -1350,7 +1422,7 @@ fi
 # Make sure core variables are clean at this point:
 unset outlets l_section l_outlet ${!gemdev_*} ${!color_*} colors_TERM have_colors
 
-# get an exclusive lock for sispmctrl and our files
+# get an exclusive lock for sispmctl and our files
 [ "$opt_L" ] || needLock 10
 
 # Assemble core variables from scrath if required.  If not, read them
@@ -1386,4 +1458,6 @@ else
         *) runInterpreter "$@";;
     esac
 fi
+[ -n "$sispmctl_err" ] && echo "$pname: sispmctl errors."
+[ -n "$finale_furioso" ] && echo "$finale_furioso"
 exit 0

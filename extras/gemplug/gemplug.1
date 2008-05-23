@@ -1,6 +1,6 @@
 .\"     Title: gemplug
 .\"    Author: Heike C. Zimmerer <hcz@hczim.de>
-.\"      Date: Time-stamp: <2008-04-29 21:46:54 hcz>
+.\"      Date: Time-stamp: <2008-04-29 21:59:40 hcz>
 .\"    Manual: gemplug
 .\"    Source: gemplug
 .\"
@@ -37,10 +37,12 @@ They are referred to here as "Gembirds".
 .PP
 \fBgemplug\fR allows you to control your Gembirds in various ways,
 e.g., by accessing them by name, by scheduling and managing timed
-jobs, and by handling multiple devices in a transparent manner. It
-delegates the task of actually accessing the hardware to
-\fBsispmctl(1)\fR.  At the time of this writing, at least version 2.8
-of sispmctl must be available before you can run gemplug successfully.
+jobs, by allowing to couple switch actions with other commands
+(including other timed switch actions), and by handling multiple
+devices in a transparent manner. It delegates the task of actually
+accessing the hardware to \fBsispmctl(1)\fR.  At the time of this
+writing, at least version 2.8 of sispmctl must be available before you
+can run gemplug successfully.
 .PP
 Timed jobs are handed over to the \fBat\fR command and rounded to the
 nearest minute.
@@ -155,6 +157,17 @@ because of some hardware or configuration file change.
 \fB\-v\fR
 .RS 4
 Do verbose reporting.  This is mainly a debugging option for the
+configuration file parser.
+.RE
+.PP
+\fB\-v\fR
+.RS 4
+Do more verbose reporting.  Adds some informational messages.
+.RE
+.PP
+\fB\-v\fR
+.RS 4
+Add even more verbose reporting.  This is mainly a debugging option for the
 configuration file parser.
 .RE
 .PP
