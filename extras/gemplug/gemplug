@@ -2,8 +2,7 @@
 
 # gemplug
 #
-time_stamp="Time-stamp: <2008-05-23 16:48:15 hcz>"
-version="gemplug version 42.07"
+time_stamp="Time-stamp: <2008-06-16 19:36:24 hcz>"
 
 #
 # Control multiple Gembird power outlets via sispmctl
@@ -25,6 +24,7 @@ LICENSE="\
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>."
 
+version="gemplug version 42.07"
 # History:
 #   2008-04-23   v42.03 hcz first public release
 #      listOneOutlet: section was listed twice
@@ -46,6 +46,8 @@ LICENSE="\
 #      version change will trigger a rebuild of the configuration data.
 #   2008-05-23  v42.07 hcz
 #      Locking code revised.  Re-execute sispmctl on error return.
+#   2008-06-16  v42.08 hcz
+#      Barfed when started for tje 1st time (without a config file).  Fixed.
 
 # TODO:        parser: allow empty outlets (will not be shown)
 
@@ -479,8 +481,17 @@ readRcFile(){
     section="1st"
     l_section=0
     l_outlet=9
-    findRcFile "$my_rc_file" "${rcdirs[@]}" \
-     || abort "Internal: Cannot open $my_rc_file" # should have been recognized earlier
+    if ! findRcFile "$my_rc_file" "${rcdirs[@]}"; then
+        if [ "$opt_T" ]; then
+            for dir in "${rcdirs[@]}"; do
+                rc_file="$dir/$rc_file"UXS
+                touch 2>/dev/null "$rc_file" && break
+            done \
+            || abort "Cannot create 'my_rc_file' in any of: ${rcdirs[*]}"
+        else
+            abort "Internal: Cannot open $my_rc_file" # should have been recognized earlier
+        fi
+    fi
     errtext="$pname: in file '$rc_file':"
     assertUnique "ALL" all_names # enter "ALL" into empty list
     shopt -s nocasematch
