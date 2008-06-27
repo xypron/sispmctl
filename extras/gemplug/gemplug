@@ -2,7 +2,7 @@
 
 # gemplug
 #
-time_stamp="Time-stamp: <2008-06-16 19:36:24 hcz>"
+time_stamp="Time-stamp: <2008-06-27 12:47:50 hcz>"
 
 #
 # Control multiple Gembird power outlets via sispmctl
@@ -38,7 +38,7 @@ version="gemplug version 42.07"
 #   2008-04-28   v42.05 hcz
 #      -m, -L, pre-off, post-off, pre-on, post-on
 #   2008-05-07   v42.06 hcz
-#      any sispcmtl command is no re-checked and re-executed (if needed).
+#      any sispcmtl command is now re-checked and re-executed (if needed).
 #       (Don't know if the spurious errors I'm enconutering are caused
 #        by flaky Hardware here or if its is a more basic problem with
 #        sispmctl or one of its libs.)
@@ -47,9 +47,14 @@ version="gemplug version 42.07"
 #   2008-05-23  v42.07 hcz
 #      Locking code revised.  Re-execute sispmctl on error return.
 #   2008-06-16  v42.08 hcz
-#      Barfed when started for tje 1st time (without a config file).  Fixed.
+#      Barfed when started for the 1st time (without a config file).  
+#      Fixed.
+#   2008-06-24  v42.09 hcz
+#      -e option added.
+#
 
 # TODO:        parser: allow empty outlets (will not be shown)
+#              man: -e
 
 usage(){
     echo "\
@@ -57,7 +62,9 @@ Usage:
   $pname [-opts] [<outlet-name>]
      lists available outlets along with their state
   $pname [-opts]  <outlet-name> <state>
-     Switch Gembird power outlets
+     Switch Gembird power outlet
+  $pname [-opts]  <outlet-name> <state> -e <command ...>
+     Switch Gembird power outlet, execute command, switch back
   $pname [-opts]  <outlet-name> <state>  [at|after <spec>] [until|for <spec>]
      Switch Gembird outlets to <state> and reverse at specified times
 
@@ -78,6 +85,8 @@ opts:
    -a   new jobs are to be added to already pending jobs
    -r   remove pending jobs
    -t   test: don't actually start jobs
+   -e <command ...> (3rd argument, after outlet name and state): 
+        switch, execute command, then switch opposite
   output control:
    -l [<outlet-name> [...]]  list multiple outlets
    -d [<outlet-name> [...]]  dump configuration data
@@ -1034,7 +1043,7 @@ listOneOutlet(){
     local r state
     if [ "$opt_g" ]; then
         getOutlet "$1"
-        [ "$state" -ne 1 ]
+        [ "$state" -eq 1 ]
         exit
     elif [ "$opt_d" ]; then
         dumpOutlet "$outlet"
@@ -1271,28 +1280,45 @@ Either choose '-r' to replace them or '-a' to add new jobs."
         )
     fi
     shift 2
-    while [ "$#" -gt 0 ]; do
-        if [ -z "$cur_sec" ]; then
-            # no previous action.  Check if we have to switch now,
-            case "$1" in
-                for|until) assembleAt "now" "$target_state" "$outlet";;
-            esac
+    if [ "$1" = "-e" ]; then
+        shift
+        $v2Echo "$pname: Setting '$outlet' to $target_state"
+        setOutlet "$outlet" "$target_state"
+        rmLock
+        $vEcho "$pname: Running '$*'"
+        "$@"
+        res=$?
+        if [ "$res" -ne 0 ]; then
+            printf "%s: %s exited with error code %d\n" "$pname" "$1" "$res"
         fi
-        case "$1" in
-            at) assembleAt "$2" "$target_state" "$outlet"; shift 2;;
-            after) assembleAfter "$2" "$target_state" "$outlet"; shift 2;;
-            until) assembleAt "$2" "$(( ! target_state))" "$outlet"; shift 2;;
-            for) assembleAfter "$2" "$(( ! target_state))" "$outlet"; shift 2;;
-            *) abort "Unknown element on command line: '$1'";;
-        esac
-    done
+        [ "$target_state" = 0 ] && target_state=1 || target_state=0
+        $v2Echo "$pname: Setting '$outlet' to $target_state"
+        needLock
+        setOutlet "$outlet" "$target_state"
+    else
+        while [ "$#" -gt 0 ]; do
+            if [ -z "$cur_sec" ]; then
+            # no previous action.  Check if we have to switch now,
+                case "$1" in
+                    for|until) assembleAt "now" "$target_state" "$outlet";;
+                esac
+            fi
+            case "$1" in
+                at) assembleAt "$2" "$target_state" "$outlet"; shift 2;;
+                after) assembleAfter "$2" "$target_state" "$outlet"; shift 2;;
+                until) assembleAt "$2" "$(( ! target_state))" "$outlet"; shift 2;;
+                for) assembleAfter "$2" "$(( ! target_state))" "$outlet"; shift 2;;
+                *) abort "Unknown element on command line: '$1'";;
+            esac
+         done
 
-     # If we've made it here, we now can execute our 'at' commands:
-     if [ "$opt_t" ]; then
-         [ "$opt_q" ] || echo "Scheduled jobs not activated (-t)"
-     else
-         execAtCmds
-     fi
+         # If we've made it here, we now can execute our 'at' commands:
+         if [ "$opt_t" ]; then
+             [ "$opt_q" ] || echo "Scheduled jobs not activated (-t)"
+         else
+             execAtCmds
+         fi
+    fi
 }
 
 ################ misc

@@ -1,7 +1,7 @@
 #!/bin/bash
 #   install.sh
 #
-# Time-stamp: <2008-04-30 08:53:26 hcz>
+# Time-stamp: <2008-06-21 11:07:01 hcz>
 #
 # Script to install gemplug
 
@@ -17,11 +17,16 @@ abort(){
     exit 1
 }
 
+cmdE(){
+    echo "   $*"
+    "$@"
+}
+
 while [ "$1" ]; do
     if [ ! -e "$2/$1" ] || [ "$2/$1" -ot "$1" ] || [ "$5" = "y" ]; then
         printf "installing %s into %s\n" "$1" "$2"
         [ "$4" = "y" ] && mkdir -p "$2"
-        install -m "$3" -o root -g root "$1" "$2" || abort
+        cmdE install -m "$3" -o root -g root "$1" "$2" || abort
     else
         echo "Skipping $1 (target not older)."
     fi
