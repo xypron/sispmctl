@@ -2,7 +2,7 @@
 
 # gemplug
 #
-time_stamp="Time-stamp: <2008-06-27 12:47:50 hcz>"
+time_stamp="Time-stamp: <2008-06-27 12:50:06 hcz>"
 
 #
 # Control multiple Gembird power outlets via sispmctl
@@ -24,7 +24,7 @@ LICENSE="\
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>."
 
-version="gemplug version 42.07"
+version="gemplug version 42.10"
 # History:
 #   2008-04-23   v42.03 hcz first public release
 #      listOneOutlet: section was listed twice
@@ -51,7 +51,8 @@ version="gemplug version 42.07"
 #      Fixed.
 #   2008-06-24  v42.09 hcz
 #      -e option added.
-#
+#   2008-06-27  v42.10 hcz
+#     option -g: result code reversed
 
 # TODO:        parser: allow empty outlets (will not be shown)
 #              man: -e
