@@ -2,7 +2,7 @@
 
 # gemplug
 #
-time_stamp="Time-stamp: <2008-07-09 10:04:40 hcz>"
+time_stamp="Time-stamp: <2008-07-09 10:42:11 hcz>"
 
 #
 # Control multiple Gembird power outlets via sispmctl
@@ -24,7 +24,6 @@ LICENSE="\
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>."
 
-version="gemplug version 42.12"
 # History:
 #   2008-04-23   v42.03 hcz first public release
 #      listOneOutlet: section was listed twice
@@ -54,12 +53,15 @@ version="gemplug version 42.12"
 #   2008-06-27  v42.10 hcz
 #     option -g: result code reversed
 #   2008-07-02  v42.11 hcz
-#      compiled_rc was unneccessarily witten to way too often
+#      compiled_rc was unneccessarily witten way too often
 #   2008-07-06  v42.12
 #      get $HOME from /etc/passwd if undefined (e.g., during system
 #      startup)
-#   2008-07-06  v42.13
+#   2008-07-09  v42.13
 #      still an error when $HOME was undefined.  Fixed.
+#   2008-07-09  v42.14
+#      use full path to gemplug command in at jobs if available
+version="gemplug version 42.14"
  
 
 # TODO:        parser: allow empty outlets (will not be shown)
@@ -141,6 +143,7 @@ pidfile="$lockdir/pid"
 # more locals
 sispmctl="/usr/local/bin/sispmctl"
 my_name="gemplug"              # name for this program (to be used in at jobs)
+my_path="${0%/*}"              # path - " -
 
 sudo=              # prefix sispmctl commands by that (default: empty)
 
@@ -1260,7 +1263,7 @@ registerAtCmd(){
     # Syntax: execAt "<date>" "<date in s since epoch>" "<outlet line>" "0|1"
     local date="$1" date_sec="$2" state="$4" cmd
     set -- $3
-    cmd="$my_name $8 $state # now=$now at=$date_sec"
+    cmd="${my_path}${my_path:+/}$my_name $8 $state # now=$now at=$date_sec"
     idx=${#at_registered_dates[@]}
     at_registered_dates[idx]="$date"
     at_registered_cmds[idx]="$cmd"
