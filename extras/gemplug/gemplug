@@ -2,7 +2,7 @@
 
 # gemplug
 #
-time_stamp="Time-stamp: <2008-06-27 12:50:06 hcz>"
+time_stamp="Time-stamp: <2008-07-09 10:04:40 hcz>"
 
 #
 # Control multiple Gembird power outlets via sispmctl
@@ -24,7 +24,7 @@ LICENSE="\
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>."
 
-version="gemplug version 42.10"
+version="gemplug version 42.12"
 # History:
 #   2008-04-23   v42.03 hcz first public release
 #      listOneOutlet: section was listed twice
@@ -53,6 +53,14 @@ version="gemplug version 42.10"
 #      -e option added.
 #   2008-06-27  v42.10 hcz
 #     option -g: result code reversed
+#   2008-07-02  v42.11 hcz
+#      compiled_rc was unneccessarily witten to way too often
+#   2008-07-06  v42.12
+#      get $HOME from /etc/passwd if undefined (e.g., during system
+#      startup)
+#   2008-07-06  v42.13
+#      still an error when $HOME was undefined.  Fixed.
+ 
 
 # TODO:        parser: allow empty outlets (will not be shown)
 #              man: -e
@@ -136,6 +144,16 @@ my_name="gemplug"              # name for this program (to be used in at jobs)
 
 sudo=              # prefix sispmctl commands by that (default: empty)
 
+# if called from init.d, we don't have a $HOME
+if [ -z "$HOME" ]; then
+    export HOME="$(
+        getent passwd $(id -u) \
+        | (IFS=: read user pwd id1  id2 name HOME rest;
+           echo "$HOME")
+    )"
+fi
+[ -z "$HOME" ] && HOME=/tmp     # last resort
+export HOME
 rcdirs=("$HOME/.$my_name" "/etc/$my_name")
 if [ -d "$HOME/.config" ]; then
     rcdirs=("$HOME/.config/$my_name" "${rcdirs[@]}")
@@ -760,9 +778,10 @@ findRcFile(){
     # Syntax: findRcFile <fnam> <dir1> <dir2> ....
     # returns first file <fnam> from dirs which is readable
     # Result in $rc_file (empty if none), true/false
-    local rc_dir
+    local rc_dir fnam="$1"
+    shift
     for rc_dir in "$@" ""; do
-        rc_file="$rc_dir/$1"
+        rc_file="$rc_dir/$fnam"
         [ -r "$rc_file" ] && [ -f "$rc_file" ] && return
     done
     return 1
@@ -773,7 +792,7 @@ findRcDir_RW(){
     # returns first dir from "$@" which is r/w-able
     # Result in $rc_dir (empty if none), true/false
     for rc_dir in "$@" ""; do
-        [ -w "$rc_dir" ] && [ -r "$dir" ] && [ -d "$rc_dir" ] && return
+        [ -w "$rc_dir" ] && [ -r "$rc_dir" ] && [ -d "$rc_dir" ] && return
     done
     return 1
 }
@@ -788,22 +807,22 @@ initialize(){
         need_update=1           # none
     fi
 
-    # find first directory which is wrteable along rcdirs[]
+    # find first directory which is writable along rcdirs[]
     # first, try directory of current rc
-    rc_dir="${rc_file#/*}"
-    if [ ! -w "${rc_file#/*}" ]; then
+    rc_dir="${rc_file%/*}"
+    if [ -z "$rc_dir" ] || [ ! -w "$rc_dir" ]; then
         # we don't have write permissions in the rc file's directory
         if ! findRcDir_RW "${rcdirs[@]}"; then
                 # we have to create our rc directory
             for rc_dir in "${rcdirs[@]}"; do
                 md_result="$md_result$_nl$(mkdir -m 0755 -p "$rc_dir" 2>&1)" && break
             done
-            if [ $? != 0 ]; then
+            if [ $? -ne 0 ]; then
                 echo "$md_result"
                 abort "Cannot write compiled configuration file"
             fi
         fi
-    fi        
+    fi    
     compiled_rc="$rc_dir/$my_compiled_rc_file"
     last_sispmctl_S="$rc_dir/$last_sispmctl_S"
 
