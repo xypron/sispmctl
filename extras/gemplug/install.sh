@@ -1,12 +1,12 @@
 #!/bin/bash
 #   install.sh
 #
-# Time-stamp: <2008-06-21 11:07:01 hcz>
+# Time-stamp: <2008-07-30 11:09:34 hcz>
 #
 # Script to install gemplug
 
 #  $   1            2                      3    4           5
-#      source       target                 mode create dir? overwrite?
+#      source       target                 mode create dir? always copy?
 set -- gemplug      /usr/local/bin         755  n           n \
        gemplug.1    /usr/local/man/man1    644  y           n \
        74-sispmctl.rules /etc/udev/rules.d 644  n           n \

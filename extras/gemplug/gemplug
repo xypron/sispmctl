@@ -2,7 +2,7 @@
 
 # gemplug
 #
-time_stamp="Time-stamp: <2008-07-09 10:42:11 hcz>"
+time_stamp="Time-stamp: <2008-10-14 13:21:23 hcz>"
 
 #
 # Control multiple Gembird power outlets via sispmctl
@@ -61,11 +61,19 @@ LICENSE="\
 #      still an error when $HOME was undefined.  Fixed.
 #   2008-07-09  v42.14
 #      use full path to gemplug command in at jobs if available
-version="gemplug version 42.14"
+#   2008-08-22  v42,15
+#      typo in usage text corrected
+#   2008-10-14  v42.16
+#      time format returned by 'at' differs between versions.
+#      Function fillPending_jobs changed to accept about any format.
+#      LC_ALL is now set at any incocation of 'at'.
+#      get_usb_pos: traverse: var 'level' made local.
+version="gemplug version 42.16"
  
 
 # TODO:        parser: allow empty outlets (will not be shown)
 #              man: -e
+#              install.sh: x permissins on gemplug
 
 usage(){
     echo "\
@@ -83,7 +91,7 @@ Usage:
     white space.
   'at' and 'until' expect time-of-day specifications.  Any format
     which is acceptable by the 'date -d' command may be used.
-  'after' and 'for' expect a time imterval: days, hours and minutes in
+  'after' and 'for' expect a time interval: days, hours and minutes in
     descending order, with at least one element marked as being d[ay],
     h[our], m[inute] or a ':' (separator between hours and minutes).
     Elements may be omitted as long as their order is preserved.
@@ -324,6 +332,7 @@ get_usb_pos(){
 
     traverse()(
         # Syntax: traverse cur_recursion_level cd_to
+        local level="$1"
         cd "$2"
         if [[ "$(< idVendor)" =~ $idVendor_re ]] \
             && [[ "$(< idProduct)" =~ $idProduct_re ]]; then
@@ -332,7 +341,7 @@ get_usb_pos(){
                     "${2##*/}"
         fi
         for dir in [0-9]*; do
-            if [[ "$dir" =~ ^[-0-9.]+$ ]] && [ "$1" -le "$maxlevel" ]; then
+            if [[ "$dir" =~ ^[-0-9.]+$ ]] && [ "$level" -le "$maxlevel" ]; then
                 traverse  $((level+1)) "$dir"
             fi
         done
@@ -955,7 +964,7 @@ getState(){
     case "${2:-$1}" in
         0|off) echo "0";;
         1|on) echo "1";;
-        *) [ "$#" != 2 ] && abort "Can't set to illegal state '$1'";;
+        *) [ "$#" != 2 ] && abort "Can't set to state '$1'. Valid states are: 0, off, 1, on";;
     esac
 }
 
@@ -1160,7 +1169,7 @@ getTimestampSpec(){
 
 getJobs(){
     # Syntax: getJobs [<outlet>]
-    # returns on stdout "jobno: date: command"
+    # returns on stdout "jobno: date - command"
     local srch err res
     if [ "$1" ]; then
         set -- $outlet
@@ -1168,11 +1177,11 @@ getJobs(){
     else
         srch=".*"
     fi
-    atq -q "$at_queue" \
+    LC_ALL=C atq -q "$at_queue" \
     | while read jobno time; do
          time="${time% $at_queue *}" # remove queue indicator and user name
          res=$(
-             at -q S -c "$jobno" | sed -n '/^cd /,$'"{/^[^ ]*$my_name $srch /p}"
+             LC_ALL=C at -q S -c "$jobno" | sed -n '/^cd /,$'"{/^[^ ]*$my_name $srch /p}"
              [ "${PIPESTATUS[0]}" -ne 0 ] && abort "Error reading job $jobno"
          )
          [ "$res" ] && printf "%s: %s - %s\n" "$jobno" "$time" "$res"
@@ -1195,7 +1204,7 @@ fillPending_jobs(){
     idx="${#pending_jobs_job[@]}" # add if there's already somthing inside
     while IFS= read line; do
         [ "$line" ] || break
-        if [[ "$line" =~ ^$num:" "+([^-]+)" - ".*"$my_name "([^ ]+)" "*([01])" "*#" "*now=$num" "+at=$num ]]; then
+        if [[ "$line" =~ ^$num:" "+.+" - ".*"$my_name "([^ ]+)" "*([01])" "*#" "*now=$num" "+at=$num ]]; then
             #declare -p BASH_REMATCH
             pending_jobs_job[idx]="${BASH_REMATCH[1]}"
             pending_jobs_date[idx]="${BASH_REMATCH[2]}"
