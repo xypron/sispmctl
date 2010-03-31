@@ -5,6 +5,7 @@
  
   (C) 2004,2005,2006 Mondrian Nuessle, Computer Architecture Group, University of Mannheim, Germany
   (C) 2005, Andreas Neuper, Germany
+  (C) 2010, Olivier Matheret, France, for the plannification part
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -30,10 +31,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#define __USE_XOPEN
 #include <time.h>
 #include <signal.h>
 #include <usb.h>
 #include <assert.h>
+#include <getopt.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -246,8 +249,9 @@ void print_usage(char* name)
 		 "sispmctl -s\n"
 		 "sispmctl [-q] [-n] [-d 1...] -b <on|off>\n"
 		 "sispmctl [-q] [-n] [-d 1...] -[o|f|t|g|m] 1..4|all\n"
-	         "   'v'   - print version & copyright\n"
-	         "   'h'   - print this usage information\n"
+		 "sispmctl [-q] [-n] [-d 1...] -[a|A] 1..4|all [--Aat '...'] [--Aafter ...] [--Ado <on|off>] ... [--Aloop ...]\n"
+     "   'v'   - print version & copyright\n"
+     "   'h'   - print this usage information\n"
 		 "   's'   - scan for supported GEMBIRD devices\n"
 		 "   'S'   - as 's' but also print USB bus number\n"
 		 "   'b'   - switch buzzer on or off\n"
@@ -258,7 +262,13 @@ void print_usage(char* name)
 	         "   'm'   - get power supply status outlet(s) on/off\n"
 		 "   'd'   - apply to device\n"
 		 "   'n'   - show result numerically\n"
-		 "   'q'   - quiet mode, no explanations - but errors\n\n"
+		 "   'q'   - quiet mode, no explanations - but errors\n"
+     "   'a'   - get plannification for outlet\n"
+     "   'A'   - set plannification for outlet\n"
+     "     '--Aat \"date\"'   - sets an event time as a date '%%Y-%%m-%%d %%H:%%M'\n"
+     "     '--Aafter N'   - sets an event time as N minutes after the previous one\n"
+     "     '--Ado <on|off>'   - sets the current event's action\n"
+     "     '--Aloop N'   - loops to 1st event's action after N minutes\n\n"
 #ifndef WEBLESS
 	         "Webinterface features:\n"
 		 "sispmctl [-q] [-i <ip>] [-p <#port>] [-u <path>] -l\n"
@@ -356,218 +366,317 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
   char* bindaddr=0;
 #endif
   unsigned int outlet;
-
+  struct plannif plan;
+  plannif_reset(&plan);
+  
 #ifdef BINDADDR
   if (BINDADDR!="")
     bindaddr=BINDADDR;
 #endif
 
-  while( (c=getopt(argc, argv,"i:o:f:t:b:g:m:lqvhnsSd:u:p:")) != -1 )
-    {    
-      if( c=='o' || c=='f' || c=='g' || c=='t' || c=='m')
-	{
-	  if((strncmp(optarg,"all",strlen("all"))==0)
-	     || (atoi(optarg)==7) )
-	    { //use all outlets
-	      from=1;
-	      upto=4;
-	    } else
-	      {
-		from = upto = atoi(optarg);
-	      }
-	  if (from<1 || upto>4)
-	    {   
-	      fprintf(stderr,"Invalid outlet number given: %s\n"
-		      "Expected: 1, 2, 3, 4, or all.\nTerminating.\n",optarg);
-	      print_disclaimer( argv[0] );
-	      exit(-6);
-	    }
-	}
-      else
-	{
-	  from = upto = 0;
-	}
-      if( c=='o' || c=='f' || c=='g' || c=='b' || c=='t' || c=='m') //we need a device handle for these commands
-	{
-	  /* get device-handle/-id if it wasn't done already */
-	  if(udev==NULL){
-	    udev = get_handle(dev[devnum]);
-	    id = get_id(dev[devnum]);
-	    if(udev==NULL)
-	      fprintf(stderr, "No access to Gembird #%d USB device %s\n",
-		      devnum, dev[devnum]->filename );
-	    else 
-	      if(verbose) printf("Accessing Gembird #%d USB device %s\n",
-				 devnum, dev[devnum]->filename );
-	  }    
-	}
+  while( (c=getopt(argc, argv,"i:o:f:t:a:A:b:g:m:lqvhnsSd:u:p:")) != -1 )
+  {    
+    if( c=='o' || c=='f' || c=='g' || c=='t' || c=='a' || c=='A' || c=='m')
+    {
+      if((strncmp(optarg,"all",strlen("all"))==0)
+         || (atoi(optarg)==7) )
+      { //use all outlets
+        from=1;
+        upto=4;
+      } else
+      {
+		    from = upto = atoi(optarg);
+      }
+      if (from<1 || upto>4)
+      {   
+        fprintf(stderr,"Invalid outlet number given: %s\n"
+          "Expected: 1, 2, 3, 4, or all.\nTerminating.\n",optarg);
+        print_disclaimer( argv[0] );
+        exit(-6);
+      }
+    }
+    else
+    {
+      from = upto = 0;
+    }
+    if( c=='o' || c=='f' || c=='g' || c=='b' || c=='t' || c=='a' || c=='A' || c=='m') //we need a device handle for these commands
+    {
+      /* get device-handle/-id if it wasn't done already */
+      if(udev==NULL){
+        udev = get_handle(dev[devnum]);
+        id = get_id(dev[devnum]);
+        if(udev==NULL)
+          fprintf(stderr, "No access to Gembird #%d USB device %s\n",
+            devnum, dev[devnum]->filename );
+        else 
+          if(verbose) printf("Accessing Gembird #%d USB device %s\n",
+		       devnum, dev[devnum]->filename );
+      }    
+    }
+    
+#ifdef WEBLESS
+    if (c=='l' || c=='i' || c=='p' || c=='u' )
+    {
+      fprintf(stderr,"Application was compiled without web-interface. Feature not available.\n");
+      exit(-100);
+    }
+#endif
+
     // using first available device 
     for (i=from;i<=upto;i++) 
     {
-#ifdef WEBLESS
-      if (c=='l' || c=='i' || c=='p' || c=='u' )
-	{
-	  fprintf(stderr,"Application was compiled without web-interface. Feature not available.\n");
-	  exit(-100);
-	}
-#endif
       switch (c)
       {
         case 's':
         case 'S':
-	    for(status=0; status<count; status++)
-	    {
-		  if (c == 'S')
-		    if (numeric==0)
-		      printf("Gembird #%d is USB bus/device %s/%s. ", 
-			     status,
-			     dev[status]->bus->dirname,
-			     dev[status]->filename);
-		    else
-		      printf("%d %s %s\n", 
-			     status,
-			     dev[status]->bus->dirname,
-			     dev[status]->filename);
-		  else
-		    if (numeric==0)
-		      printf("Gembird #%d is USB device %s.",
-			     status,dev[status]->filename);
-		    else
-		       printf("%d %s\n", 
-			     status,
-			     dev[status]->filename);	       
-	        
-		id = get_id(dev[status]);
-		if (id==PRODUCT_ID_SISPM || id==PRODUCT_ID_SISPM_FLASH_NEW)
-		  {
-		    if (numeric==0)
-		      printf("This device is a 4-socket SiS-PM.\n");
-		    else
-		      printf("4\n");
-		  }
-		else
-		  {
-		    if (numeric==0)
-		      printf("This device is a 1-socket mSiS-PM.\n");
-		    else
-		      printf("1\n");
-		  }
-		sudev = get_handle(dev[status]);
-		id = get_id(dev[status]);
-		if(sudev==NULL)
-		  fprintf(stderr, "No access to Gembird #%d USB device %s\n",
-			  status, dev[status]->filename );
-		else 
-		  if(verbose && numeric==0) printf("Accessing Gembird #%d USB device %s\n",
-				     status, dev[status]->filename );
-	        
-		if (numeric==0)
-		  printf("This device has a serial number of %s\n",get_serial(sudev));
-		else
-		  printf("%s\n",get_serial(sudev));		  
-		usb_close(sudev);
-		printf("\n");
-	    }
-	    break;
-	case 'd': // replace previous (first is default) device by selected one
-	    if(udev!=NULL) usb_close (udev);
-	    devnum = atoi(optarg);
-	    if(devnum>=count) devnum=count-1;
-	    break;
-	case 'o':   
-	  {
-	    outlet=check_outlet_number(id, i);
-	    sispm_switch_on(udev,id,outlet);
-	    if(verbose) printf("Switched outlet %d %s\n",i,onoff[1+numeric]);
-	    break;
-	  }
-	case 'f':   
-	  {
-	    outlet=check_outlet_number(id, i);
-	    sispm_switch_off(udev,id,outlet);
-	    if(verbose) printf("Switched outlet %d %s\n",i,onoff[0+numeric]);
-	    break;
-	  }
-	case 't':   
-	  {
-	    outlet=check_outlet_number(id, i);
-	    result=sispm_switch_toggle(udev,id,outlet);
-	    if(verbose) printf("Toggled outlet %d %s\n",i,onoff[result]);
-	    break;
-	  }
-	case 'g':   
-	  {
-	    outlet=check_outlet_number(id, i);
-	    result=sispm_switch_getstatus(udev,id,outlet); 
-	    if(verbose) printf("Status of outlet %d:\t",i);
-	    printf("%s\n",onoff[ result +numeric]); 
-	    break;
-	  }
-	case 'm':   
-	  {
-	    outlet=check_outlet_number(id, i);
-	    result=sispm_get_power_supply_status(udev,id,outlet);
-	    if(verbose) printf("Power supply status is:\t");
-	    printf("%s\n",onoff[ result +numeric]); //take bit 1, which gives the relais status
-	    break;
-	  }
-#ifndef WEBLESS
-	case 'p':
-	    listenport=atoi(optarg);
-	    if(verbose) printf("Server will listen on port %d.\n",listenport);
-	    break;
-	case 'u':
-	    homedir=strdup(optarg);
-	    if(verbose) printf("Web pages come from \"%s\".\n",homedir);
-	    break;
-        case 'i':
-  	    bindaddr=optarg;
-	    if (verbose) printf("Web server will bind on interface with IP %s\n",bindaddr);
-	    break;
-	case 'l':
-	    {
-	        if(verbose) printf("Server goes to listen mode now.\n");
-		int*s=(int*)NULL;
+	        for(status=0; status<count; status++)
+	        {
+		        if (c == 'S') {
+		          if (numeric==0)
+		            printf("Gembird #%d is USB bus/device %s/%s. ", 
+			           status,
+			           dev[status]->bus->dirname,
+			           dev[status]->filename);
+		          else
+		            printf("%d %s %s\n", 
+			           status,
+			           dev[status]->bus->dirname,
+			           dev[status]->filename);
+		        }
+		        else {
+		          if (numeric==0)
+		            printf("Gembird #%d is USB device %s.",
+			           status,dev[status]->filename);
+		          else
+		             printf("%d %s\n", 
+			           status,
+			           dev[status]->filename);	       
+            }
+        		id = get_id(dev[status]);
+        		if (id==PRODUCT_ID_SISPM || id==PRODUCT_ID_SISPM_FLASH_NEW)
+		        {
+		          if (numeric==0)
+		            printf("This device is a 4-socket SiS-PM.\n");
+		          else
+		            printf("4\n");
+		        }
+		        else
+	          {
+	            if (numeric==0)
+	              printf("This device is a 1-socket mSiS-PM.\n");
+	            else
+	              printf("1\n");
+	          }
+		        sudev = get_handle(dev[status]);
+		        id = get_id(dev[status]);
+		        if(sudev==NULL)
+		          fprintf(stderr, "No access to Gembird #%d USB device %s\n",
+			          status, dev[status]->filename );
+		        else 
+		          if(verbose && numeric==0) printf("Accessing Gembird #%d USB device %s\n",
+				             status, dev[status]->filename );
+	            
+		        if (numeric==0)
+		          printf("This device has a serial number of %s\n",get_serial(sudev));
+		        else
+		          printf("%s\n",get_serial(sudev));		  
+	          usb_close(sudev);
+		        printf("\n");
+          }
+	        break;
+	      case 'd': // replace previous (first is default) device by selected one
+	        if(udev!=NULL) usb_close (udev);
+	        devnum = atoi(optarg);
+	        if(devnum>=count) devnum=count-1;
+	        break;
+      	case 'o':   
+          outlet=check_outlet_number(id, i);
+          sispm_switch_on(udev,id,outlet);
+          if(verbose) printf("Switched outlet %d %s\n",i,onoff[1+numeric]);
+          break;
+      	case 'f':   
+	        outlet=check_outlet_number(id, i);
+	        sispm_switch_off(udev,id,outlet);
+	        if(verbose) printf("Switched outlet %d %s\n",i,onoff[0+numeric]);
+	        break;
+      	case 't':   
+	        outlet=check_outlet_number(id, i);
+	        result=sispm_switch_toggle(udev,id,outlet);
+	        if(verbose) printf("Toggled outlet %d %s\n",i,onoff[result]);
+	        break;
+      	case 'A':
+	      {
+          time_t date, lastEventTime;
+	        outlet=check_outlet_number(id, i);
+	        struct plannif plan;
+          int opt, lastAction = 0;
+          ulong loop = 0;
+          int optindsave = optind;
+          int actionNo=0;
+          
+          time( &date );
+          lastEventTime = ((ulong)(date/60))*60; // round to previous minute
+          plannif_reset (&plan);
+          plan.socket = outlet;
+          plan.timeStamp = date;
+          plan.actions[0].switchOn = 0;
+          
+          const struct option opts[] = {
+            { "Ado", 1, NULL, 'd' }, { "Aafter", 1, NULL, 'a' }, { "Aat", 1, NULL, '@' }, 
+            { "Aloop", 1, NULL, 'l' }, { NULL, 0, 0, 0 }
+          };
+          
+          // scan long options and store in plan+loop variables
+          while ((opt = getopt_long(argc, argv, "", opts, NULL)) != EOF) {
+            if (opt == 'l') {
+              loop = atol(optarg);
+              continue;
+            }
+            if (actionNo+1 >= sizeof(plan.actions)/sizeof(struct plannifAction)) { // last event is reserved for loop or stop
+              fprintf(stderr,"Too many plannification events\nTerminating\n");
+              exit(-7);
+            }
+            switch (opt) {
+            case 'd':
+              plan.actions[actionNo+1].switchOn = (strcmp(optarg, "on") == 0 ? 1 : 0);
+              break;
+            case 'a':
+              plan.actions[actionNo].timeForNext = atol(optarg);
+              break;
+            case '@':
+              {
+                struct tm tm;
+                time_t time4next;
+                bzero (&tm, sizeof(tm));
+                strptime(optarg, "%Y-%m-%d %H:%M", &tm);
+                time4next = mktime(&tm);
+                if (time4next > lastEventTime)
+                  plan.actions[actionNo].timeForNext = (time4next - lastEventTime) / 60;
+                else
+                  plan.actions[actionNo].timeForNext = 0;
+                break;
+              }
+            case '?':
+            default:
+        	    print_usage(argv[0]);
+	            fprintf(stderr,"Unknown Option: %s\nTerminating\n",argv[optind-1]);
+	            exit(-7);
+	            break;
+            }
+            if (plan.actions[actionNo].timeForNext == 0) {
+        	    print_usage(argv[0]);
+              fprintf(stderr,"Incorrect Date: %s\nTerminating\n",optarg);
+              exit(-7);
+            }
 
-		if( (s = socket_init(bindaddr)) != NULL)
-		{
-		    while(1)
-		    {
-			l_listen(s,dev[devnum],devnum);
-		    }
-		}
-	    }
-	    break;
+            if (plan.actions[actionNo].timeForNext != -1 && plan.actions[actionNo+1].switchOn != -1) {
+              lastEventTime += 60 * plan.actions[actionNo].timeForNext;
+              actionNo++;
+            }
+          }
+          
+          // compute the value to set in the last row, according to loop
+          while (plan.actions[lastAction].timeForNext != -1) {
+            if (loop && (lastAction > 0)) { // we ignore the first time for the loop calculation
+              if (loop <= plan.actions[lastAction].timeForNext) {
+                printf ("error : the loop period is too short\n");
+                exit(1);
+              }
+              loop -= plan.actions[lastAction].timeForNext;
+            }
+            lastAction++;
+          }
+          if (lastAction >= 1)
+            plan.actions[lastAction].timeForNext = loop;
+                
+          // let's go, and check
+          usb_command_setplannif(udev, &plan);
+	        if(verbose) {
+            plannif_reset (&plan);
+	          usb_command_getplannif(udev,outlet,&plan);
+	          plannif_display(&plan);
+          }
+          
+          if (i<upto)
+            optind = optindsave; // reset for next device if needed
+          
+          break;
+	      }   
+      	case 'a':   
+	        outlet=check_outlet_number(id, i);
+          struct plannif plan;
+          plannif_reset (&plan);
+	        usb_command_getplannif(udev,outlet,&plan);
+          plannif_display(&plan);
+	        break;
+      	case 'g':   
+	        outlet=check_outlet_number(id, i);
+	        result=sispm_switch_getstatus(udev,id,outlet); 
+	        if(verbose) printf("Status of outlet %d:\t",i);
+	        printf("%s\n",onoff[ result +numeric]); 
+	        break;
+      	case 'm':   
+    	    outlet=check_outlet_number(id, i);
+	        result=sispm_get_power_supply_status(udev,id,outlet);
+	        if(verbose) printf("Power supply status is:\t");
+	        printf("%s\n",onoff[ result +numeric]); //take bit 1, which gives the relais status
+	        break;
+#ifndef WEBLESS
+  	    case 'p':
+	        listenport=atoi(optarg);
+	        if(verbose) printf("Server will listen on port %d.\n",listenport);
+	        break;
+      	case 'u':
+	        homedir=strdup(optarg);
+	        if(verbose) printf("Web pages come from \"%s\".\n",homedir);
+	        break;
+            case 'i':
+      	    bindaddr=optarg;
+	        if (verbose) printf("Web server will bind on interface with IP %s\n",bindaddr);
+	        break;
+      	case 'l':
+	      {
+      		int* s;
+	        if(verbose) printf("Server goes to listen mode now.\n");
+
+		      if( (s = socket_init(bindaddr)) != NULL)
+		        while(1)
+        			l_listen(s,dev[devnum],devnum);
+    	    break;
+  	    }
 #endif
-	case 'q':
-	    verbose=1-verbose;
-	    break;
-	case 'n':
-	    numeric=2-numeric;
-	    break;
-	case 'b':
-	    if (strncmp(optarg,"on",strlen("on"))==0)
-	    {   sispm_buzzer_on(udev);
-		if(verbose) printf("Turned buzzer %s\n",onoff[1+numeric]);
-	    } else
-	    if (strncmp(optarg,"off",strlen("off"))==0)
-	    {   sispm_buzzer_off(udev);
-		if(verbose) printf("Turned buzzer %s\n",onoff[0+numeric]);
-	    }
-	    break;
-       case 'v':
-	    print_disclaimer( argv[0] );
-	    break;
-       case 'h':
-	    print_usage( argv[0] );
-	    break;
-	default:
-	    print_usage( argv[0]);
-	    fprintf(stderr,"Unknown Option: %c(%x)\nTerminating\n",c,c);
-	    exit(-7);
+      	case 'q':
+	        verbose=1-verbose;
+    	    break;
+      	case 'n':
+	        numeric=2-numeric;
+	        break;
+        case 'b':
+    	    if (strncmp(optarg,"on",strlen("on"))==0)
+          {   
+	          sispm_buzzer_on(udev);
+		        if(verbose) printf("Turned buzzer %s\n",onoff[1+numeric]);
+    	    } else
+      	    if (strncmp(optarg,"off",strlen("off"))==0)
+	          {   
+	            sispm_buzzer_off(udev);
+          		if(verbose) printf("Turned buzzer %s\n",onoff[0+numeric]);
+      	    }
+    	    break;
+        case 'v':
+  	      print_disclaimer( argv[0] );
+    	    break;
+        case 'h':
+	        print_usage( argv[0] );
+	        break;
+      	default:
+    	    print_usage( argv[0]);
+	        fprintf(stderr,"Unknown Option: %c(%x)\nTerminating\n",c,c);
+	        exit(-7);
       }
-    }
-  }
+    } // loop through devices
+  } // loop through options
+  
   if (udev!=NULL) usb_close(udev);
   return;
 }

@@ -5,6 +5,7 @@
  
   (C) 2004,2005,2006 Mondrian Nuessle, Computer Architecture Group, University of Mannheim, Germany
   (C) 2005, Andreas Neuper, Germany
+  (C) 2010, Olivier Matheret, France, for the plannification part
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -28,8 +29,10 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <wchar.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
 #include <usb.h>
 #include <assert.h>
 #include "sispm_ctl.h"
@@ -199,4 +202,282 @@ int sispm_get_power_supply_status(usb_dev_handle * udev,int id, int outlet)
   outlet=check_outlet_number(id,outlet);
   result=(usb_command( udev, 3*outlet, 0x03, 1 ) ); //take bit 0, which gives the power supply status
   return (result >>1 )& 1;
+}
+
+
+// displays a plannification structure in a human readable way
+void plannif_display(const struct plannif* plan) {
+  char datebuffer[80];
+  struct tm * timeinfo;
+  time_t date;
+  int action;
+  ulong loop=0, lastActionTime=0;
+  
+  printf("\nGet outlet %d status :\n", plan->socket);
+  
+  date = plan->timeStamp;
+  timeinfo = localtime( &date );
+  strftime (datebuffer,80,"%e-%b-%Y %H:%M:%S",timeinfo);
+  printf("  programmed on : %s\n", datebuffer);
+
+  // action dates are on round minutes
+  date = ((time_t)(date/60))*60;
+  
+  // count loop time, as the sum of all but first events
+  for (action=sizeof(plan->actions)/sizeof(struct plannifAction)-1 ; action>=0 && plan->actions[action].switchOn == -1; action--); // skip void entries
+  if (action>=1 && plan->actions[action].timeForNext > 0) {  // we have a loop
+    for ( ; action>=1; action--)
+      loop += plan->actions[action].timeForNext;
+  }
+  
+  // compute last action time
+  for (action=0 ; action+1<sizeof(plan->actions)/sizeof(struct plannifAction) && (plan->actions[action+1].switchOn != -1); action++)
+    lastActionTime += plan->actions[action].timeForNext;
+
+  // if loop is enabled, do not display initial times, but next trigger times
+  // so that at least last action is in the future
+  if (loop > 0) {
+    time_t now;
+    ulong numOfLoops;
+    time (&now);
+    if (date+(lastActionTime*60) <= now) {
+      numOfLoops = 1 + (now-(date+(lastActionTime*60))) / (loop*60);
+      date += numOfLoops * (loop*60);
+    }
+  }
+  
+  // now read all filled rows, except the possibly last "stop" row
+  for (action=0 ; action<sizeof(plan->actions)/sizeof(struct plannifAction) && (plan->actions[action].switchOn != -1) && (plan->actions[action].timeForNext > 0); action++) {
+    date += 60 * plan->actions[action].timeForNext;
+    if ((action+1 < sizeof(plan->actions)/sizeof(struct plannifAction)) && (plan->actions[action+1].switchOn != -1)) {
+      timeinfo = localtime( &date );
+      strftime (datebuffer,80,"%e-%b-%Y %H:%M",timeinfo);
+      printf("  On %s ", datebuffer);
+      printf("switch %s\n", (plan->actions[action+1].switchOn ? "on" : "off"));
+    }
+    else {
+      if (action > 0) {
+        printf("  Loop every ");
+        if (loop >= 60*24*7) {
+          printf("%li weeks ", loop / (60*24*7));
+          loop = loop % (60*24*7);
+        }
+        if (loop >= 60*24) {
+          printf("%li days ", loop / (60*24));
+          loop = loop % (60*24);
+        }
+        if (loop >= 60) {
+          printf("%lih ", loop / 60);
+          loop = loop % 60;
+        }
+        if (loop > 0)
+          printf("%limin", loop);
+        printf("\n");
+      }
+      else
+        printf("  No programmed event.\n");
+    }
+  }
+}
+
+
+// private : scans the buffer, and fills the plannification structure accordingly
+void plannif_scanf(struct plannif* plan, const unsigned char* buffer)
+{
+	int bufindex = 0;
+  ulong nextWord;
+  int actionNo = 1;
+
+  READNEXTBYTE;
+	plan->socket = (nextWord-1)/3;
+	READNEXTDOUBLEWORD;
+	plan->timeStamp = nextWord;
+	
+	// first time to wait is at the end of the buffer, but may be extended to the plannif rows space
+	READWORD(0x25);
+	plan->actions[0].timeForNext = nextWord;
+	if (plan->actions[0].timeForNext == 0xFD21) { // max value : means we may have extensions, which would have the flag 0x4000
+    do {
+      READNEXTWORD;
+      if ((nextWord & 0x4000) == 0x4000) {
+        plan->actions[0].timeForNext += nextWord & ~0x4000;
+      }
+      else {
+        REVERTNEXTWORD;
+      }
+    } while (nextWord == 0x7FFF);
+	}
+	plan->actions[0].switchOn = 1; // whatever, it is useless for the initial waiting phase
+	
+  // now we can read each plannification rows
+  while (bufindex < 0x25) {
+    READNEXTWORD;
+    if (nextWord != 0x3FFF) { // 3FFF means "empty"
+      // on/off is the MSB of the 1st word, whether it is extended or not
+	    plan->actions[actionNo].switchOn = nextWord >> 15;
+      plan->actions[actionNo].timeForNext = nextWord & 0x7FFF;
+      if (plan->actions[actionNo].timeForNext == 0x3FFE ) { // again, 3FFE is the max value : it might be extended to next words, if they have the flag 0x4000
+        do {
+          READNEXTWORD;
+          if ((nextWord & 0x4000) == 0x4000) {
+            plan->actions[actionNo].timeForNext += nextWord & ~0x4000;
+          }
+          else {
+            REVERTNEXTWORD;
+          }
+        } while (nextWord == 0x7FFF);
+      }
+    }
+    actionNo++;
+  }
+
+}
+
+// queries the device, and fills the plannification structure
+void usb_command_getplannif(usb_dev_handle *udev, int socket, struct plannif* plan)
+{
+  int  reqtype=0x21 | USB_DIR_IN; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /*request type*/,
+  int  req=0x01;
+  unsigned char buffer[0x27];
+
+  if ( usb_control_msg(udev /* handle*/,
+		       reqtype,
+		       req,
+		       ((0x03<<8) | (3*socket)) +1,
+		       0 /*index*/,
+		       buffer /*bytes*/ ,
+		       0x27, /*size*/
+		       500) < 0 )
+  {
+      fprintf(stderr,"Error performing requested action\n"
+	          "Libusb error string: %s\nTerminating\n",usb_strerror());
+      usb_close (udev);
+      exit(-5);
+  }
+
+  /*// debug
+  int n;
+  for(n = 0 ; n < 0x27 ; n++)
+    printf("%02x ",(unsigned char)buffer[n]);
+  printf("\n"); 
+  // */
+  
+  plannif_scanf(plan, buffer);
+}
+
+
+// private : prints the buffer according to the plannification structure
+void plannif_printf(const struct plannif* plan, unsigned char* buffer)
+{
+	int bufindex = 0;
+  ulong nextWord, time4next;
+  int actionNo;
+
+  nextWord = 3*plan->socket +1;
+  WRITENEXTBYTE;
+  nextWord = plan->timeStamp;
+  WRITENEXTDOUBLEWORD;
+  
+  wmemset((wchar_t*)(buffer+5), (wchar_t)0x3FFF3FFF, (0x27-5)/sizeof(wchar_t));
+  
+  if (plan->actions[0].timeForNext == -1) {
+    //delete all
+    nextWord = 1;
+    WRITEWORD(0x25);
+  }
+  else {
+    time4next = plan->actions[0].timeForNext;
+  	// first time to wait is at the end of the buffer, but may be extended to the plannif rows space
+    if (time4next > 0xFD21) {
+    	// max value is 0xFD21 : means we can set extensions, with the flag 0x4000
+      time4next -= 0xFD21;
+      while (time4next > 0x3FFF) { // each extension can handle 3FFF bytes
+        nextWord = 0x3FFF | 0x4000;
+        WRITENEXTWORD;
+        time4next -= 0x3FFF;
+      }
+      nextWord = time4next | 0x4000;
+      WRITENEXTWORD;
+      nextWord = 0xFD21;
+    }
+    else
+      nextWord = time4next;
+    WRITEWORD(0x25);
+  }  
+
+  // now we can write each plannification rows, if non empty
+  for (actionNo = 1 ; (actionNo < sizeof(plan->actions)/sizeof(struct plannifAction)) && (plan->actions[actionNo].switchOn != -1); actionNo++) {
+DEBUGVAR(actionNo);
+    time4next = plan->actions[actionNo].timeForNext;
+DEBUGVAR(time4next);
+DEBUGVAR(plan->actions[actionNo].switchOn);
+DEBUGVAR((plan->actions[actionNo].switchOn << 15));
+    if (time4next > 0x3FFE) {
+    	// max value is 0x3FFE : means we can set extensions, with the flag 0x4000
+      nextWord = 0x3FFE | (plan->actions[actionNo].switchOn << 15);
+DEBUGVAR(nextWord);
+      WRITENEXTWORD;
+      time4next -= 0x3FFE;
+      while (time4next > 0x3FFF) { // each extension can handle 3FFF bytes
+        nextWord = 0x3FFF | 0x4000;
+DEBUGVAR(nextWord);
+        WRITENEXTWORD;
+        time4next -= 0x3FFF;
+      }
+      nextWord = time4next | 0x4000;
+    }
+    else
+      nextWord = time4next | (plan->actions[actionNo].switchOn << 15);
+DEBUGVAR(nextWord);
+    WRITENEXTWORD;
+  }
+}
+
+// prepares the buffer according to plannif and sends it to the device
+void usb_command_setplannif(usb_dev_handle *udev, struct plannif* plan)
+{
+  int  reqtype=0x21; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /*request type*/,
+  int  req=0x09;
+  unsigned char buffer[0x27];
+
+  plannif_printf(plan, buffer);
+  
+  /*// debug
+  int n;
+  for(n = 0 ; n < 0x27 ; n++)
+    printf("%02x ",(unsigned char)buffer[n]);
+  printf("\n"); /*
+  plannif_reset(plan);
+  plannif_scanf(plan, &buffer[0]);
+  plannif_display(plan);
+  exit(0);
+  //*/
+  if ( usb_control_msg(udev /* handle*/,
+		       reqtype,
+		       req,
+		       ((0x03<<8) | (3*plan->socket)) +1,
+		       0 /*index*/,
+		       buffer /*bytes*/ ,
+		       0x27, /*size*/
+		       500) < 0 )
+  {
+      fprintf(stderr,"Error performing requested action\n"
+	          "Libusb error string: %s\nTerminating\n",usb_strerror());
+      usb_close (udev);
+      exit(-5);
+  }
+
+}
+
+
+// prepares the plannif structure with initial values : compulsory before structure use !
+void plannif_reset (struct plannif* plan) {
+  int i;
+
+  plan->socket = 0;
+  plan->timeStamp = 0;  
+  for (i=0 ; i<sizeof(plan->actions)/sizeof(struct plannifAction) ; i++) {
+    plan->actions[i].switchOn = -1;
+    plan->actions[i].timeForNext = -1;
+  }
 }
