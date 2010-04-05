@@ -75,7 +75,7 @@ struct plannif {
 void plannif_reset (struct plannif* plan);
 void usb_command_getplannif(usb_dev_handle *udev, int socket, struct plannif* plan);
 void usb_command_setplannif(usb_dev_handle *udev, struct plannif* plan);
-void plannif_display(const struct plannif* plan);
+void plannif_display(const struct plannif* plan, int verbose, const char* progname);
 
 usb_dev_handle*get_handle(struct usb_device*dev);
 int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected );

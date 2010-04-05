@@ -60,7 +60,7 @@ char* get_serial(usb_dev_handle *udev)
 		       req,
 		       (0x03<<8) | 1,
 		       0 /*index*/,
-		       buffer /*bytes*/ ,
+		       (char*) buffer /*bytes*/ ,
 		       5, //1 /*size*/,
 		       500) < 0 )
   {
@@ -206,12 +206,13 @@ int sispm_get_power_supply_status(usb_dev_handle * udev,int id, int outlet)
 
 
 // displays a plannification structure in a human readable way
-void plannif_display(const struct plannif* plan) {
+void plannif_display(const struct plannif* plan, int verbose, const char* progname) {
   char datebuffer[80];
   struct tm * timeinfo;
   time_t date;
   int action;
   ulong loop=0, lastActionTime=0;
+  char cmdline[1024] = "";
   
   printf("\nGet outlet %d status :\n", plan->socket);
   
@@ -251,9 +252,11 @@ void plannif_display(const struct plannif* plan) {
     date += 60 * plan->actions[action].timeForNext;
     if ((action+1 < sizeof(plan->actions)/sizeof(struct plannifAction)) && (plan->actions[action+1].switchOn != -1)) {
       timeinfo = localtime( &date );
-      strftime (datebuffer,80,"%e-%b-%Y %H:%M",timeinfo);
+      strftime (datebuffer,80,"%Y-%m-%d %H:%M",timeinfo);
       printf("  On %s ", datebuffer);
       printf("switch %s\n", (plan->actions[action+1].switchOn ? "on" : "off"));
+      if (verbose)
+        sprintf(cmdline+(strlen(cmdline)), "--Aat \"%s\" --Ado %s ", datebuffer, (plan->actions[action+1].switchOn ? "on" : "off"));
     }
     else {
       if (action > 0) {
@@ -273,10 +276,15 @@ void plannif_display(const struct plannif* plan) {
         if (loop > 0)
           printf("%limin", loop);
         printf("\n");
+        if (verbose)
+          sprintf(cmdline+(strlen(cmdline)), "--Aloop %li ", loop);
       }
       else
         printf("  No programmed event.\n");
     }
+  }
+  if (verbose) {
+    printf("  equivalent command line : %s -A%i %s\n", progname, plan->socket, cmdline);
   }
 }
 
@@ -345,7 +353,7 @@ void usb_command_getplannif(usb_dev_handle *udev, int socket, struct plannif* pl
 		       req,
 		       ((0x03<<8) | (3*socket)) +1,
 		       0 /*index*/,
-		       buffer /*bytes*/ ,
+		       (char*) buffer /*bytes*/ ,
 		       0x27, /*size*/
 		       500) < 0 )
   {
@@ -407,20 +415,14 @@ void plannif_printf(const struct plannif* plan, unsigned char* buffer)
 
   // now we can write each plannification rows, if non empty
   for (actionNo = 1 ; (actionNo < sizeof(plan->actions)/sizeof(struct plannifAction)) && (plan->actions[actionNo].switchOn != -1); actionNo++) {
-DEBUGVAR(actionNo);
     time4next = plan->actions[actionNo].timeForNext;
-DEBUGVAR(time4next);
-DEBUGVAR(plan->actions[actionNo].switchOn);
-DEBUGVAR((plan->actions[actionNo].switchOn << 15));
     if (time4next > 0x3FFE) {
     	// max value is 0x3FFE : means we can set extensions, with the flag 0x4000
       nextWord = 0x3FFE | (plan->actions[actionNo].switchOn << 15);
-DEBUGVAR(nextWord);
       WRITENEXTWORD;
       time4next -= 0x3FFE;
       while (time4next > 0x3FFF) { // each extension can handle 3FFF bytes
         nextWord = 0x3FFF | 0x4000;
-DEBUGVAR(nextWord);
         WRITENEXTWORD;
         time4next -= 0x3FFF;
       }
@@ -428,7 +430,6 @@ DEBUGVAR(nextWord);
     }
     else
       nextWord = time4next | (plan->actions[actionNo].switchOn << 15);
-DEBUGVAR(nextWord);
     WRITENEXTWORD;
   }
 }
@@ -446,10 +447,10 @@ void usb_command_setplannif(usb_dev_handle *udev, struct plannif* plan)
   int n;
   for(n = 0 ; n < 0x27 ; n++)
     printf("%02x ",(unsigned char)buffer[n]);
-  printf("\n"); /*
+  printf("\n");
   plannif_reset(plan);
   plannif_scanf(plan, &buffer[0]);
-  plannif_display(plan);
+  plannif_display(plan, 0, NULL);
   exit(0);
   //*/
   if ( usb_control_msg(udev /* handle*/,
@@ -457,7 +458,7 @@ void usb_command_setplannif(usb_dev_handle *udev, struct plannif* plan)
 		       req,
 		       ((0x03<<8) | (3*plan->socket)) +1,
 		       0 /*index*/,
-		       buffer /*bytes*/ ,
+		       (char*) buffer /*bytes*/ ,
 		       0x27, /*size*/
 		       500) < 0 )
   {

@@ -370,7 +370,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
   plannif_reset(&plan);
   
 #ifdef BINDADDR
-  if (BINDADDR!="")
+  if (strlen(BINDADDR) != 0)
     bindaddr=BINDADDR;
 #endif
 
@@ -594,7 +594,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 	        if(verbose) {
             plannif_reset (&plan);
 	          usb_command_getplannif(udev,outlet,&plan);
-	          plannif_display(&plan);
+	          plannif_display(&plan, 0, NULL);
           }
           
           if (i<upto)
@@ -607,7 +607,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
           struct plannif plan;
           plannif_reset (&plan);
 	        usb_command_getplannif(udev,outlet,&plan);
-          plannif_display(&plan);
+          plannif_display(&plan, verbose, argv[0]);
 	        break;
       	case 'g':   
 	        outlet=check_outlet_number(id, i);
@@ -699,7 +699,7 @@ int main(int argc, char** argv)
   usb_find_devices();
 
 #ifndef WEBLESS
-  if (WEBDIR=="")
+  if (strlen(WEBDIR)==0)
     {
       homedir=HOMEDIR;
     }
