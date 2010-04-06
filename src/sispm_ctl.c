@@ -48,6 +48,16 @@ int get_id( struct usb_device* dev)
   return dev->descriptor.idProduct;
 }
 
+int usb_control_msg_tries(usb_dev_handle *dev, int requesttype, int request, int value, int index, char *bytes, int size, int timeout) {
+   int ret, i=0;
+   do {
+      usleep(500*i);
+      ret = usb_control_msg(dev, requesttype, request, value, index, bytes, size, timeout);
+      i++;
+   } while ((ret != size) && (i < 5));
+   return ret;
+}
+
 // for identification: reqtype=a1, request=01, b1=0x01, size=5
 char* get_serial(usb_dev_handle *udev)
 {
@@ -55,14 +65,14 @@ char* get_serial(usb_dev_handle *udev)
    int  req=0x01;
    unsigned char buffer[6];
 
-  if ( usb_control_msg(udev /* handle*/,
+  if ( usb_control_msg_tries(udev /* handle*/,
 		       reqtype,
 		       req,
 		       (0x03<<8) | 1,
 		       0 /*index*/,
 		       (char*) buffer /*bytes*/ ,
 		       5, //1 /*size*/,
-		       500) < 5 )
+		       5000) < 5 )
   {
       fprintf(stderr,"Error performing requested action\n"
 	          "Libusb error string: %s\nTerminating\n",usb_strerror());
@@ -88,14 +98,14 @@ int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected 
 	reqtype|=USB_DIR_IN;
 	req=0x01;
   }
-  if ( usb_control_msg(udev /* handle*/,
+  if ( usb_control_msg_tries(udev /* handle*/,
 		       reqtype,
 		       req,
 		       (0x03<<8) | b1,
 		       0 /*index*/,
 		       buffer /*bytes*/ ,
 		       2, //1 /*size*/,
-		       500) < 2 )
+		       5000) < 2 )
   {
       fprintf(stderr,"Error performing requested action\n"
 	          "Libusb error string: %s\nTerminating\n",usb_strerror());
@@ -348,14 +358,14 @@ void usb_command_getplannif(usb_dev_handle *udev, int socket, struct plannif* pl
   int  req=0x01;
   unsigned char buffer[0x27];
 
-  if ( usb_control_msg(udev /* handle*/,
+  if ( usb_control_msg_tries(udev /* handle*/,
 		       reqtype,
 		       req,
 		       ((0x03<<8) | (3*socket)) +1,
 		       0 /*index*/,
 		       (char*) buffer /*bytes*/ ,
 		       0x27, /*size*/
-		       500) < 0x27 )
+		       5000) < 0x27 )
   {
       fprintf(stderr,"Error performing requested action\n"
 	          "Libusb error string: %s\nTerminating\n",usb_strerror());
@@ -363,7 +373,7 @@ void usb_command_getplannif(usb_dev_handle *udev, int socket, struct plannif* pl
       exit(-5);
   }
 
-  // debug
+  /* // debug
   int n;
   for(n = 0 ; n < 0x27 ; n++)
     printf("%02x ",(unsigned char)buffer[n]);
@@ -453,14 +463,14 @@ void usb_command_setplannif(usb_dev_handle *udev, struct plannif* plan)
   plannif_display(plan, 0, NULL);
   exit(0);
   //*/
-  if ( usb_control_msg(udev /* handle*/,
+  if ( usb_control_msg_tries(udev /* handle*/,
 		       reqtype,
 		       req,
 		       ((0x03<<8) | (3*plan->socket)) +1,
 		       0 /*index*/,
 		       (char*) buffer /*bytes*/ ,
 		       0x27, /*size*/
-		       500) < 0x27 )
+		       5000) < 0x27 )
   {
       fprintf(stderr,"Error performing requested action\n"
 	          "Libusb error string: %s\nTerminating\n",usb_strerror());
