@@ -62,7 +62,7 @@ char* get_serial(usb_dev_handle *udev)
 		       0 /*index*/,
 		       (char*) buffer /*bytes*/ ,
 		       5, //1 /*size*/,
-		       500) < 0 )
+		       500) < 5 )
   {
       fprintf(stderr,"Error performing requested action\n"
 	          "Libusb error string: %s\nTerminating\n",usb_strerror());
@@ -95,7 +95,7 @@ int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected 
 		       0 /*index*/,
 		       buffer /*bytes*/ ,
 		       2, //1 /*size*/,
-		       500) < 0 )
+		       500) < 2 )
   {
       fprintf(stderr,"Error performing requested action\n"
 	          "Libusb error string: %s\nTerminating\n",usb_strerror());
@@ -107,7 +107,7 @@ int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected 
 }
 
 
-usb_dev_handle*get_handle(struct usb_device*dev)
+usb_dev_handle* get_handle(struct usb_device*dev)
 {
     usb_dev_handle *udev=NULL;
     if( dev==NULL ) return NULL;
@@ -355,7 +355,7 @@ void usb_command_getplannif(usb_dev_handle *udev, int socket, struct plannif* pl
 		       0 /*index*/,
 		       (char*) buffer /*bytes*/ ,
 		       0x27, /*size*/
-		       500) < 0 )
+		       500) < 0x27 )
   {
       fprintf(stderr,"Error performing requested action\n"
 	          "Libusb error string: %s\nTerminating\n",usb_strerror());
@@ -363,7 +363,7 @@ void usb_command_getplannif(usb_dev_handle *udev, int socket, struct plannif* pl
       exit(-5);
   }
 
-  /*// debug
+  // debug
   int n;
   for(n = 0 ; n < 0x27 ; n++)
     printf("%02x ",(unsigned char)buffer[n]);
@@ -460,7 +460,7 @@ void usb_command_setplannif(usb_dev_handle *udev, struct plannif* plan)
 		       0 /*index*/,
 		       (char*) buffer /*bytes*/ ,
 		       0x27, /*size*/
-		       500) < 0 )
+		       500) < 0x27 )
   {
       fprintf(stderr,"Error performing requested action\n"
 	          "Libusb error string: %s\nTerminating\n",usb_strerror());
