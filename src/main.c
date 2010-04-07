@@ -234,6 +234,7 @@ void print_disclaimer(char*name)
 {
   fprintf(stderr, "\nSiS PM Control for Linux 2.6\n\n"
 	 "(C) 2004, 2005, 2006, 2007, 2008 by Mondrian Nuessle, (C) 2005, 2006 by Andreas Neuper.\n"
+         "(C) 2010 by Olivier Matheret for the plannification part\n"
 	 "This program is free software.\n"
 	 "%s comes with ABSOLUTELY NO WARRANTY; for details \n"
 	 "see the file INSTALL. This is free software, and you are welcome\n"
@@ -558,13 +559,11 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
               }
             case '?':
             default:
-        	    print_usage(argv[0]);
-	            fprintf(stderr,"Unknown Option: %s\nTerminating\n",argv[optind-1]);
-	            exit(-7);
-	            break;
+                fprintf(stderr,"Unknown Option: %s\nTerminating\n",argv[optind-1]);
+                exit(-7);
+                break;
             }
             if (plan.actions[actionNo].timeForNext == 0) {
-        	    print_usage(argv[0]);
               fprintf(stderr,"Incorrect Date: %s\nTerminating\n",optarg);
               exit(-7);
             }
@@ -654,7 +653,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
         case 'b':
     	    if (strncmp(optarg,"on",strlen("on"))==0)
           {   
-	          sispm_buzzer_on(udev);
+                 sispm_buzzer_on(udev);
 		        if(verbose) printf("Turned buzzer %s\n",onoff[1+numeric]);
     	    } else
       	    if (strncmp(optarg,"off",strlen("off"))==0)
@@ -664,15 +663,14 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
       	    }
     	    break;
         case 'v':
-  	      print_disclaimer( argv[0] );
+            print_disclaimer( argv[0] );
     	    break;
         case 'h':
-	        print_usage( argv[0] );
-	        break;
+            print_usage( argv[0] );
+            break;
       	default:
-    	    print_usage( argv[0]);
-	        fprintf(stderr,"Unknown Option: %c(%x)\nTerminating\n",c,c);
-	        exit(-7);
+            fprintf(stderr,"Unknown Option: %c(%x)\nTerminating\n",c,c);
+            exit(-7);
       }
     } // loop through devices
   } // loop through options
