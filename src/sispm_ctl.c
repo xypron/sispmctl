@@ -270,21 +270,22 @@ void plannif_display(const struct plannif* plan, int verbose, const char* progna
     }
     else {
       if (action > 0) {
+        ulong loopdsp = loop;
         printf("  Loop every ");
-        if (loop >= 60*24*7) {
-          printf("%li weeks ", loop / (60*24*7));
-          loop = loop % (60*24*7);
+        if (loopdsp >= 60*24*7) {
+          printf("%li week(s) ", loopdsp / (60*24*7));
+          loopdsp %= (60*24*7);
         }
-        if (loop >= 60*24) {
-          printf("%li days ", loop / (60*24));
-          loop = loop % (60*24);
+        if (loopdsp >= 60*24) {
+          printf("%li day(s) ", loopdsp / (60*24));
+          loopdsp %= (60*24);
         }
-        if (loop >= 60) {
-          printf("%lih ", loop / 60);
-          loop = loop % 60;
+        if (loopdsp >= 60) {
+          printf("%lih ", loopdsp / 60);
+          loopdsp %= 60;
         }
-        if (loop > 0)
-          printf("%limin", loop);
+        if (loopdsp > 0)
+          printf("%limin", loopdsp);
         printf("\n");
         if (verbose)
           sprintf(cmdline+(strlen(cmdline)), "--Aloop %li ", loop);
