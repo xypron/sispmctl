@@ -1,6 +1,6 @@
-SiS-PM Control for Linux 2.7
+SiS-PM Control for Linux 3.0
 ----------------------------
-(c) 2005,2006,2007,2008 by Mondrian Nuessle et al.
+(c) 2005-2010 by Mondrian Nuessle et al.
 
 Overview
 --------
@@ -13,6 +13,7 @@ Since version 2.3 also 1-outlet mSIS-PM devices are supported; this is still
 alpha, probably not working and needs testers/developers.
 Since version 2.4 a GUI is available in the extra sub-directory. See the 
 README there.
+Version 3.0 added the possibility to program the internal timer, thanks to Olivier Matheret.
 
 
 Installation
@@ -42,7 +43,7 @@ The following confiure options may be of interest:
 
 Dependencies
 ------------
-- libusb 0.19+ must be installed, libusb-config in $PATH
+- libusb 0.1.9+ must be installed, libusb-config in $PATH
 
 
 Web-Interface

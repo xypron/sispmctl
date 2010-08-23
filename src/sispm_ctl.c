@@ -80,7 +80,7 @@ char* get_serial(usb_dev_handle *udev)
       exit(-5);
   }
 
-  sprintf(serial_id, "%02x:%02x:%02x:%02x:%02x", buffer[0],buffer[1],
+  snprintf(serial_id, 15, "%02x:%02x:%02x:%02x:%02x", buffer[0],buffer[1],
 	  buffer[2],buffer[3],buffer[4]);
   return serial_id;
 }

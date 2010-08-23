@@ -66,6 +66,7 @@ void process(int out,char*v,struct usb_device *dev,int devnum)
     long length=0,lastpos,remlen=0;
     usb_dev_handle *udev;
     unsigned int id; //product id of current device
+	  char* retvalue;
 
     if(debug)
 	fprintf(stderr,"\nRequested is (%s)\n",v);
@@ -122,7 +123,8 @@ void process(int out,char*v,struct usb_device *dev,int devnum)
 	    devnum, dev->filename );
  
     lastpos=ftell(in);
-    fgets(xbuffer,BSIZE-1,in);
+    retvalue=fgets(xbuffer,BSIZE-1,in);
+    assert(retvalue!=NULL);
     remlen=length=ftell(in)-lastpos;
     lastpos=ftell(in);
     while(!feof(in))
@@ -220,7 +222,8 @@ void process(int out,char*v,struct usb_device *dev,int devnum)
 	}
 	send(out,mrk,remlen,0);
 	memset(xbuffer,0,BSIZE);
-	fgets(xbuffer,BSIZE-1,in);
+	retvalue=fgets(xbuffer,BSIZE-1,in);
+	assert(retvalue!=NULL);
 	remlen=length=ftell(in)-lastpos;
 	lastpos=ftell(in);
     }
@@ -232,8 +235,8 @@ void process(int out,char*v,struct usb_device *dev,int devnum)
 
 void print_disclaimer(char*name)
 {
-  fprintf(stderr, "\nSiS PM Control for Linux 2.6\n\n"
-	 "(C) 2004, 2005, 2006, 2007, 2008 by Mondrian Nuessle, (C) 2005, 2006 by Andreas Neuper.\n"
+  fprintf(stderr, "\nSiS PM Control for Linux 3.0\n\n"
+	 "(C) 2004-2010 by Mondrian Nuessle, (C) 2005, 2006 by Andreas Neuper.\n"
          "(C) 2010 by Olivier Matheret for the plannification part\n"
 	 "This program is free software.\n"
 	 "%s comes with ABSOLUTELY NO WARRANTY; for details \n"
@@ -266,6 +269,7 @@ void print_usage(char* name)
 		 "   'q'   - quiet mode, no explanations - but errors\n"
      "   'a'   - get plannification for outlet\n"
      "   'A'   - set plannification for outlet\n"
+		 "     '-A<num>  - select outlet
      "     '--Aat \"date\"'   - sets an event time as a date '%%Y-%%m-%%d %%H:%%M'\n"
      "     '--Aafter N'   - sets an event time as N minutes after the previous one\n"
      "     '--Ado <on|off>'   - sets the current event's action\n"
