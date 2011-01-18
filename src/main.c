@@ -269,7 +269,7 @@ void print_usage(char* name)
 		 "   'q'   - quiet mode, no explanations - but errors\n"
      "   'a'   - get plannification for outlet\n"
      "   'A'   - set plannification for outlet\n"
-		 "     '-A<num>  - select outlet
+		 "     '-A<num>  - select outlet\n"
      "     '--Aat \"date\"'   - sets an event time as a date '%%Y-%%m-%%d %%H:%%M'\n"
      "     '--Aafter N'   - sets an event time as N minutes after the previous one\n"
      "     '--Ado <on|off>'   - sets the current event's action\n"
