@@ -69,7 +69,7 @@ AC_CHECK_FUNC(socket, [true], [AC_CHECK_LIB(socket, socket)])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
-AC_CONFIG_HEADERS([src/config.h])
+AM_CONFIG_HEADER(config.h)
 AC_OUTPUT
 echo ""
 echo "Good - your configure finished. Start make now"
