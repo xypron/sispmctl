@@ -489,26 +489,37 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 		        printf("\n");
           }
 	        break;
-	      // select device...
-              // replace previous (first is default) device by selected one
-	      case 'd': // by id
-	        if(udev!=NULL) usb_close (udev);
-	        devnum = atoi(optarg);
-	        if(devnum>=count) devnum=count-1;
-	        break;
-	      case 'D': // by serial number
-		for (j=0; j < count; j++)
-		{
-		  //fprintf(stderr, ">>> %s = %s\n", usbdevsn[j], optarg);
-		  if (strcasecmp(usbdevsn[j], optarg) == 0)
-		  {
-		    if(udev!=NULL) usb_close (udev);
-		    devnum = j;
-		    if(devnum>=count) devnum=count-1;
-		    break;
-		  }
-		}
-	        break;
+      // select device...
+      // replace previous (first is default) device by selected one
+      case 'd': // by id
+        if (udev != NULL)
+          usb_close(udev);
+        devnum = atoi(optarg)-1;
+        if ((devnum < 0) || (devnum >= count)) {
+          fprintf(stderr, "Invalid number or given device not found.\nTerminating\n");
+          if (udev != NULL)
+            usb_close(udev);
+          exit(-8);
+        }
+        break;
+      case 'D': // by serial number
+        for (j=0; j < count; j++) {
+          if (debug)
+            fprintf(stderr, "now comparing %s and %s\n", usbdevsn[j], optarg);
+          if (strcasecmp(usbdevsn[j], optarg) == 0) {
+            if (udev != NULL)
+              usb_close(udev);
+            devnum = j;
+            break;
+          }
+        }
+        if (devnum != j) {
+          fprintf(stderr, "No device with serial number %s found.\nTerminating\n",optarg);
+          if (udev != NULL)
+            usb_close(udev);
+          exit(-8);
+        }
+        break;
       	case 'o':
           outlet=check_outlet_number(id, i);
           sispm_switch_on(udev,id,outlet);
