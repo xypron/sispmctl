@@ -250,46 +250,45 @@ void print_usage(char* name)
 {
   print_disclaimer(name);
   fprintf(stderr,"\n"
-		 "sispmctl -s\n"
-		 "sispmctl [-q] [-n] [-d 1...] [-D ...] -b <on|off>\n"
-		 "sispmctl [-q] [-n] [-d 1...] [-D ...] -[o|f|t|g|m] 1..4|all\n"
-		 "sispmctl [-q] [-n] [-d 1...] [-D ...] -[a|A] 1..4|all [--Aat '...'] [--Aafter ...] [--Ado <on|off>] ... [--Aloop ...]\n"
-     "   'v'   - print version & copyright\n"
-     "   'h'   - print this usage information\n"
-		 "   's'   - scan for supported GEMBIRD devices\n"
-		 "   'S'   - as 's' but also print USB bus number\n"
-		 "   'b'   - switch buzzer on or off\n"
-		 "   'o'   - switch outlet(s) on\n"
-		 "   'f'   - switch outlet(s) off\n"
-		 "   't'   - toggle outlet(s) on/off\n"
-		 "   'g'   - get status of outlet(s)\n"
-	         "   'm'   - get power supply status outlet(s) on/off\n"
-		 "   'd'   - apply to device 'n'\n"
-		 "   'D'   - apply to device with given serial number\n"
-		 "   'n'   - show result numerically\n"
-		 "   'q'   - quiet mode, no explanations - but errors\n"
-     "   'a'   - get plannification for outlet\n"
-     "   'A'   - set plannification for outlet\n"
-		 "     '-A<num>  - select outlet\n"
-     "     '--Aat \"date\"'   - sets an event time as a date '%%Y-%%m-%%d %%H:%%M'\n"
-     "     '--Aafter N'   - sets an event time as N minutes after the previous one\n"
-     "     '--Ado <on|off>'   - sets the current event's action\n"
-     "     '--Aloop N'   - loops to 1st event's action after N minutes\n\n"
+          "sispmctl -s\n"
+          "sispmctl [-q] [-n] [-d 1...] [-D ...] -b <on|off>\n"
+          "sispmctl [-q] [-n] [-d 1...] [-D ...] -[o|f|t|g|m] 1..4|all\n"
+          "sispmctl [-q] [-n] [-d 1...] [-D ...] -[a|A] 1..4|all [--Aat '...'] [--Aafter ...] [--Ado <on|off>] ... [--Aloop ...]\n"
+          "   'v'   - print version & copyright\n"
+          "   'h'   - print this usage information\n"
+          "   's'   - scan for supported GEMBIRD devices\n"
+          "   'S'   - as 's' but also print USB bus number\n"
+          "   'b'   - switch buzzer on or off\n"
+          "   'o'   - switch outlet(s) on\n"
+          "   'f'   - switch outlet(s) off\n"
+          "   't'   - toggle outlet(s) on/off\n"
+          "   'g'   - get status of outlet(s)\n"
+          "   'm'   - get power supply status outlet(s) on/off\n"
+          "   'd'   - apply to device 'n'\n"
+          "   'D'   - apply to device with given serial number\n"
+          "   'n'   - show result numerically\n"
+          "   'q'   - quiet mode, no explanations - but errors\n"
+          "   'a'   - get plannification for outlet\n"
+          "   'A'   - set plannification for outlet\n"
+          "           '-A<num>'        - select outlet\n"
+          "           '--Aat \"date\"'   - sets an event time as a date '%%Y-%%m-%%d %%H:%%M'\n"
+          "           '--Aafter N'     - sets an event time as N minutes after the previous one\n"
+          "           '--Ado <on|off>' - sets the current event's action\n"
+          "           '--Aloop N'      - loops to 1st event's action after N minutes\n\n"
 #ifndef WEBLESS
-	         "Webinterface features:\n"
-		 "sispmctl [-q] [-i <ip>] [-p <#port>] [-u <path>] -l\n"
-		 "   'l'   - start port listener\n"
-	         "   'i'   - bind socket on interface with given IP (dotted decimal, i.e. 192.168.1.1)\n"
-		 "   'p'   - port number for listener (%d)\n"
-		 "   'u'   - repository for web pages (default=%s)\n\n"
-	  , listenport,homedir
+          "Webinterface features:\n"
+          "sispmctl [-q] [-i <ip>] [-p <#port>] [-u <path>] -l\n"
+          "   'l'   - start port listener\n"
+          "   'i'   - bind socket on interface with given IP (dotted decimal, i.e. 192.168.1.1)\n"
+          "   'p'   - port number for listener (%d)\n"
+          "   'u'   - repository for web pages (default=%s)\n\n"
+	  ,listenport, homedir
 #endif
+          );
 
-);
 #ifdef WEBLESS
   fprintf(stderr,"Note: This build was compiled without web-interface features.\n\n");
 #endif
-
 }
 
 #ifndef WEBLESS
