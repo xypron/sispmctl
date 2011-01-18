@@ -7,16 +7,16 @@
 sispmctl - Gembird Silver Shield PM ConTroL program
 
 .SH SYNOPSIS
-.B sispmctl [ 
+.B sispmctl [
 .I -i <ip>
 .B ] [
 .I -p <#port>
 .B ] [
 .I -u <path>
-.B ] 
+.B ]
 .I -l
 .P
-.B sispmctl 
+.B sispmctl
 .I -s
 .P
 .B sispmctl [
@@ -24,9 +24,9 @@ sispmctl - Gembird Silver Shield PM ConTroL program
 .B ] [
 .I -n
 .B ] [
-.I -d 
+.I -d
 .B 1... ]
-.I -b 
+.I -b
 .B <on|off>
 .P
 .B sispmctl [
@@ -34,13 +34,13 @@ sispmctl - Gembird Silver Shield PM ConTroL program
 .B ] [
 .I -n
 .B ] [
-.I -d 
+.I -d
 .B 1... ] <
-.I -o 
+.I -o
 .B |
-.I -f 
+.I -f
 .B |
-.I -g 
+.I -g
 .B > <1..4|all>
 
 .SH DESCRIPTION
@@ -48,7 +48,7 @@ sispmctl - Gembird Silver Shield PM ConTroL program
 is a tool to switch the USB controlled outlets of Gembird Silver Shield PM.
 It is known by many names, e.g. Revolt Power Switch.
 .P
-It is coded in C and does use the usb specific library (LibUSB).  
+It is coded in C and does use the usb specific library (LibUSB).
 This allows you a portable and fast solution.
 
 .SH OPTIONS
@@ -82,26 +82,26 @@ print version & copyright
 
 .SH WEB INTERFACE
 
-The sispmctl program provides a web interface when started with the 
+The sispmctl program provides a web interface when started with the
 .I -l
-option. No additional http server is needed. 
+option. No additional http server is needed.
 Each selected usb device is blocked by sispmctl while running.
 .P
 After installation, the first of three web-interfaces is selected. The default location of the HTML
 files is /usr/local/httpd/sispm_ctl/doc which is a symbolic link to /usr/local/httpd/sispm_ctl/skin1.
 .P
-The http capabilities of sispmctl are limited. 
+The http capabilities of sispmctl are limited.
 Technically speaking, only the first line of each http request is parsed.
 The terminating path component, i.e. file name, is looked up in the repository directory.
 If present the file is parsed and in absence of control sequences sent as is.
 The files must include the http header portion.
 .P
 Control sequences start and end with double dollar `$$'.
-They consist of a command portion separated by a question mark `?' from 
+They consist of a command portion separated by a question mark `?' from
 alternative outputs which are separated by the first colon `:'.
 The command portion is a token followed by an embraced number that references the outlet, e.g.
 .IB $$command(1)?positive:negative$$
-while command is one of 
+while command is one of
 .B status
 ,
 .B toggle
@@ -117,7 +117,7 @@ Best is to redirect to other pages that only include status requests.
 Switch off the first outlet of the first SiS-PM and the third outlet of the second SiS-PM:
 .P
 .B sispmctl -f 1 -d 1 -f 3
- 
+
 Print the status of the forth outlet as zero or one:
 .P
 .B sispmctl -nqg 4
@@ -128,7 +128,7 @@ Run sispmctl on the second device as a web-server:
 
 You can connect to it from the same machine by pointing to http://localhost:2638 with
 your webbrowser
- 
+
 .SH AUTHOR
 .P
 First version by Mondrian Nuessle, nuessle@uni-mannheim.de
