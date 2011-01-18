@@ -1,8 +1,8 @@
 /*
   SisPM.c
- 
+
   Controls the GEMBIRD Silver Shield PM USB outlet device
- 
+
   (C) 2004,2005,2006 Mondrian Nuessle, Computer Architecture Group, University of Mannheim, Germany
   (C) 2005, Andreas Neuper, Germany
   (C) 2010, Olivier Matheret, France, for the plannification part
@@ -11,12 +11,12 @@
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -118,10 +118,10 @@ void process(int out,char*v,struct usb_device *dev,int devnum)
     if(udev==NULL)
 	fprintf(stderr, "No access to Gembird #%d USB device %s\n",
 	    devnum, dev->filename );
-    else 
+    else
 	if(verbose) printf("Accessing Gembird #%d USB device %s\n",
 	    devnum, dev->filename );
- 
+
     lastpos=ftell(in);
     retvalue=fgets(xbuffer,BSIZE-1,in);
     assert(retvalue!=NULL);
@@ -151,7 +151,7 @@ void process(int out,char*v,struct usb_device *dev,int devnum)
 		char *trm=strchr(neg?neg:cmd,'$');
 		if(debug) fprintf(stderr,"%p\n%p\n%p\n%p\n%p\n%p\n",cmd,num,pos,neg,trm,ptr);
 		if(debug) fprintf(stderr,"%s%s%s%s%s%s",cmd,num,pos,neg,trm,ptr);
-		if( trm!=NULL ) 
+		if( trm!=NULL )
 		{
 		    assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at #",num!=NULL));
 		    assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at ?",pos!=NULL));
@@ -241,7 +241,7 @@ void print_disclaimer(char*name)
 	 "This program is free software.\n"
 	 "%s comes with ABSOLUTELY NO WARRANTY; for details \n"
 	 "see the file INSTALL. This is free software, and you are welcome\n"
-	 "to redistribute it under certain conditions; see the file INSTALL\n" 
+	 "to redistribute it under certain conditions; see the file INSTALL\n"
 	 "for details.\n\n", name );
   return;
 }
@@ -281,14 +281,14 @@ void print_usage(char* name)
 	         "   'i'   - bind socket on interface with given IP (dotted decimal, i.e. 192.168.1.1)\n"
 		 "   'p'   - port number for listener (%d)\n"
 		 "   'u'   - repository for web pages (default=%s)\n\n"
-	  , listenport,homedir 
+	  , listenport,homedir
 #endif
 
 );
 #ifdef WEBLESS
   fprintf(stderr,"Note: This build was compiled without web-interface features.\n\n");
 #endif
-  
+
 }
 
 #ifndef WEBLESS
@@ -321,7 +321,7 @@ const char*answer(char*in)
 
     static char out[MAXANSWER+2];
     memset(out,0,MAXANSWER);
-    
+
     if( strncasecmp("GET ",in,4) == 0 )
     {
 	type=1;
@@ -343,11 +343,11 @@ const char*answer(char*in)
 	ptr+=6;
     } else
     {
-	
+
     }
-    
+
     strcpy(out,show_header((4<<4)+1));
-    
+
     strcat(out,"\n\n<HTML><HEAD><TITLE>TEST</TITLE></HEAD><BODY><H1>TEST</H1></BODY></HTML>\n");
     strcat(out,show_header((4<<4)+1));
     return(out);
@@ -373,14 +373,14 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
   unsigned int outlet;
   struct plannif plan;
   plannif_reset(&plan);
-  
+
 #ifdef BINDADDR
   if (strlen(BINDADDR) != 0)
     bindaddr=BINDADDR;
 #endif
 
   while( (c=getopt(argc, argv,"i:o:f:t:a:A:b:g:m:lqvhnsSd:u:p:")) != -1 )
-  {    
+  {
     if( c=='o' || c=='f' || c=='g' || c=='t' || c=='a' || c=='A' || c=='m')
     {
       if((strncmp(optarg,"all",strlen("all"))==0)
@@ -393,7 +393,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 		    from = upto = atoi(optarg);
       }
       if (from<1 || upto>4)
-      {   
+      {
         fprintf(stderr,"Invalid outlet number given: %s\n"
           "Expected: 1, 2, 3, 4, or all.\nTerminating.\n",optarg);
         print_disclaimer( argv[0] );
@@ -413,12 +413,12 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
         if(udev==NULL)
           fprintf(stderr, "No access to Gembird #%d USB device %s\n",
             devnum, dev[devnum]->filename );
-        else 
+        else
           if(verbose) printf("Accessing Gembird #%d USB device %s\n",
 		       devnum, dev[devnum]->filename );
-      }    
+      }
     }
-    
+
 #ifdef WEBLESS
     if (c=='l' || c=='i' || c=='p' || c=='u' )
     {
@@ -427,8 +427,8 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
     }
 #endif
 
-    // using first available device 
-    for (i=from;i<=upto;i++) 
+    // using first available device
+    for (i=from;i<=upto;i++)
     {
       switch (c)
       {
@@ -438,12 +438,12 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 	        {
 		        if (c == 'S') {
 		          if (numeric==0)
-		            printf("Gembird #%d is USB bus/device %s/%s. ", 
+		            printf("Gembird #%d is USB bus/device %s/%s. ",
 			           status,
 			           dev[status]->bus->dirname,
 			           dev[status]->filename);
 		          else
-		            printf("%d %s %s\n", 
+		            printf("%d %s %s\n",
 			           status,
 			           dev[status]->bus->dirname,
 			           dev[status]->filename);
@@ -453,9 +453,9 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 		            printf("Gembird #%d is USB device %s.",
 			           status,dev[status]->filename);
 		          else
-		             printf("%d %s\n", 
+		             printf("%d %s\n",
 			           status,
-			           dev[status]->filename);	       
+			           dev[status]->filename);
             }
         		id = get_id(dev[status]);
         		if (id==PRODUCT_ID_SISPM || id==PRODUCT_ID_SISPM_FLASH_NEW)
@@ -477,14 +477,14 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 		        if(sudev==NULL)
 		          fprintf(stderr, "No access to Gembird #%d USB device %s\n",
 			          status, dev[status]->filename );
-		        else 
+		        else
 		          if(verbose && numeric==0) printf("Accessing Gembird #%d USB device %s\n",
 				             status, dev[status]->filename );
-	            
+
 		        if (numeric==0)
 		          printf("This device has a serial number of %s\n",get_serial(sudev));
 		        else
-		          printf("%s\n",get_serial(sudev));		  
+		          printf("%s\n",get_serial(sudev));
 	          usb_close(sudev);
 		        printf("\n");
           }
@@ -494,17 +494,17 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 	        devnum = atoi(optarg);
 	        if(devnum>=count) devnum=count-1;
 	        break;
-      	case 'o':   
+      	case 'o':
           outlet=check_outlet_number(id, i);
           sispm_switch_on(udev,id,outlet);
           if(verbose) printf("Switched outlet %d %s\n",i,onoff[1+numeric]);
           break;
-      	case 'f':   
+      	case 'f':
 	        outlet=check_outlet_number(id, i);
 	        sispm_switch_off(udev,id,outlet);
 	        if(verbose) printf("Switched outlet %d %s\n",i,onoff[0+numeric]);
 	        break;
-      	case 't':   
+      	case 't':
 	        outlet=check_outlet_number(id, i);
 	        result=sispm_switch_toggle(udev,id,outlet);
 	        if(verbose) printf("Toggled outlet %d %s\n",i,onoff[result]);
@@ -518,9 +518,9 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
           ulong loop = 0;
           int optindsave = optind;
           int actionNo=0;
-          
+
           outlet=check_outlet_number(id, i);
- 
+
           time( &date );
 					timeStamp_tm = localtime(&date);
           lastEventTime = ((ulong)(date/60))*60; // round to previous minute
@@ -528,12 +528,12 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
           plan.socket = outlet;
           plan.timeStamp = date;
           plan.actions[0].switchOn = 0;
-          
+
           const struct option opts[] = {
-            { "Ado", 1, NULL, 'd' }, { "Aafter", 1, NULL, 'a' }, { "Aat", 1, NULL, '@' }, 
+            { "Ado", 1, NULL, 'd' }, { "Aafter", 1, NULL, 'a' }, { "Aat", 1, NULL, '@' },
             { "Aloop", 1, NULL, 'l' }, { NULL, 0, 0, 0 }
           };
-          
+
           // scan long options and store in plan+loop variables
           while ((opt = getopt_long(argc, argv, "", opts, NULL)) != EOF) {
             if (opt == 'l') {
@@ -581,7 +581,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
               actionNo++;
             }
           }
-          
+
           // compute the value to set in the last row, according to loop
           while (plan.actions[lastAction].timeForNext != -1) {
             if (loop && (lastAction > 0)) { // we ignore the first time for the loop calculation
@@ -595,7 +595,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
           }
           if (lastAction >= 1)
             plan.actions[lastAction].timeForNext = loop;
-                
+
           // let's go, and check
           usb_command_setplannif(udev, &plan);
 	        if(verbose) {
@@ -603,26 +603,26 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 	          usb_command_getplannif(udev,outlet,&plan);
 	          plannif_display(&plan, 0, NULL);
           }
-          
+
           if (i<upto)
             optind = optindsave; // reset for next device if needed
-          
+
           break;
-	      }   
-      	case 'a':   
+	      }
+      	case 'a':
 	        outlet=check_outlet_number(id, i);
           struct plannif plan;
           plannif_reset (&plan);
 	        usb_command_getplannif(udev,outlet,&plan);
           plannif_display(&plan, verbose, argv[0]);
 	        break;
-      	case 'g':   
+      	case 'g':
 	        outlet=check_outlet_number(id, i);
-	        result=sispm_switch_getstatus(udev,id,outlet); 
+	        result=sispm_switch_getstatus(udev,id,outlet);
 	        if(verbose) printf("Status of outlet %d:\t",i);
-	        printf("%s\n",onoff[ result +numeric]); 
+	        printf("%s\n",onoff[ result +numeric]);
 	        break;
-      	case 'm':   
+      	case 'm':
     	    outlet=check_outlet_number(id, i);
 	        result=sispm_get_power_supply_status(udev,id,outlet);
 	        if(verbose) printf("Power supply status is:\t");
@@ -660,12 +660,12 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 	        break;
         case 'b':
     	    if (strncmp(optarg,"on",strlen("on"))==0)
-          {   
+          {
                  sispm_buzzer_on(udev);
 		        if(verbose) printf("Turned buzzer %s\n",onoff[1+numeric]);
     	    } else
       	    if (strncmp(optarg,"off",strlen("off"))==0)
-	          {   
+	          {
 	            sispm_buzzer_off(udev);
           		if(verbose) printf("Turned buzzer %s\n",onoff[0+numeric]);
       	    }
@@ -682,7 +682,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
       }
     } // loop through devices
   } // loop through options
-  
+
   if (udev!=NULL) usb_close(udev);
   return;
 }
@@ -747,10 +747,10 @@ int main(int argc, char** argv)
 	  fprintf(stderr,"%d devices found. Please recompile if you need to support more devices!\n",count);
 	  break;
 	}
-      
+
     }
   }
-  if(count==0) 
+  if(count==0)
   {
     fprintf(stderr, "No GEMBIRD SiS-PM found. Check USB connections, please!\n");
     return 1;
