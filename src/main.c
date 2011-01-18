@@ -251,9 +251,9 @@ void print_usage(char* name)
   print_disclaimer(name);
   fprintf(stderr,"\n"
 		 "sispmctl -s\n"
-		 "sispmctl [-q] [-n] [-d 1...] -b <on|off>\n"
-		 "sispmctl [-q] [-n] [-d 1...] -[o|f|t|g|m] 1..4|all\n"
-		 "sispmctl [-q] [-n] [-d 1...] -[a|A] 1..4|all [--Aat '...'] [--Aafter ...] [--Ado <on|off>] ... [--Aloop ...]\n"
+		 "sispmctl [-q] [-n] [-d 1...] [-D ...] -b <on|off>\n"
+		 "sispmctl [-q] [-n] [-d 1...] [-D ...] -[o|f|t|g|m] 1..4|all\n"
+		 "sispmctl [-q] [-n] [-d 1...] [-D ...] -[a|A] 1..4|all [--Aat '...'] [--Aafter ...] [--Ado <on|off>] ... [--Aloop ...]\n"
      "   'v'   - print version & copyright\n"
      "   'h'   - print this usage information\n"
 		 "   's'   - scan for supported GEMBIRD devices\n"
@@ -264,7 +264,8 @@ void print_usage(char* name)
 		 "   't'   - toggle outlet(s) on/off\n"
 		 "   'g'   - get status of outlet(s)\n"
 	         "   'm'   - get power supply status outlet(s) on/off\n"
-		 "   'd'   - apply to device\n"
+		 "   'd'   - apply to device 'n'\n"
+		 "   'D'   - apply to device with given serial number\n"
 		 "   'n'   - show result numerically\n"
 		 "   'q'   - quiet mode, no explanations - but errors\n"
      "   'a'   - get plannification for outlet\n"
@@ -354,11 +355,11 @@ const char*answer(char*in)
 }
 #endif
 
-void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev[])
+void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev[], char *usbdevsn[])
 {
   int numeric=0;
   int c;
-  int i;
+  int i,j;
   int result;
   int from=1, upto=4;
   int status;
@@ -379,7 +380,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
     bindaddr=BINDADDR;
 #endif
 
-  while( (c=getopt(argc, argv,"i:o:f:t:a:A:b:g:m:lqvhnsSd:u:p:")) != -1 )
+  while( (c=getopt(argc, argv,"i:o:f:t:a:A:b:g:m:lqvhnsSd:D:u:p:")) != -1 )
   {
     if( c=='o' || c=='f' || c=='g' || c=='t' || c=='a' || c=='A' || c=='m')
     {
@@ -489,10 +490,25 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 		        printf("\n");
           }
 	        break;
-	      case 'd': // replace previous (first is default) device by selected one
+	      // select device...
+              // replace previous (first is default) device by selected one
+	      case 'd': // by id
 	        if(udev!=NULL) usb_close (udev);
 	        devnum = atoi(optarg);
 	        if(devnum>=count) devnum=count-1;
+	        break;
+	      case 'D': // by serial number
+		for (j=0; j < count; j++)
+		{
+		  //fprintf(stderr, ">>> %s = %s\n", usbdevsn[j], optarg);
+		  if (strcasecmp(usbdevsn[j], optarg) == 0)
+		  {
+		    if(udev!=NULL) usb_close (udev);
+		    devnum = j;
+		    if(devnum>=count) devnum=count-1;
+		    break;
+		  }
+		}
 	        break;
       	case 'o':
           outlet=check_outlet_number(id, i);
@@ -692,6 +708,7 @@ int main(int argc, char** argv)
 {
   struct usb_bus *bus;
   struct usb_device *dev, *usbdev[MAXGEMBIRD], *usbdevtemp;
+  char *usbdevsn[MAXGEMBIRD];
   int count=0, found = 0, i=1;
 
 #ifndef MSG_NOSIGNAL
@@ -770,11 +787,34 @@ int main(int argc, char** argv)
         }
       } while (found != 0);
     }
+
+    /* get serial number of each device */
+    for (i=0; i < count; i++)
+    {
+      usb_dev_handle *sudev = NULL;
+
+      sudev = get_handle(usbdev[i]);
+      if (sudev == NULL)
+      {
+	fprintf(stderr, "No access to Gembird #%d USB device %s\n",
+		i, usbdev[i]->filename );
+	usbdevsn[i] = malloc(5);
+	usbdevsn[i][0] = '#';
+	usbdevsn[i][1] = '0'+i;
+	usbdevsn[i][2] = '\0';
+      }
+      else
+      {
+	usbdevsn[i] = strdup(get_serial(sudev));
+	usb_close(sudev);
+      }
+    }
+
     /* do the real work here */
     if (argc<=1)
       print_usage(argv[0]);
     else
-	parse_command_line(argc,argv,count,usbdev);
+      parse_command_line(argc,argv,count,usbdev,usbdevsn);
   }
   return 0;
 }
