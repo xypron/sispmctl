@@ -381,6 +381,12 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 
   while( (c=getopt(argc, argv,"i:o:f:t:a:A:b:g:m:lqvhnsSd:D:u:p:")) != -1 )
   {
+    if ((c != 'h') && (c != 'v') && (count == 0)) {
+      fprintf(stderr, "No GEMBIRD SiS-PM found. Check USB connections, please!\n");
+      if (udev != NULL)
+        usb_close(udev);
+      exit(1);
+    }
     if( c=='o' || c=='f' || c=='g' || c=='t' || c=='a' || c=='A' || c=='m')
     {
       if((strncmp(optarg,"all",strlen("all"))==0)
@@ -773,12 +779,6 @@ int main(int argc, char** argv)
 
     }
   }
-  if(count==0)
-  {
-    fprintf(stderr, "No GEMBIRD SiS-PM found. Check USB connections, please!\n");
-    return 1;
-  } else
-  {
     /* bubble sort them first, thnx Ingo Flaschenberger */
     if (count > 1) {
       do {
@@ -821,6 +821,6 @@ int main(int argc, char** argv)
       print_usage(argv[0]);
     else
       parse_command_line(argc,argv,count,usbdev,usbdevsn);
-  }
+
   return 0;
 }
