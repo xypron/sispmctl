@@ -735,92 +735,80 @@ int main(int argc, char** argv)
 
 #ifndef WEBLESS
   if (strlen(WEBDIR)==0)
-    {
-      homedir=HOMEDIR;
-    }
+    homedir=HOMEDIR;
   else
-    {
-      homedir=WEBDIR;
-    }
+    homedir=WEBDIR;
 #endif
 
   // initialize by setting device pointers to zero
-  for ( count=0; count< MAXGEMBIRD; count++) usbdev[count]=NULL; count=0;
+  for (count=0; count < MAXGEMBIRD; count++)
+    usbdev[count]=NULL; count=0;
+
   //first search for GEMBIRD (m)SiS-PM devices
-  for (bus = usb_busses; bus; bus = bus->next)
-  {
-    for (dev = bus->devices; dev; dev = dev->next)
-    {
-      if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct==PRODUCT_ID_SISPM)
-      {
+  for (bus = usb_busses; bus; bus = bus->next) {
+    for (dev = bus->devices; dev; dev = dev->next) {
+      if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct == PRODUCT_ID_SISPM) {
 	//printf("Found (classic) SIS-PM device.\n");
 	usbdev[count++] = dev;
       }
-      if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct==PRODUCT_ID_MSISPM_OLD)
-      {
+      if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct == PRODUCT_ID_MSISPM_OLD) {
 	//printf("Found mSIS-PM device.\n");
 	usbdev[count++] = dev;
       }
-      if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct==PRODUCT_ID_MSISPM_FLASH)
-      {
+      if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct == PRODUCT_ID_MSISPM_FLASH) {
 	//printf("Found msispm flash device.\n");
 	usbdev[count++] = dev;
       }
-      if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct==PRODUCT_ID_SISPM_FLASH_NEW)
-      {
+      if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct == PRODUCT_ID_SISPM_FLASH_NEW) {
 	//printf("Found new sispm device (id 0xFD13)\n");
 	usbdev[count++] = dev;
       }
-      if (count==MAXGEMBIRD)
-	{
-	  fprintf(stderr,"%d devices found. Please recompile if you need to support more devices!\n",count);
-	  break;
-	}
-
+      if (count == MAXGEMBIRD) {
+        fprintf(stderr,"%d devices found. Please recompile if you need to support more devices!\n",count);
+        break;
+      }
     }
   }
-    /* bubble sort them first, thnx Ingo Flaschenberger */
-    if (count > 1) {
-      do {
-        found = 0;
-        for (i=1; i< count; i++) {
-          if (usbdev[i]->devnum < usbdev[i-1]->devnum) {
-            usbdevtemp = usbdev[i];
-            usbdev[i] = usbdev[i-1];
-            usbdev[i-1] = usbdevtemp;
-            found = 1;
-          }
+
+  /* bubble sort them first, thnx Ingo Flaschenberger */
+  if (count > 1) {
+    do {
+      found = 0;
+      for (i=1; i< count; i++) {
+        if (usbdev[i]->devnum < usbdev[i-1]->devnum) {
+          usbdevtemp = usbdev[i];
+          usbdev[i] = usbdev[i-1];
+          usbdev[i-1] = usbdevtemp;
+          found = 1;
         }
-      } while (found != 0);
-    }
-
-    /* get serial number of each device */
-    for (i=0; i < count; i++)
-    {
-      usb_dev_handle *sudev = NULL;
-
-      sudev = get_handle(usbdev[i]);
-      if (sudev == NULL)
-      {
-	fprintf(stderr, "No access to Gembird #%d USB device %s\n",
-		i, usbdev[i]->filename );
-	usbdevsn[i] = malloc(5);
-	usbdevsn[i][0] = '#';
-	usbdevsn[i][1] = '0'+i;
-	usbdevsn[i][2] = '\0';
       }
-      else
-      {
-	usbdevsn[i] = strdup(get_serial(sudev));
-	usb_close(sudev);
-      }
-    }
+    } while (found != 0);
+  }
 
-    /* do the real work here */
-    if (argc<=1)
-      print_usage(argv[0]);
-    else
-      parse_command_line(argc,argv,count,usbdev,usbdevsn);
+  /* get serial number of each device */
+  for (i=0; i < count; i++) {
+    usb_dev_handle *sudev = NULL;
+
+    sudev = get_handle(usbdev[i]);
+    if (sudev == NULL) {
+      fprintf(stderr, "No access to Gembird #%d USB device %s\n",
+              i, usbdev[i]->filename );
+      usbdevsn[i] = malloc(5);
+      usbdevsn[i][0] = '#';
+      usbdevsn[i][1] = '0'+i;
+      usbdevsn[i][2] = '\0';
+    }
+    else {
+      usbdevsn[i] = strdup(get_serial(sudev));
+      usb_close(sudev);
+    }
+  }
+
+  /* do the real work here */
+  if (argc <= 1)
+    print_usage(argv[0]);
+  else
+    parse_command_line(argc,argv,count,usbdev,usbdevsn);
 
   return 0;
 }
