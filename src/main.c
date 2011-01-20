@@ -747,20 +747,10 @@ int main(int argc, char** argv)
   //first search for GEMBIRD (m)SiS-PM devices
   for (bus = usb_busses; bus; bus = bus->next) {
     for (dev = bus->devices; dev; dev = dev->next) {
-      if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct == PRODUCT_ID_SISPM) {
-	//printf("Found (classic) SIS-PM device.\n");
-	usbdev[count++] = dev;
-      }
-      if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct == PRODUCT_ID_MSISPM_OLD) {
-	//printf("Found mSIS-PM device.\n");
-	usbdev[count++] = dev;
-      }
-      if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct == PRODUCT_ID_MSISPM_FLASH) {
-	//printf("Found msispm flash device.\n");
-	usbdev[count++] = dev;
-      }
-      if (dev->descriptor.idVendor == VENDOR_ID && dev->descriptor.idProduct == PRODUCT_ID_SISPM_FLASH_NEW) {
-	//printf("Found new sispm device (id 0xFD13)\n");
+      if ((dev->descriptor.idVendor == VENDOR_ID) && ((dev->descriptor.idProduct == PRODUCT_ID_SISPM) ||
+                                                      (dev->descriptor.idProduct == PRODUCT_ID_MSISPM_OLD) ||
+                                                      (dev->descriptor.idProduct == PRODUCT_ID_MSISPM_FLASH) ||
+                                                      (dev->descriptor.idProduct == PRODUCT_ID_SISPM_FLASH_NEW))) {
 	usbdev[count++] = dev;
       }
       if (count == MAXGEMBIRD) {
