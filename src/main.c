@@ -75,7 +75,8 @@ void process(int out,char*v,struct usb_device *dev,int devnum)
         memset( filename, 0, 1023);
 	strncpy( filename, strchr(v,' ')+1, strchr(v,'\n')-v );
 	ptr=strchr( filename, ' ' );
-	*ptr=0;
+	if (ptr != NULL)
+	  *ptr = 0;
     }
     if(debug)
 	fprintf(stderr,"\nrequested filename(%s)\n",filename);
