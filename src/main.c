@@ -58,179 +58,184 @@ int verbose=1;
 
 
 #ifndef WEBLESS
-void process(int out,char*v,struct usb_device *dev,int devnum)
+void process(int out ,char *request, struct usb_device *dev, int devnum)
 {
-    char xbuffer[BSIZE+2];
-    char filename[1024],*ptr;
-    FILE*in=NULL;
-    long length=0,lastpos,remlen=0;
-    usb_dev_handle *udev;
-    unsigned int id; //product id of current device
-	  char* retvalue;
+  char xbuffer[BSIZE+2];
+  char filename[1024];
+  char *ptr = NULL;
+  FILE *in = NULL;
+  long length = 0;
+  long lastpos = 0;
+  long remlen = 0;
+  usb_dev_handle *udev;
+  unsigned int id; //product id of current device
+  char *retvalue = NULL;
 
-    if(debug)
-	fprintf(stderr,"\nRequested is (%s)\n",v);
-    if( strchr(v,'\n') != NULL )
-    {
-        memset( filename, 0, 1023);
-	strncpy( filename, strchr(v,' ')+1, strchr(v,'\n')-v );
-	ptr=strchr( filename, ' ' );
-	if (ptr != NULL)
-	  *ptr = 0;
-    }
-    if(debug)
-	fprintf(stderr,"\nrequested filename(%s)\n",filename);
-    ptr=strrchr(filename,'/');
-    if( (ptr!=NULL) )
-    {	// avoid to read other directories, %-codes are not evalutated
-	ptr++;
-    } else
-    {
-	ptr=filename;
-    }
-    if(strlen(ptr)==0) ptr="index.html";
-    if(debug)
-	fprintf(stderr,"\nresulting filename(%s)\n",ptr);
-    if(debug)
-	fprintf(stderr,"\nchange directory to (%s)\n",homedir);
-    if(chdir(homedir)!=0)
-    {
-	sprintf(xbuffer, "HTTP/1.1 4%02d Bad request\nServer: SisPM\nContent-Type: text/html\n\n"
-		"<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>4%02d Bad Defaults</title>\n"
-		"</head><body>\n<h1>Bad Defaults</h1>\n<p>%s</p></body></html>\n\n",errno,errno,strerror(errno));
-	send(out,xbuffer,strlen(xbuffer),0);
-	return;
-    }
-    if(debug)
-	fprintf(stderr,"\nopen file(%s)\n",ptr);
-    in=fopen(ptr,"r");
-    if( (in==NULL) )
-    {
-	sprintf(xbuffer, "HTTP/1.1 4%02d Bad request\nServer: SisPM\nContent-Type: text/html\n\n"
-		"<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>4%02d Bad Request</title>\n"
-		"</head><body>\n<h1>Bad Request</h1>\n<p>%s</p></body></html>\n\n",errno,errno,strerror(errno));
-	send(out,xbuffer,strlen(xbuffer),0);
-	return;
-    }
+  if (debug)
+    fprintf(stderr,"\nRequested is (%s)\n",request);
 
-    /* get device-handle/-id */
-    udev = get_handle(dev);
-    id = get_id(dev);
-    if(udev==NULL)
-	fprintf(stderr, "No access to Gembird #%d USB device %s\n",
-	    devnum, dev->filename );
-    else
-	if(verbose) printf("Accessing Gembird #%d USB device %s\n",
-	    devnum, dev->filename );
+  // extract the filename
+  if (strchr(request,'\n') != NULL) {
+    memset(filename, 0, 1023);
+    strncpy(filename, strchr(request,' ')+1, strchr(request,'\n')-request);
+    ptr = strchr(filename, ' ');
+    if (ptr != NULL)
+      *ptr = 0;
+  }
 
-    lastpos=ftell(in);
-    retvalue=fgets(xbuffer,BSIZE-1,in);
+  if (debug)
+    fprintf(stderr,"\nrequested filename(%s)\n",filename);
+
+  ptr = strrchr(filename,'/');
+
+  // avoid to read other directories, %-codes are not evalutated
+  if (ptr != NULL)
+    ptr++;
+  else
+    ptr = filename;
+
+  if (strlen(ptr) == 0)
+    ptr="index.html";
+
+  if (debug)
+    fprintf(stderr,"\nresulting filename(%s)\n",ptr);
+
+  if (debug)
+    fprintf(stderr,"\nchange directory to (%s)\n",homedir);
+
+  if (chdir(homedir) != 0) {
+    sprintf(xbuffer, "HTTP/1.1 4%02d Bad request\nServer: SisPM\nContent-Type: text/html\n\n"
+            "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>4%02d Bad Defaults</title>\n"
+            "</head><body>\n<h1>Bad Defaults</h1>\n<p>%s</p></body></html>\n\n",
+            errno,errno,strerror(errno));
+    send(out,xbuffer,strlen(xbuffer),0);
+    return;
+  }
+
+  if (debug)
+    fprintf(stderr,"\nopen file(%s)\n",ptr);
+
+  in = fopen(ptr,"r");
+
+  if (in == NULL) {
+    sprintf(xbuffer, "HTTP/1.1 4%02d Bad request\nServer: SisPM\nContent-Type: text/html\n\n"
+            "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>4%02d Bad Request</title>\n"
+            "</head><body>\n<h1>Bad Request</h1>\n<p>%s</p></body></html>\n\n",errno,errno,strerror(errno));
+    send(out,xbuffer,strlen(xbuffer),0);
+    return;
+  }
+
+  /* get device-handle/-id */
+  udev = get_handle(dev);
+  id = get_id(dev);
+  if (udev == NULL)
+    fprintf(stderr, "No access to Gembird #%d USB device %s\n", devnum, dev->filename );
+  else
+    if (verbose)
+      printf("Accessing Gembird #%d USB device %s\n", devnum, dev->filename );
+
+  lastpos=ftell(in);
+  retvalue=fgets(xbuffer,BSIZE-1,in);
+  assert(retvalue!=NULL);
+  remlen=length=ftell(in)-lastpos;
+  lastpos=ftell(in);
+
+  while (!feof(in)) {
+    char *mrk = xbuffer;
+    char *ptr = xbuffer;
+    /* search for:
+     *	$$exec(0)?.1.:.2.$$	to execute command(#)
+     *	$$stat(2)?.1.:.2.$$	to evaluate status(#)
+     */
+    for (mrk=ptr=xbuffer;(ptr-xbuffer)<length;ptr++) {
+      if (*ptr=='$' && ptr[1]=='$') {
+        /*
+         * $$exec(1)?select:forget$$
+         *   ^cmd    ^pos	 ^trm
+         * ^ptr	 ^num	   ^neg
+         */
+        char *cmd=&ptr[2];
+        char *num=strchr(cmd,'(');
+        char *pos=strchr(num?num:cmd,'?');
+        char *neg=strchr(pos?pos:cmd,':');
+        char *trm=strchr(neg?neg:cmd,'$');
+        if (debug) {
+          fprintf(stderr,"%p\n%p\n%p\n%p\n%p\n%p\n",cmd,num,pos,neg,trm,ptr);
+          fprintf(stderr,"%s%s%s%s%s%s",cmd,num,pos,neg,trm,ptr);
+        }
+
+	if (trm != NULL) {
+          assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at #",num!=NULL));
+          assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at ?",pos!=NULL));
+          assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at :",neg!=NULL));
+          // if( (ptr=strchr(neg,'$')) == NULL ) ptr=cmd; else *ptr=0;
+          // *pos=*neg=0;
+          num++; pos++; neg++;
+          send(out,mrk,ptr-mrk,0);
+          remlen = remlen - (ptr - mrk);
+          mrk=ptr;
+          /*
+           *
+           */
+          if (strncasecmp(cmd,"on(",3)==0) {
+            if (debug)
+              fprintf(stderr,"\nON(%s)\n",num);
+            if (sispm_switch_on(udev,id,atoi(num)) !=0)
+              send(out,pos,neg-pos-1,0);
+            else
+              send(out,neg,trm-neg,0);
+          } else
+            if (strncasecmp(cmd,"off(",4)==0) {
+              assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at final $",(trm[1]=='$')));
+              if (debug)
+                fprintf(stderr,"\nOFF(%s)\n",num);
+              if (sispm_switch_off(udev,id,atoi(num)) !=0)
+                send(out,pos,neg-pos-1,0);
+              else
+                send(out,neg,trm-neg,0);
+            } else
+              if (strncasecmp(cmd,"toggle(",7)==0) {
+                assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at final $",(trm[1]=='$')));
+                if (debug)
+                  fprintf(stderr,"\nTOGGLE(%s)\n",num);
+                if (sispm_switch_getstatus(udev,id,atoi(num)) == 0) {
+                  sispm_switch_on(udev,id,atoi(num));
+                  send(out,pos,neg-pos-1,0);
+                } else {
+                  sispm_switch_off(udev,id,atoi(num));
+                  send(out,neg,trm-neg,0);
+                }
+              } else
+                if (strncasecmp(cmd,"status(",7)==0) {
+                  assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at final $",(trm[1]=='$')));
+                  if (debug)
+                    fprintf(stderr,"\nSTATUS(%s)\n",num);
+                  if (sispm_switch_getstatus(udev,id,atoi(num)) != 0)
+                    send(out,pos,neg-pos-1,0);
+                  else
+                    send(out,neg,trm-neg,0);
+                } else {
+                  // assert(("unknown but terminated command sequence",(trm[1]=='$')));
+                  //fprintf(stderr,"\n<UNDERLINE>undefined sequence <B>%s</B></UNDERLINE>\n",cmd);
+                  send(out,"$$",2,0);
+                }
+          remlen=remlen-(2+trm-mrk);
+          mrk=ptr=&trm[2];
+        }
+      }
+    }
+    send(out,mrk,remlen,0);
+    memset(xbuffer,0,BSIZE);
+    retvalue = fgets(xbuffer,BSIZE-1,in);
     assert(retvalue!=NULL);
     remlen=length=ftell(in)-lastpos;
     lastpos=ftell(in);
-    while(!feof(in))
-    {
-	char*mrk=xbuffer;
-	char*ptr=xbuffer;
-	/* search for:
-	 *	$$exec(0)?.1.:.2.$$	to execute command(#)
-	 *	$$stat(2)?.1.:.2.$$	to evaluate status(#)
-	 */
-	for(mrk=ptr=xbuffer;(ptr-xbuffer)<length;ptr++)
-	{
-	    if(*ptr=='$' && ptr[1]=='$')
-	    {
-	       /*
-		* $$exec(1)?select:forget$$
-		*   ^cmd    ^pos	 ^trm
-		* ^ptr	 ^num	   ^neg
-		*/
-		char *cmd=&ptr[2];
-		char *num=strchr(cmd,'(');
-		char *pos=strchr(num?num:cmd,'?');
-		char *neg=strchr(pos?pos:cmd,':');
-		char *trm=strchr(neg?neg:cmd,'$');
-		if(debug) fprintf(stderr,"%p\n%p\n%p\n%p\n%p\n%p\n",cmd,num,pos,neg,trm,ptr);
-		if(debug) fprintf(stderr,"%s%s%s%s%s%s",cmd,num,pos,neg,trm,ptr);
-		if( trm!=NULL )
-		{
-		    assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at #",num!=NULL));
-		    assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at ?",pos!=NULL));
-		    assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at :",neg!=NULL));
-		    // if( (ptr=strchr(neg,'$')) == NULL ) ptr=cmd; else *ptr=0;
-		    // *pos=*neg=0;
-		    num++; pos++; neg++;
-		    send(out,mrk,ptr-mrk,0);
-		    remlen = remlen - (ptr - mrk);
-		    mrk=ptr;
-		    /*
-		     *
-		     */
-		    if(strncasecmp(cmd,"on(",3)==0)
-		    {
-			if(debug)
-			    fprintf(stderr,"\nON(%s)\n",num);
-			if( sispm_switch_on(udev,id,atoi(num)) !=0)
-			{   send(out,pos,neg-pos-1,0);
-			} else
-			{   send(out,neg,trm-neg,0);
-			}
-		    } else
-		    if(strncasecmp(cmd,"off(",4)==0)
-		    {
-			assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at final $",(trm[1]=='$')));
-			if(debug)
-			    fprintf(stderr,"\nOFF(%s)\n",num);
-			if( sispm_switch_off(udev,id,atoi(num)) !=0)
-			{   send(out,pos,neg-pos-1,0);
-			} else
-			{   send(out,neg,trm-neg,0);
-			}
-		    } else
-		    if(strncasecmp(cmd,"toggle(",7)==0)
-		    {
-			assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at final $",(trm[1]=='$')));
-			if(debug)
-			    fprintf(stderr,"\nTOGGLE(%s)\n",num);
-			if( sispm_switch_getstatus(udev,id,atoi(num)) == 0)
-			{   sispm_switch_on(udev,id,atoi(num));
-			    send(out,pos,neg-pos-1,0);
-			} else
-			{   sispm_switch_off(udev,id,atoi(num));
-			    send(out,neg,trm-neg,0);
-			}
-		    } else
-		    if(strncasecmp(cmd,"status(",7)==0)
-		    {
-			assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at final $",(trm[1]=='$')));
-			if(debug)
-			    fprintf(stderr,"\nSTATUS(%s)\n",num);
-			if( sispm_switch_getstatus(udev,id,atoi(num)) != 0)
-			{   send(out,pos,neg-pos-1,0);
-			} else
-			{   send(out,neg,trm-neg,0);
-			}
-		    } else
-		    {
-			// assert(("unknown but terminated command sequence",(trm[1]=='$')));
-			//fprintf(stderr,"\n<UNDERLINE>undefined sequence <B>%s</B></UNDERLINE>\n",cmd);
-			send(out,"$$",2,0);
-		    }
-		    remlen=remlen-(2+trm-mrk);
-		    mrk=ptr=&trm[2];
-		}
-	    }
-	}
-	send(out,mrk,remlen,0);
-	memset(xbuffer,0,BSIZE);
-	retvalue=fgets(xbuffer,BSIZE-1,in);
-	assert(retvalue!=NULL);
-	remlen=length=ftell(in)-lastpos;
-	lastpos=ftell(in);
-    }
-    if(udev!=NULL) usb_close (udev);
-    fclose(in);
-    return;
+  }
+
+  if (udev != NULL)
+    usb_close (udev);
+  fclose(in);
+  return;
 }
 #endif
 
