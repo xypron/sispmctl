@@ -227,7 +227,7 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
     send(out,mrk,remlen,0);
     memset(xbuffer,0,BSIZE);
     retvalue = fgets(xbuffer,BSIZE-1,in);
-    assert(retvalue!=NULL);
+    //assert(retvalue!=NULL);
     remlen=length=ftell(in)-lastpos;
     lastpos=ftell(in);
   }
