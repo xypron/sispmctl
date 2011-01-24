@@ -83,12 +83,8 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
       *ptr = 0;
   }
 
-  if (debug)
-    fprintf(stderr,"\nrequested filename(%s)\n",filename);
-
-  ptr = strrchr(filename,'/');
-
   // avoid to read other directories, %-codes are not evalutated
+  ptr = strrchr(filename,'/');
   if (ptr != NULL)
     ptr++;
   else
@@ -97,11 +93,11 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
   if (strlen(ptr) == 0)
     ptr="index.html";
 
-  if (debug)
-    fprintf(stderr,"\nresulting filename(%s)\n",ptr);
-
-  if (debug)
-    fprintf(stderr,"\nchange directory to (%s)\n",homedir);
+  if (debug) {
+    fprintf(stderr,"\nrequested filename(%s)\n", filename);
+    fprintf(stderr,"resulting filename(%s)\n", ptr);
+    fprintf(stderr,"change directory to (%s)\n", homedir);
+  }
 
   if (chdir(homedir) != 0) {
     sprintf(xbuffer, "HTTP/1.1 4%02d Bad request\nServer: SisPM\nContent-Type: text/html\n\n"
@@ -120,7 +116,8 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
   if (in == NULL) {
     sprintf(xbuffer, "HTTP/1.1 4%02d Bad request\nServer: SisPM\nContent-Type: text/html\n\n"
             "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>4%02d Bad Request</title>\n"
-            "</head><body>\n<h1>Bad Request</h1>\n<p>%s</p></body></html>\n\n",errno,errno,strerror(errno));
+            "</head><body>\n<h1>Bad Request</h1>\n<p>%s</p></body></html>\n\n",
+            errno,errno,strerror(errno));
     send(out,xbuffer,strlen(xbuffer),0);
     return;
   }
@@ -134,11 +131,11 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
     if (verbose)
       printf("Accessing Gembird #%d USB device %s\n", devnum, dev->filename );
 
-  lastpos=ftell(in);
-  retvalue=fgets(xbuffer,BSIZE-1,in);
-  assert(retvalue!=NULL);
-  remlen=length=ftell(in)-lastpos;
-  lastpos=ftell(in);
+  lastpos = ftell(in);
+  retvalue = fgets(xbuffer, BSIZE-1, in);
+  assert(retvalue != NULL);
+  remlen = length = ftell(in) - lastpos;
+  lastpos = ftell(in);
 
   while (!feof(in)) {
     char *mrk = xbuffer;
@@ -147,7 +144,7 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
      *	$$exec(0)?.1.:.2.$$	to execute command(#)
      *	$$stat(2)?.1.:.2.$$	to evaluate status(#)
      */
-    for (mrk=ptr=xbuffer;(ptr-xbuffer)<length;ptr++) {
+    for (mrk = ptr = xbuffer; (ptr-xbuffer) < length; ptr++) {
       if (*ptr=='$' && ptr[1]=='$') {
         /*
          * $$exec(1)?select:forget$$
@@ -174,9 +171,7 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
           send(out,mrk,ptr-mrk,0);
           remlen = remlen - (ptr - mrk);
           mrk=ptr;
-          /*
-           *
-           */
+
           if (strncasecmp(cmd,"on(",3)==0) {
             if (debug)
               fprintf(stderr,"\nON(%s)\n",num);
@@ -184,7 +179,8 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
               send(out,pos,neg-pos-1,0);
             else
               send(out,neg,trm-neg,0);
-          } else
+          }
+          else
             if (strncasecmp(cmd,"off(",4)==0) {
               assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at final $",(trm[1]=='$')));
               if (debug)
@@ -193,7 +189,8 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
                 send(out,pos,neg-pos-1,0);
               else
                 send(out,neg,trm-neg,0);
-            } else
+            }
+            else
               if (strncasecmp(cmd,"toggle(",7)==0) {
                 assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at final $",(trm[1]=='$')));
                 if (debug)
@@ -201,11 +198,13 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
                 if (sispm_switch_getstatus(udev,id,atoi(num)) == 0) {
                   sispm_switch_on(udev,id,atoi(num));
                   send(out,pos,neg-pos-1,0);
-                } else {
+                }
+                else {
                   sispm_switch_off(udev,id,atoi(num));
                   send(out,neg,trm-neg,0);
                 }
-              } else
+              }
+              else
                 if (strncasecmp(cmd,"status(",7)==0) {
                   assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at final $",(trm[1]=='$')));
                   if (debug)
@@ -214,7 +213,8 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
                     send(out,pos,neg-pos-1,0);
                   else
                     send(out,neg,trm-neg,0);
-                } else {
+                }
+                else {
                   // assert(("unknown but terminated command sequence",(trm[1]=='$')));
                   //fprintf(stderr,"\n<UNDERLINE>undefined sequence <B>%s</B></UNDERLINE>\n",cmd);
                   send(out,"$$",2,0);
@@ -224,12 +224,12 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
         }
       }
     }
-    send(out,mrk,remlen,0);
-    memset(xbuffer,0,BSIZE);
-    retvalue = fgets(xbuffer,BSIZE-1,in);
-    //assert(retvalue!=NULL);
-    remlen=length=ftell(in)-lastpos;
-    lastpos=ftell(in);
+    send(out, mrk, remlen, 0);
+    memset(xbuffer, 0, BSIZE);
+    retvalue = fgets(xbuffer, BSIZE-1, in);
+    //assert(retvalue != NULL);
+    remlen = length = ftell(in) - lastpos;
+    lastpos = ftell(in);
   }
 
   if (udev != NULL)
