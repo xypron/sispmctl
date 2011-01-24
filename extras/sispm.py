@@ -18,12 +18,12 @@
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -35,6 +35,7 @@ VENDOR_ID=0x04B4
 PRODUCT_ID_SISPM=0xFD11
 PRODUCT_ID_MSISPM_OLD=0xFD10
 PRODUCT_ID_MSISPM_FLASH=0xFD12
+PRODUCT_ID_MSISPM_FLASH_NEW=0xFD13
 
 class SispmException(Exception):
 	""" Exception class. """
@@ -49,7 +50,8 @@ def get_num_devices():
 		for device in bus.devices:
 			if device.idVendor==VENDOR_ID \
 					and device.idProduct in [PRODUCT_ID_SISPM,
-					PRODUCT_ID_MSISPM_OLD,PRODUCT_ID_MSISPM_FLASH]:
+					PRODUCT_ID_MSISPM_OLD,PRODUCT_ID_MSISPM_FLASH,
+					PRODUCT_ID_MSISPM_FLASH_NEW]:
 				cnt+=1
 
 	return cnt
@@ -66,7 +68,8 @@ class Sispm:
 			for device in bus.devices:
 				if device.idVendor==VENDOR_ID \
 						and device.idProduct in [PRODUCT_ID_SISPM,
-						PRODUCT_ID_MSISPM_OLD,PRODUCT_ID_MSISPM_FLASH]:
+						PRODUCT_ID_MSISPM_OLD,PRODUCT_ID_MSISPM_FLASH,
+						PRODUCT_ID_MSISPM_FLASH_NEW]:
 
 					if num==cnt:
 						self.device=device
@@ -119,7 +122,8 @@ class Sispm:
 				[PRODUCT_ID_MSISPM_OLD,PRODUCT_ID_MSISPM_FLASH]:
 			return 1
 
-		elif self.device.idProduct==PRODUCT_ID_SISPM:
+		elif self.device.idProduct in \
+				[PRODUCT_ID_SISPM,PRODUCT_ID_MSISPM_FLASH_NEW]:
 			return 4
 
 		else:
