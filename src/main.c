@@ -145,7 +145,7 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
      *	$$stat(2)?.1.:.2.$$	to evaluate status(#)
      */
     for (mrk = ptr = xbuffer; (ptr-xbuffer) < length; ptr++) {
-      if (*ptr=='$' && ptr[1]=='$') {
+      if (*ptr=='$' && ptr[1]=='$' && (ptr[2]=='e' || ptr[2]=='s')) {
         /*
          * $$exec(1)?select:forget$$
          *   ^cmd    ^pos	 ^trm
