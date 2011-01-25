@@ -69,6 +69,7 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
   long remlen = 0;
   usb_dev_handle *udev;
   unsigned int id; //product id of current device
+  char *retvalue = NULL;
 
   if (debug)
     fprintf(stderr,"\nRequested is (%s)\n",request);
@@ -131,7 +132,8 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
       printf("Accessing Gembird #%d USB device %s\n", devnum, dev->filename );
 
   lastpos = ftell(in);
-  fgets(xbuffer, BSIZE-1, in);
+  retvalue = fgets(xbuffer, BSIZE-1, in);
+  assert((retvalue != NULL) || feof(in));
   remlen = length = ftell(in) - lastpos;
   lastpos = ftell(in);
 
@@ -224,7 +226,8 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
     }
     send(out, mrk, remlen, 0);
     memset(xbuffer, 0, BSIZE);
-    fgets(xbuffer, BSIZE-1, in);
+    retvalue = fgets(xbuffer, BSIZE-1, in);
+    assert((retvalue != NULL) || feof(in));
     remlen = length = ftell(in) - lastpos;
     lastpos = ftell(in);
   }
