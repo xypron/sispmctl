@@ -260,7 +260,6 @@ void print_usage(char* name)
           "   'v'   - print version & copyright\n"
           "   'h'   - print this usage information\n"
           "   's'   - scan for supported GEMBIRD devices\n"
-          "   'S'   - as 's' but also print USB bus number\n"
           "   'b'   - switch buzzer on or off\n"
           "   'o'   - switch outlet(s) on\n"
           "   'f'   - switch outlet(s) off\n"
@@ -382,7 +381,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
     bindaddr=BINDADDR;
 #endif
 
-  while( (c=getopt(argc, argv,"i:o:f:t:a:A:b:g:m:lqvhnsSd:D:u:p:")) != -1 )
+  while( (c=getopt(argc, argv,"i:o:f:t:a:A:b:g:m:lqvhnsd:D:u:p:")) != -1 )
   {
     if ((c != 'h') && (c != 'v') && (count == 0)) {
       fprintf(stderr, "No GEMBIRD SiS-PM found. Check USB connections, please!\n");
@@ -440,54 +439,32 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
     for (i=from; i <= upto; i++) {
       switch(c) {
         case 's':
-        case 'S':
           for (status=0; status<count; status++) {
-            if (c == 'S') {
-              if (numeric == 0)
-                printf("Gembird #%d is USB bus/device %s/%s. ",
-                       status,
-                       dev[status]->bus->dirname,
-                       dev[status]->filename);
-              else
-                printf("%d %s %s\n",
-                       status,
-                       dev[status]->bus->dirname,
-                       dev[status]->filename);
-            }
-            else {
-              if (numeric == 0)
-                printf("Gembird #%d is USB device %s. ",
-                       status,dev[status]->filename);
-              else
-                printf("%d %s\n",
-                       status,
-                       dev[status]->filename);
-            }
+            if (numeric == 0)
+              printf("Gembird #%d\nUSB information:  bus %s, device %s\n", status,
+                     dev[status]->bus->dirname, dev[status]->filename);
+            else
+              printf("%d %s %s\n", status,
+                     dev[status]->bus->dirname, dev[status]->filename);
             id = get_id(dev[status]);
-            if ((id == PRODUCT_ID_SISPM) || (id == PRODUCT_ID_SISPM_FLASH_NEW)) {
+            if ((id == PRODUCT_ID_SISPM) || (id == PRODUCT_ID_SISPM_FLASH_NEW))
               if (numeric == 0)
-                printf("This device is a 4-socket SiS-PM.\n");
+                printf("device type:      4-socket SiS-PM\n");
               else
                 printf("4\n");
-            }
-            else {
+            else
               if (numeric == 0)
-                printf("This device is a 1-socket mSiS-PM.\n");
+                printf("device type:      1-socket mSiS-PM.\n");
               else
                 printf("1\n");
-            }
             sudev = get_handle(dev[status]);
             id = get_id(dev[status]);
             if(sudev==NULL)
               fprintf(stderr, "No access to Gembird #%d USB device %s\n",
                       status, dev[status]->filename );
-            else
-              if(verbose && (numeric == 0))
-                printf("Accessing Gembird #%d USB device %s\n",
-                       status, dev[status]->filename );
 
             if (numeric == 0)
-              printf("This device has a serial number of %s\n",get_serial(sudev));
+              printf("serial number:    %s\n",get_serial(sudev));
             else
               printf("%s\n",get_serial(sudev));
             usb_close(sudev);
