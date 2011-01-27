@@ -297,65 +297,59 @@ void print_usage(char* name)
 }
 
 #ifndef WEBLESS
-const char*show_header(int type)
+const char *show_header(int type)
 {
-    char*content=NULL;
-    static char buffer[1024];
-    time_t now;
-    int http=100*(type>>4);
+  char *content = NULL;
+  static char buffer[1024];
+  time_t now;
+  int http = 100 * (type>>4);
 
-    switch(type&0xf)
-    {
+  switch(type&0xf) {
     case 1: content="\nContent-Type: text/html"; break;
     case 2: content="\nContent-Type: text/plain"; break;
     case 3: content="\nContent-Type: image/gif"; break;
     case 4: content="\nContent-Type: image/jpg"; break;
     default: content=""; break;
-    }
-    now=time(NULL);
-    sprintf(buffer,"HTTP/1.0 %d Answer\nServer: sispm\nConnection: close%s\nDate: %s\n\n",http,content,ctime(&now));
-    return(buffer);
+  }
+
+  now = time(NULL);
+  sprintf(buffer, "HTTP/1.0 %d Answer\nServer: sispm\nConnection: close%s\nDate: %s\n\n", http, content, ctime(&now));
+
+  return(buffer);
 }
 
 
 
-const char*answer(char*in)
+const char *answer(char*in)
 {
-    char*ptr=NULL,*end=NULL;
-    int type=0;
+  char *ptr = NULL, *end = NULL;
+  int type = 0;
 
-    static char out[MAXANSWER+2];
-    memset(out,0,MAXANSWER);
+  static char out[MAXANSWER+2];
+  memset(out,0,MAXANSWER);
 
-    if( strncasecmp("GET ",in,4) == 0 )
-    {
-	type=1;
-	ptr=&in[4];
-    } else
-    if( strncasecmp("POST ",in,5) == 0 )
-    {
-	type=1;
-	ptr=&in[5];
-    } else
-    {
-	type=1;
-	ptr=&in[0];
-    }
-    end=strchr(ptr,' ');
-    assert((end-ptr<1024,"filename buffer is defined to 1024 chars only"));
-    if( strncasecmp("/switch",ptr,6) == 0 )
-    {
-	ptr+=6;
-    } else
-    {
-
+  if (strncasecmp("GET ",in,4) == 0) {
+    type = 1;
+    ptr = &in[4];
+  } else
+    if (strncasecmp("POST ",in,5) == 0) {
+      type = 1;
+      ptr = &in[5];
+    } else {
+      type = 1;
+      ptr = &in[0];
     }
 
-    strcpy(out,show_header((4<<4)+1));
+  end = strchr(ptr,' ');
+  assert((end-ptr<1024,"filename buffer is defined to 1024 chars only"));
+  if (strncasecmp("/switch",ptr,6) == 0)
+    ptr += 6;
 
-    strcat(out,"\n\n<HTML><HEAD><TITLE>TEST</TITLE></HEAD><BODY><H1>TEST</H1></BODY></HTML>\n");
-    strcat(out,show_header((4<<4)+1));
-    return(out);
+  strcpy(out,show_header((4<<4)+1));
+
+  strcat(out,"\n\n<HTML><HEAD><TITLE>TEST</TITLE></HEAD><BODY><H1>TEST</H1></BODY></HTML>\n");
+  strcat(out,show_header((4<<4)+1));
+  return(out);
 }
 #endif
 
