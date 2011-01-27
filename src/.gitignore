@@ -1,0 +1,8 @@
+/.deps
+/Makefile
+/Makefile.in
+/main.o
+/nethelp.o
+/sispm_ctl.o
+/sispmctl
+/socket.o
