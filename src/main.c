@@ -518,7 +518,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 	      {
           time_t date, lastEventTime;
           struct tm *timeStamp_tm;
-	        struct plannif plan;
+          struct plannif plan;
           int opt, lastAction = 0;
           ulong loop = 0;
           int optindsave = optind;
@@ -561,7 +561,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
                 struct tm tm;
                 time_t time4next;
                 bzero (&tm, sizeof(tm));
-								tm.tm_isdst = timeStamp_tm->tm_isdst;
+                tm.tm_isdst = timeStamp_tm->tm_isdst;
                 strptime(optarg, "%Y-%m-%d %H:%M", &tm);
                 time4next = mktime(&tm);
                 if (time4next > lastEventTime)
