@@ -46,7 +46,7 @@ LICENSE="\
 #   2008-05-23  v42.07 hcz
 #      Locking code revised.  Re-execute sispmctl on error return.
 #   2008-06-16  v42.08 hcz
-#      Barfed when started for the 1st time (without a config file).  
+#      Barfed when started for the 1st time (without a config file).
 #      Fixed.
 #   2008-06-24  v42.09 hcz
 #      -e option added.
@@ -69,7 +69,7 @@ LICENSE="\
 #      LC_ALL is now set at any incocation of 'at'.
 #      get_usb_pos: traverse: var 'level' made local.
 version="gemplug version 42.16"
- 
+
 
 # TODO:        parser: allow empty outlets (will not be shown)
 #              man: -e
@@ -104,7 +104,7 @@ opts:
    -a   new jobs are to be added to already pending jobs
    -r   remove pending jobs
    -t   test: don't actually start jobs
-   -e <command ...> (3rd argument, after outlet name and state): 
+   -e <command ...> (3rd argument, after outlet name and state):
         switch, execute command, then switch opposite
   output control:
    -l [<outlet-name> [...]]  list multiple outlets
@@ -203,7 +203,7 @@ getColors(){
         eval $export color_bold_$1="\$bold\$color_$1"
         # eval $export color_bold_$1_bg="\$bold\$color_${1}_bg"
     done
-    
+
 } 2>/dev/null
 
 needColors(){
@@ -242,7 +242,7 @@ rmLock(){
 needLock(){
     # Syntax: needLock <number of seconds to wait>
     # get a lock before executing sispmctl if we don't own it already
-    #  Note: sets global 'have_lock' - so make sure this isn't 
+    #  Note: sets global 'have_lock' - so make sure this isn't
     #  called from within a subshell
     local n_tries pid name fail n_retries=${1:-6} bash cmd args
     RANDOM=$$                   # seed RNG
@@ -261,7 +261,7 @@ needLock(){
             if [ "$pid" ]; then
                 # check if the PID still belongs to a gemplug process
                 read bash cmd args <<EOF
-$(tr 2>/dev/null '\000' ' ' < /proc/$pid/cmdline) 
+$(tr 2>/dev/null '\000' ' ' < /proc/$pid/cmdline)
 EOF
                 [ "${cmd##*/}" != "$pname" ] && break # no.
             fi
@@ -300,7 +300,7 @@ execSispmctl(){
     return "$res"
 }
 
-    
+
 assertUnique(){
     # Syntax: assertUnique string <array-name>
     #  Assserts that name (i.e. no spaces) $1 is not yet in array $2
@@ -514,7 +514,7 @@ readRcFile(){
         perr -fatal -skip "need preceding outlet definition"
         return 1
     }
-            
+
     # get bus mapping
     getGemdevArray
 
@@ -548,7 +548,7 @@ readRcFile(){
                 : $((++lineno))
             done
             line="${curline:+$curline }$line"
-            
+
             orig_line="$line"
             # strip comments off
             while [[ " $line" =~ ^(.*)$_c.*$ ]]; do
@@ -559,7 +559,7 @@ readRcFile(){
             # strip leading & trailing whitespace, skip (now) empty lines
             [[ "$line" =~ ^$_s*($_S+($_s+$_S+)*)$_s*$ ]] || continue # empty
             line="${BASH_REMATCH[1]}"
-            
+
             if [ -z "$skip_sect" ]; then
                 if [[ "$line" =~ ^([[:alpha:]][-[:alnum:]]+)$_s*=$_s*($_S+($_s+$_S+)*)$_s*$ ]]; then
                     config_item="${BASH_REMATCH[1]}"
@@ -635,16 +635,16 @@ readRcFile(){
                 perr -fatal "Not a valid line"
                 abort "Errors in configuration file"
             fi
-        done 
+        done
         [ "$fatal" ] && abort "Errors in configuration file, Aborting."
     } < "$rc_file"
-    
+
     [ -z "$errtext" ] && echo >&2
     # Now check if there are any Gembirds left out:
     for ((idx=0; idx < "${#gemdev_usb_pos[@]}"; idx++)); do
         if [ "${gemdev_used[idx]}" != "1" ]; then
             printf >&2 "\
-* Note: unconfigured Gembird found at bus/device %s 
+* Note: unconfigured Gembird found at bus/device %s
     pos = %s
     serial = %s\n" \
     "${gemdev_bus_dev[idx]}" "${gemdev_usb_pos[idx]}" "${gemdev_serial[idx]}"
@@ -663,7 +663,7 @@ template_hdr="\
 
 ### Some syntax rules:
 #
-#   Comments                     
+#   Comments
 #       '#' and ':' at the start of a word (i.e. after white space or a
 #       newline) start a comment.  All text up to the end of the line will be
 #       ignored.
@@ -782,7 +782,7 @@ addTemplate(){
 Configuration  written to '$rc_file'.
 You may now want to edit it and give the items there meaningful names."
     fi
-        
+
 }
 
 
@@ -811,7 +811,7 @@ findRcDir_RW(){
 
 initialize(){
     local compiled_rc need_update rc_file rc_dir
-    
+
     # Find first rc file along $rcdirs[]
     if findRcFile "$my_compiled_rc_file" "${rcdirs[@]}"; then  # set rc_file
         compiled_conf="$rc_file"
@@ -834,12 +834,12 @@ initialize(){
                 abort "Cannot write compiled configuration file"
             fi
         fi
-    fi    
+    fi
     compiled_rc="$rc_dir/$my_compiled_rc_file"
     last_sispmctl_S="$rc_dir/$last_sispmctl_S"
 
     # check if sispmctl -S reports a different config than last time
-    
+
     getSispmctlS
     if [ ! -r "$last_sispmctl_S" ] || [ "$version$_nl$sispmctl_S" != "$(<"$last_sispmctl_S")" ]; then
         need_update=1
@@ -878,7 +878,7 @@ initialize(){
             $vEcho "$compiled_rc written."
             chmod 0400 "$compiled_rc" || abort "Can't set permissions of '$compiled_rc'"
         else
-            $vEcho "$compiled_rc NOT written because of sispmctl errors"            
+            $vEcho "$compiled_rc NOT written because of sispmctl errors"
         fi
     fi
 }
@@ -941,7 +941,7 @@ findOutletByName(){
         while [ "$1" ]; do
             case "$1" in
                 $srch*)
-                    res="$outlet"                    
+                    res="$outlet"
                     found[${#found[@]}]="$1"
                     break
                     ;;
@@ -970,7 +970,7 @@ getState(){
 
 setOutlet(){
     # Syntax: setOutlet "<outlet line from outlets[]>" state [recursion_level}
-    local outlet="$1" state="$2" recursion_level="${3:-0}" t_echo dev port cmd on_off dev_name 
+    local outlet="$1" state="$2" recursion_level="${3:-0}" t_echo dev port cmd on_off dev_name
 
     execPrePost(){
         # Syntax: execPrePost pre|post
@@ -1025,7 +1025,7 @@ getOutlet(){
 
 dumpOutlet(){
     # Syntax: dumpOutlet <outlet-line>
-    
+
     local idx cur=($1) line
     getOutlet "$1"
     [ "$state" -eq 0 ] && state="0 (Off)" || state="1 (on)"
@@ -1037,7 +1037,7 @@ dumpOutlet(){
         printf " %s" "${cur[idx]}"
     done
     echo
-    
+
     printf "USB position:      %s\n" "${cur[i_usbpos]}"
     printf "Bus/Device:        %s\n" "${cur[i_busdev]}"
     printf "Gembird#:          %s\n" "${cur[i_gemno]}"
@@ -1064,9 +1064,9 @@ dumpOutlet(){
                 printf "  Owner:           %s (no write permission)\n" "$owner"
             fi
         fi
-    )    
+    )
     printf "current state:     %s\n" "$state"
-        
+
 }
 
 
@@ -1370,7 +1370,7 @@ makeWorldReadWritable(){
         chmod a+rw "$dev_bus_usb/$bus_dev" || abort "Can't set permissions"
     done
     echo "$pname: Permissions done."
-}    
+}
 
 
 execMode(){
@@ -1390,8 +1390,8 @@ execMode(){
             for outlet in "${outs[@]}"; do
                 setOutlet "$outlet" "$1"
             done
-            ;;                
-        p) 
+            ;;
+        p)
             for jobno; do
                 if atrm "$jobno"; then
                     echo "job $jobno purged"
@@ -1441,14 +1441,14 @@ doGetopts(){
             d|p|f|g|t|n|l|m|j|k|a|r|c|i|y|C|T|W|X|L) eval opt_$argv=1;;
             x) set -x;;
             q) [ "$opt_q" ] && opt_qq=1; opt_q=1;;
-            v) 
+            v)
                 case $((++opt_v)) in
                     1) vEcho="echo";;
                     2) v2Echo="echo :+ "; vCmd=vCmd;;
                     3) v3Echo="echo :* ";;
                 esac
-                ;;        
-            -*) 
+                ;;
+            -*)
                 case "$OPTARG" in
                     li*) version; echo "$LICENSE"; exit 0;;
                     c*) doGetopts "C";;
