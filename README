@@ -1,19 +1,20 @@
 SiS-PM Control for Linux 3.0
 ----------------------------
-(c) 2005-2010 by Mondrian Nuessle et al.
+(c) 2005-2011 by Mondrian Nuessle et al.
 
 Overview
 --------
 This projects adds support for the GEMBIRD SIS-PM device to linux.
 Follow the instructions in INSTALL to install the application
 (generic configure && make && make install).
-Call sispmctl (formerly: sispm_ctl) without commandline parameters, 
+Call sispmctl (formerly: sispm_ctl) without commandline parameters,
 it will print the available options to stdout.
 Since version 2.3 also 1-outlet mSIS-PM devices are supported; this is still
 alpha, probably not working and needs testers/developers.
-Since version 2.4 a GUI is available in the extra sub-directory. See the 
+Since version 2.4 a GUI is available in the extra sub-directory. See the
 README there.
-Version 3.0 added the possibility to program the internal timer, thanks to Olivier Matheret.
+Version 3.0 added the possibility to program the internal timer, thanks to
+Olivier Matheret.
 
 
 Installation
@@ -22,24 +23,29 @@ Installation
 See the file INSTALLATION for generic installation instructions.
 The following confiure options may be of interest:
 
---prefix=dif    Set installation directory-prefix (default is /usr/local)
+--prefix=dif
+        Set installation directory-prefix (default is /usr/local)
 
---enable-webless  Disable the builtin webserver. It will not be compiled into
-                  the binary. The commandline options for the web-interface will
-									not be available.
-									
---with-webdir=directory Install the web-interface file to subdirectories of the
-	                      given directory. A doc linl in this directory will point
-												to skin1. And the path will be default path compiled into
-												the binary.
-												The default without this option is /usr/local/httpd/sispmctl.
-												
---with-bindaddr=ipaddress Give the IP address (in dotted decimal form, i.e. 127.0.0.1) for
-	                        the default interface that the webserver accepts connections on.
-													The default without this option is to use all available interfaces.
-													
---with-default-port=portnumber Give the default port number the webserver is listening on.
-                          If you do not specify this option the default is 2638
+--enable-webless
+        Disable the builtin webserver. It will not be compiled into
+        the binary. The commandline options for the web-interface will
+        not be available.
+
+--with-webdir=directory
+        Install the web-interface file to subdirectories of the
+        given directory. A doc linl in this directory will point
+        to skin1. And the path will be default path compiled into
+        the binary.
+        The default without this option is /usr/local/httpd/sispmctl.
+
+--with-bindaddr=ipaddress
+        Give the IP address (in dotted decimal form, i.e. 127.0.0.1) for
+        the default interface that the webserver accepts connections on.
+        The default without this option is to use all available interfaces.
+
+--with-default-port=portnumber
+        Give the default port number the webserver is listening on.
+        If you do not specify this option the default is 2638
 
 Dependencies
 ------------
@@ -48,7 +54,7 @@ Dependencies
 
 Web-Interface
 ------------
-The web interface may be started manually (i.e. sispmctl -l) 
+The web interface may be started manually (i.e. sispmctl -l)
 or using the inittab. Add the following line to your /etc/inittab:
 
 pm:2345:respawn:/usr/local/bin/sispmctl -l
@@ -67,7 +73,8 @@ chaning this symbolic link.
 
 It is quite easy to change one or write a new one. Try it.
 
-The webinterface does not recognize if a mSIS-PM is connected, so always 4 outlets will be displayed.
+The webinterface does not recognize if a mSIS-PM is connected, so always 4
+outlets will be displayed.
 
 Usage
 -----
@@ -76,23 +83,25 @@ See the output of sispmctl when run without parameters and the man page.
 Permissions
 -----------
 
-Per default, only root is allowed to use devices directly, therefor the SiS-PM 
-also only works as root. If you use a Linux distribution that is using the 
+Per default, only root is allowed to use devices directly, therefor the SiS-PM
+also only works as root. If you use a Linux distribution that is using the
 ressource manager package (resmgrd), you can add a  line to /etc/resmgr.conf.
 
-The following line is an example for SuSE 10.0. It MAY be different on your system.
+The following line is an example for SuSE 10.0. It MAY be different on your
+system.
 
 add usb:vendor=0x04b4,product=0xfd11 usb
 
-This adds the SiS-PM device to the USB class which can be used by logged in users on SuSE 10.0.
-If you are using a mSiS-PM device you need to use the product ID of 0xFD10 or 0xFD12 (dependant
-on hardware revision, see output of /sbin/lsusb -v).
+This adds the SiS-PM device to the USB class which can be used by logged in
+users on SuSE 10.0. If you are using a mSiS-PM device you need to use the
+product ID of 0xFD10 or 0xFD12 (dependant on hardware revision, see output
+of /sbin/lsusb -v).
 
 Solaris Support
 ---------------
-Solaris 10 and later come with sufficient libusb support; the ugen (generic USB) driver
-needs to be associated with the SIS-PM devices by issueing the following command
-before plugging in the device:
+Solaris 10 and later come with sufficient libusb support; the ugen (generic USB)
+driver needs to be associated with the SIS-PM devices by issueing the following
+command before plugging in the device:
 
     for SIS-PM:
 	update_drv -a -i '"usb4b4,fd11"' ugen
