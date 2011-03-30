@@ -257,9 +257,9 @@ void print_usage(char* name)
   print_disclaimer(name);
   fprintf(stderr,"\n"
           "sispmctl -s\n"
-          "sispmctl [-q] [-n] [-d 1...] [-D ...] -b <on|off>\n"
-          "sispmctl [-q] [-n] [-d 1...] [-D ...] -[o|f|t|g|m] 1..4|all\n"
-          "sispmctl [-q] [-n] [-d 1...] [-D ...] -[a|A] 1..4|all [--Aat '...'] [--Aafter ...] [--Ado <on|off>] ... [--Aloop ...]\n"
+          "sispmctl [-q] [-n] [-d 0...] [-D ...] -b <on|off>\n"
+          "sispmctl [-q] [-n] [-d 0...] [-D ...] -[o|f|t|g|m] 1..4|all\n"
+          "sispmctl [-q] [-n] [-d 0...] [-D ...] -[a|A] 1..4|all [--Aat '...'] [--Aafter ...] [--Ado <on|off>] ... [--Aloop ...]\n"
           "   'v'   - print version & copyright\n"
           "   'h'   - print this usage information\n"
           "   's'   - scan for supported GEMBIRD devices\n"
@@ -473,7 +473,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
       case 'd': // by id
         if (udev != NULL)
           usb_close(udev);
-        devnum = atoi(optarg)-1;
+        devnum = atoi(optarg);
         if ((devnum < 0) || (devnum >= count)) {
           fprintf(stderr, "Invalid number or given device not found.\nTerminating\n");
           if (udev != NULL)
