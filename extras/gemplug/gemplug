@@ -2,7 +2,7 @@
 
 # gemplug
 #
-time_stamp="Time-stamp: <2008-10-14 13:21:23 hcz>"
+time_stamp="Time-stamp: <2011-03-30 18:26:24 pete>"
 
 #
 # Control multiple Gembird power outlets via sispmctl
@@ -61,14 +61,16 @@ LICENSE="\
 #      still an error when $HOME was undefined.  Fixed.
 #   2008-07-09  v42.14
 #      use full path to gemplug command in at jobs if available
-#   2008-08-22  v42,15
+#   2008-08-22  v42.15
 #      typo in usage text corrected
 #   2008-10-14  v42.16
 #      time format returned by 'at' differs between versions.
 #      Function fillPending_jobs changed to accept about any format.
 #      LC_ALL is now set at any incocation of 'at'.
 #      get_usb_pos: traverse: var 'level' made local.
-version="gemplug version 42.16"
+#   2011-03-30  v42.17 pete
+#      make gemplug work with sispmctl 3.0 (new -s output-layout)
+version="gemplug version 42.17"
 
 
 # TODO:        parser: allow empty outlets (will not be shown)
@@ -122,10 +124,10 @@ opts:
    -TW  append templates for unconfigured devices to configuration file
    -x   script debug (set -x)
    -X
-   --license  display license information
-   -L, --nolock       don't acquire lock
-   --version      display version info
-   -h, --help     display this help
+   --license     display license information
+   -L, --nolock  don't acquire lock
+   --version     display version info
+   -h, --help    display this help
 
 Examples:
 $pname laser 1 for 1:00h                # switch on now, 1 hour later off
@@ -353,18 +355,18 @@ get_usb_pos(){
 }
 
 getSispmctlS(){
-    # reads in sispmctl -S into $sispmctl_S
+    # reads in sispmctl -s into $sispmctl_S
     # Due to spurious errors reading is done multiple times
     local i sistmp err tries=0
     [ "$sispmctl_S" ] && return
     while [ $((++tries)) -le 3 ]; do
         sistmp="$sispmctl_S"
-        sispmctl_S="$(execSispmctl -S)" || err=1
+        sispmctl_S="$(execSispmctl -s)" || err=1
         if [ -n "$sistmp" ] && [ "$sistmp" != "$sispmctl_S" ]; then
-            $vEcho "$pname: Inconsistent readout from 'sispmctl -S'"
+            $vEcho "$pname: Inconsistent readout from 'sispmctl -s'"
             tries=0
         fi
-        [ $((++tries)) -gt 10 ] && abort "Can't get a consistent answer from 'sispmctl -S' after $tries tries"
+        [ $((++tries)) -gt 10 ] && abort "Can't get a consistent answer from 'sispmctl -s' after $tries tries"
     done
     if [ "$err" ];then
         finale_furioso="$finale_furioso$_nl${color_red}Note: we had serious errors${color_reset}"
@@ -372,7 +374,7 @@ getSispmctlS(){
 }
 
 getGemdevArray(){
-    # Calls 'sispmctl -S and fills the following arrays:
+    # Calls 'sispmctl -s and fills the following arrays:
     #  gemdev_pos
     #  gemdev_bus_dev
     #  gemdev_serial
@@ -389,18 +391,21 @@ getGemdevArray(){
     while IFS= read line; do
         [[ "$line" =~ ^$_s*$ ]] && continue
         [[ "$line" =~ ^'Accessing' ]] && continue
-        if [[ "$line" =~ 'Gembird #'($_n).*'bus/device '($_n/$_n)'.'.*($_n)'-socket' ]]; then
-            # Gembird #3 is USB bus/device 004/046. This device is a 4-socket SiS-PM.
+        if [[ "$line" =~ 'Gembird #'($_n) ]]; then
+            # Gembird #0
             : $((idx++))
             unset gemdev_used[idx]
             gemdev_gembird_no[idx]="${BASH_REMATCH[1]}"
-            gemdev_bus_dev[idx]="${BASH_REMATCH[2]}"
-            gemdev_max_outlet[idx]="${BASH_REMATCH[3]}"
-        elif [[ "$line" =~ "serial number of "($_S+) ]]; then
-            # This device has a serial number of 01:ffffff97:ffffffa8:ffffffdb:41
+        elif [[ "$line" =~ 'USB information:  bus '($_n)', device '($_n) ]]; then
+            # USB information:  bus 006, device 002
+            gemdev_bus_dev[idx]="${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
+        elif [[ "$line" =~ 'device type:      '($_n)'-socket SiS-PM' ]]; then
+            gemdev_max_outlet[idx]="${BASH_REMATCH[1]}"
+        elif [[ "$line" =~ "serial number:    "($_S+) ]]; then
+            # serial number:    01:01:02:0b:22
             gemdev_serial[idx]="${BASH_REMATCH[1]}"
         else
-            abort "Unknown response from $sispmctl -S: '$line'"
+            abort "Unknown response from $sispmctl -s: '$line'"
         fi
     done <<EOF
 $sispmctl_S
@@ -461,7 +466,7 @@ readRcFile(){
     #    |      |    |              | +-----#5: The total number of outlets
     #    |      |    |              +-------#4: The Gembird's number for sispmctl command
     #    |      |    +----------------------#3: The Gembird's serial number
-    #    |      +----------- #2: The USB Bus/device as reorted by get-usb-pos and sispmctl -S
+    #    |      +----------- #2: The USB Bus/device as reorted by get-usb-pos and sispmctl -s
     #    +------------------ #1: The topological pos position as reportet by get-usb-pos
 
     # results:
@@ -500,6 +505,7 @@ readRcFile(){
         # Syntax: getIdx idx
         # Accepts idx if new or same
         if [ "$idx" ] && [ "$idx" -ne "$1" ]; then
+            echo $idx
             perr -fatal "Conflicting pos ('$pos') and serial ('$serial') statements"
         else
             idx="$1"
@@ -698,7 +704,7 @@ template_hdr="\
 #
 #        serial = 01:02:03:04:05
 #            Names the Gembird's serial number as reported by gemplug -d <one-
-#            of-its-outlets> or sispmctl -S.
+#            of-its-outlets> or sispmctl -s.
 #
 #        1 = Outlet-name [Alias ...]
 #            Number, '=', Name Aliases ...  names the individual plug outlets.
@@ -838,7 +844,7 @@ initialize(){
     compiled_rc="$rc_dir/$my_compiled_rc_file"
     last_sispmctl_S="$rc_dir/$last_sispmctl_S"
 
-    # check if sispmctl -S reports a different config than last time
+    # check if sispmctl -s reports a different config than last time
 
     getSispmctlS
     if [ ! -r "$last_sispmctl_S" ] || [ "$version$_nl$sispmctl_S" != "$(<"$last_sispmctl_S")" ]; then
