@@ -2,10 +2,10 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(sispmctl, 2.7, nuessle@uni-mannheim.de)
+AC_INIT(sispmctl, 3.0, nuessle@uni-mannheim.de)
 AC_CONFIG_AUX_DIR(admin)
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE(sispmctl,2.7)
+AM_INIT_AUTOMAKE(sispmctl,3.0)
 
 # Checks for programs.
 AC_PROG_CC
