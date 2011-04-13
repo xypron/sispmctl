@@ -40,6 +40,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include <fcntl.h>
+
 #include "sispm_ctl.h"
 #include "socket.h"
 #include "main.h"
@@ -56,6 +58,43 @@ extern int errno;
 int debug=1;
 int verbose=1;
 
+
+#ifndef WEBLESS
+void daemonize()
+{
+  /* Our process ID and Session ID */
+  pid_t pid, sid;
+
+  /* Fork off the parent process */
+  pid = fork();
+  if (pid < 0)
+    exit(EXIT_FAILURE);
+
+  /* If we got a good PID, then
+     we can exit the parent process. */
+  if (pid > 0)
+    exit(EXIT_SUCCESS);
+
+  /* Change the file mode mask */
+  umask(0);
+
+  /* Create a new SID for the child process */
+  sid = setsid();
+  if (sid < 0)
+    /* Log the failure */
+    exit(EXIT_FAILURE);
+
+  /* Change the current working directory */
+  if ((chdir("/var/tmp")) < 0)
+    /* Log the failure */
+    exit(EXIT_FAILURE);
+
+  /* Close out the standard file descriptors */
+  close(STDIN_FILENO);
+  close(STDOUT_FILENO);
+close(STDERR_FILENO);
+}
+#endif
 
 #ifndef WEBLESS
 void process(int out ,char *request, struct usb_device *dev, int devnum)
@@ -646,16 +685,20 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
       	    bindaddr=optarg;
 	        if (verbose) printf("Web server will bind on interface with IP %s\n",bindaddr);
 	        break;
-      	case 'l':
-	      {
-      		int* s;
-	        if(verbose) printf("Server goes to listen mode now.\n");
-
-		      if( (s = socket_init(bindaddr)) != NULL)
-		        while(1)
-        			l_listen(s,dev[devnum],devnum);
-    	    break;
-  	    }
+        case 'l':
+          {
+                int* s;
+                if (verbose)
+                  printf("Server goes to listen mode now.\n");
+                if ((s = socket_init(bindaddr)) != NULL) {
+                  daemonize();
+                  while(1)
+                    l_listen(s,dev[devnum],devnum);
+                }
+                else
+                  exit(EXIT_FAILURE);
+            break;
+          }
 #endif
       	case 'q':
 	        verbose=1-verbose;
