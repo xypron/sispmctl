@@ -61,10 +61,9 @@ pm:2345:respawn:/usr/local/bin/sispmctl -l
 
 There are three kind of skins between you might select:
 	src/web1/	classic sispm_http style
-	src/web2/	an extended google start page
-	src/web3/	a vertical sized frame
+	src/web2/	a vertical sized frame
 The skins are installed under
-$(PREFIX)/httpd/sispmctl/skin1..3
+$(PREFIX)/httpd/sispmctl/skin1..2
 
 The default skin is selected by the symbolic link
 $(PREFIX)/httpd/sispmctl/doc which point to skin1 after
