@@ -63,7 +63,7 @@ char* get_serial(usb_dev_handle *udev)
 {
    int  reqtype=0xa1; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /*request type*/,
    int  req=0x01;
-   unsigned char buffer[6];
+   unsigned char buffer[6] = { 0, 0, 0, 0, 0, 0 };
 
   if ( usb_control_msg_tries(udev /* handle*/,
 		       reqtype,
@@ -72,7 +72,7 @@ char* get_serial(usb_dev_handle *udev)
 		       0 /*index*/,
 		       (char*) buffer /*bytes*/ ,
 		       5, //1 /*size*/,
-		       5000) < 5 )
+                      5000) < 2 )
   {
       fprintf(stderr,"Error performing requested action\n"
 	          "Libusb error string: %s\nTerminating\n",usb_strerror());
@@ -89,7 +89,7 @@ int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected 
 {
   int  reqtype=0x21; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /*request type*/,
   int  req=0x09;
-  char buffer[2];
+  char buffer[5];
 
   buffer[0]=b1;
   buffer[1]=b2;
@@ -104,7 +104,7 @@ int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected 
 		       (0x03<<8) | b1,
 		       0 /*index*/,
 		       buffer /*bytes*/ ,
-		       2, //1 /*size*/,
+		       5, //1 /*size*/,
 		       5000) < 2 )
   {
       fprintf(stderr,"Error performing requested action\n"
@@ -152,21 +152,25 @@ usb_dev_handle* get_handle(struct usb_device*dev)
 
 int check_outlet_number(int id, int outlet)
 {
-  if (id==PRODUCT_ID_MSISPM_OLD || id==PRODUCT_ID_MSISPM_FLASH)
-    {
-      if (verbose==1)
-	fprintf(stderr,"mSIS-PM devices only features one outlet. Number changed to 1\n");
-      return 0;
+  if (id == PRODUCT_ID_MSISPM_OLD) {
+    if (outlet < 0 || outlet > 1)
+      if (verbose == 1)
+        fprintf(stderr,"mSIS-PM devices only feature one outlet. Number changed from %d to 1\n", outlet);
+    outlet = 0;
+  }
+  if (id == PRODUCT_ID_MSISPM_FLASH) {
+    if (outlet != 1)
+      if (verbose == 1)
+        fprintf(stderr,"mSIS-PM devices only feature one outlet. Number changed from %d to 1\n", outlet);
+    outlet = 1;
+  }
+  if (id == PRODUCT_ID_SISPM || id == PRODUCT_ID_SISPM_FLASH_NEW) {
+    if (outlet < 1 || outlet > 4) {
+      if (verbose == 1)
+        fprintf(stderr,"SIS-PM devices only feature 4 outlets. Number changed from %d to 1\n", outlet);
+      outlet = 1;
     }
-  if (id==PRODUCT_ID_SISPM || id==PRODUCT_ID_SISPM_FLASH_NEW)
-    {
-      if (outlet>4)
-	{
-	  outlet=1;
-	  if (verbose==1)
-	    fprintf(stderr,"SIS-PM devices only feature 4 outlets. Number changed to 1\n");
-	}
-    }
+  }
   return outlet;
 }
 
