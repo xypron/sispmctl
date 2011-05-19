@@ -1,8 +1,8 @@
 /*
   SisPM_ctl.c
- 
+
   Controls the GEMBIRD Silver Shield PM USB outlet device
- 
+
   (C) 2004,2005,2006 Mondrian Nuessle, Computer Architecture Group, University of Mannheim, Germany
   (C) 2005, Andreas Neuper, Germany
   (C) 2010, Olivier Matheret, France, for the plannification part
@@ -11,12 +11,12 @@
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -190,15 +190,15 @@ int sispm_switch_toggle(usb_dev_handle * udev,int id, int outlet)
       return 1;
     }
   else
-    {    
+    {
       sispm_switch_off(udev,id,outlet);
       return 0;
     }
-  
+
   return 0;
 }
 
-int sispm_switch_getstatus(usb_dev_handle * udev,int id, int outlet)	
+int sispm_switch_getstatus(usb_dev_handle * udev,int id, int outlet)
 {
   int result;
   outlet=check_outlet_number(id,outlet);
@@ -206,7 +206,7 @@ int sispm_switch_getstatus(usb_dev_handle * udev,int id, int outlet)
   return result & 1;
 }
 
-int sispm_get_power_supply_status(usb_dev_handle * udev,int id, int outlet)	
+int sispm_get_power_supply_status(usb_dev_handle * udev,int id, int outlet)
 {
   int result;
   outlet=check_outlet_number(id,outlet);
@@ -223,9 +223,9 @@ void plannif_display(const struct plannif* plan, int verbose, const char* progna
   int action;
   ulong loop=0, lastActionTime=0;
   char cmdline[1024] = "";
-  
+
   printf("\nGet outlet %d status :\n", plan->socket);
-  
+
   date = plan->timeStamp;
   timeinfo = localtime( &date );
   strftime (datebuffer,80,"%e-%b-%Y %H:%M:%S",timeinfo);
@@ -233,14 +233,14 @@ void plannif_display(const struct plannif* plan, int verbose, const char* progna
 
   // action dates are on round minutes
   date = ((time_t)(date/60))*60;
-  
+
   // count loop time, as the sum of all but first events
   for (action=sizeof(plan->actions)/sizeof(struct plannifAction)-1 ; action>=0 && plan->actions[action].switchOn == -1; action--); // skip void entries
   if (action>=1 && plan->actions[action].timeForNext > 0) {  // we have a loop
     for ( ; action>=1; action--)
       loop += plan->actions[action].timeForNext;
   }
-  
+
   // compute last action time
   for (action=0 ; action+1<sizeof(plan->actions)/sizeof(struct plannifAction) && (plan->actions[action+1].switchOn != -1); action++)
     lastActionTime += plan->actions[action].timeForNext;
@@ -256,7 +256,7 @@ void plannif_display(const struct plannif* plan, int verbose, const char* progna
       date += numOfLoops * (loop*60);
     }
   }
-  
+
   // now read all filled rows, except the possibly last "stop" row
   for (action=0 ; action<sizeof(plan->actions)/sizeof(struct plannifAction) && (plan->actions[action].switchOn != -1) && (plan->actions[action].timeForNext > 0); action++) {
     date += 60 * plan->actions[action].timeForNext;
@@ -311,7 +311,7 @@ void plannif_scanf(struct plannif* plan, const unsigned char* buffer)
 	plan->socket = (nextWord-1)/3;
 	READNEXTDOUBLEWORD;
 	plan->timeStamp = nextWord;
-	
+
 	// first time to wait is at the end of the buffer, but may be extended to the plannif rows space
 	READWORD(0x25);
 	plan->actions[0].timeForNext = nextWord;
@@ -327,7 +327,7 @@ void plannif_scanf(struct plannif* plan, const unsigned char* buffer)
     } while (nextWord == 0x7FFF);
 	}
 	plan->actions[0].switchOn = 1; // whatever, it is useless for the initial waiting phase
-	
+
   // now we can read each plannification rows
   while (bufindex < 0x25) {
     READNEXTWORD;
@@ -378,9 +378,9 @@ void usb_command_getplannif(usb_dev_handle *udev, int socket, struct plannif* pl
   int n;
   for(n = 0 ; n < 0x27 ; n++)
     printf("%02x ",(unsigned char)buffer[n]);
-  printf("\n"); 
+  printf("\n");
   // */
-  
+
   plannif_scanf(plan, buffer);
 }
 
@@ -396,9 +396,9 @@ void plannif_printf(const struct plannif* plan, unsigned char* buffer)
   WRITENEXTBYTE;
   nextWord = plan->timeStamp;
   WRITENEXTDOUBLEWORD;
-  
+
   wmemset((wchar_t*)(buffer+5), (wchar_t)0x3FFF3FFF, (0x27-5)/sizeof(wchar_t));
-  
+
   if (plan->actions[0].timeForNext == -1) {
     //delete all
     nextWord = 1;
@@ -422,7 +422,7 @@ void plannif_printf(const struct plannif* plan, unsigned char* buffer)
     else
       nextWord = time4next;
     WRITEWORD(0x25);
-  }  
+  }
 
   // now we can write each plannification rows, if non empty
   for (actionNo = 1 ; (actionNo < sizeof(plan->actions)/sizeof(struct plannifAction)) && (plan->actions[actionNo].switchOn != -1); actionNo++) {
@@ -453,7 +453,7 @@ void usb_command_setplannif(usb_dev_handle *udev, struct plannif* plan)
   unsigned char buffer[0x27];
 
   plannif_printf(plan, buffer);
-  
+
   /*// debug
   int n;
   for(n = 0 ; n < 0x27 ; n++)
@@ -487,7 +487,7 @@ void plannif_reset (struct plannif* plan) {
   int i;
 
   plan->socket = 0;
-  plan->timeStamp = 0;  
+  plan->timeStamp = 0;
   for (i=0 ; i<sizeof(plan->actions)/sizeof(struct plannifAction) ; i++) {
     plan->actions[i].switchOn = -1;
     plan->actions[i].timeForNext = -1;
