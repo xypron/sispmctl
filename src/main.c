@@ -271,8 +271,10 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
     lastpos = ftell(in);
   }
 
-  if (udev != NULL)
-    usb_close (udev);
+  if (udev != NULL) {
+    usb_close(udev);
+    udev = NULL;
+  }
   fclose(in);
   return;
 }
@@ -421,8 +423,10 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
   {
     if ((c != 'h') && (c != 'v') && (count == 0)) {
       fprintf(stderr, "No GEMBIRD SiS-PM found. Check USB connections, please!\n");
-      if (udev != NULL)
+      if (udev != NULL) {
         usb_close(udev);
+        udev = NULL;
+      }
       exit(1);
     }
     if( c=='o' || c=='f' || c=='g' || c=='t' || c=='a' || c=='A' || c=='m')
@@ -507,19 +511,24 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
             else
               printf("%s\n",get_serial(sudev));
             usb_close(sudev);
+            sudev = NULL;
             printf("\n");
           }
           break;
       // select device...
       // replace previous (first is default) device by selected one
       case 'd': // by id
-        if (udev != NULL)
+        if (udev != NULL) {
           usb_close(udev);
+          udev = NULL;
+        }
         devnum = atoi(optarg);
         if ((devnum < 0) || (devnum >= count)) {
           fprintf(stderr, "Invalid number or given device not found.\nTerminating\n");
-          if (udev != NULL)
+          if (udev != NULL) {
             usb_close(udev);
+            udev = NULL;
+          }
           exit(-8);
         }
         break;
@@ -528,16 +537,20 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
           if (debug)
             fprintf(stderr, "now comparing %s and %s\n", usbdevsn[j], optarg);
           if (strcasecmp(usbdevsn[j], optarg) == 0) {
-            if (udev != NULL)
+            if (udev != NULL) {
               usb_close(udev);
+              udev = NULL;
+            }
             devnum = j;
             break;
           }
         }
         if (devnum != j) {
           fprintf(stderr, "No device with serial number %s found.\nTerminating\n",optarg);
-          if (udev != NULL)
+          if (udev != NULL) {
             usb_close(udev);
+            udev = NULL;
+          }
           exit(-8);
         }
         break;
@@ -734,7 +747,10 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
     } // loop through devices
   } // loop through options
 
-  if (udev!=NULL) usb_close(udev);
+  if (udev!=NULL) {
+    usb_close(udev);
+    udev = NULL;
+  }
   return;
 }
 
@@ -814,6 +830,7 @@ int main(int argc, char** argv)
     else {
       usbdevsn[i] = strdup(get_serial(sudev));
       usb_close(sudev);
+      sudev = NULL;
     }
   }
 
