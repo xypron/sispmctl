@@ -1,26 +1,12 @@
 .\" Process this file with
 .\" groff -man -Tascii foo.1
 .\"
-.TH sispmctl 1 "AUG 2006" Linux "User Manuals"
+.TH sispmctl 1 "JUL 2011" Linux "User Manuals"
 
 .SH NAME
 sispmctl - Gembird Silver Shield PM ConTroL program
 
 .SH SYNOPSIS
-.B sispmctl [
-.I -d
-.B 1... ]
-.B [
-.I -D
-.B ... ] [
-.I -i <ip>
-.B ] [
-.I -p <#port>
-.B ] [
-.I -u <path>
-.B ]
-.I -l
-.P
 .B sispmctl
 .I -s
 .P
@@ -30,7 +16,7 @@ sispmctl - Gembird Silver Shield PM ConTroL program
 .I -n
 .B ] [
 .I -d
-.B 1... ]
+.B 0... ]
 .B [
 .I -D
 .B ... ]
@@ -43,7 +29,7 @@ sispmctl - Gembird Silver Shield PM ConTroL program
 .I -n
 .B ] [
 .I -d
-.B 1... ]
+.B 0... ]
 .B [
 .I -D
 .B ... ] <
@@ -51,45 +37,100 @@ sispmctl - Gembird Silver Shield PM ConTroL program
 .B |
 .I -f
 .B |
+.I -t
+.B |
 .I -g
+.B |
+.I -m
 .B > <1..4|all>
+.P
+.B sispmctl [
+.I -q
+.B ] [
+.I -n
+.B ] [
+.I -d
+.B 0... ]
+.B [
+.I -D
+.B ... ] <
+.I -a
+.B |
+.I -A
+.B > <1..4|all>
+.B [
+.I --Aat
+.B '...' ] [
+.I --Aafter
+.B ... ] [
+.I --Ado
+.B <on|off> ] ... [
+.I --Aloop
+.B ... ]
+.P
+.B sispmctl [
+.I -d
+.B 0... ]
+.B [
+.I -D
+.B ... ] [
+.I -i <ip>
+.B ] [
+.I -p <#port>
+.B ] [
+.I -u <path>
+.B ]
+.I -l
+.P
 
 .SH DESCRIPTION
 .B sispmctl
 is a tool to switch the USB controlled outlets of Gembird Silver Shield PM.
 It is known by many names, e.g. Revolt Power Switch.
 .P
-It is coded in C and does use the usb specific library (LibUSB).
+It is coded in C and uses the usb specific library (LibUSB).
 This allows you a portable and fast solution.
 
 .SH OPTIONS
 .IP -h
-Print usage information
+print usage information
 .IP -s
-Scan all universal serial buses for devices with the ID 04B4:FD11.
+scan for supported GEMBIRD devices
 .IP -l
-stay listening on network port for http protocol.
+daemonize and start to listening as a simple http webserver (default port: 2638)
 .IP -p
 IP network port (default: 2638) for listener. There is no authentication implemented yet.
 .IP -u
-give the directory path where pages lay, that are served (default: /usr/local/httpd/sispmctl ).
+give the directory path where pages lay, that are served (default: /usr/local/httpd/sispmctl).
 The Web path component is completely ignored for security reasons.
 .IP -b
-switch the buzzer on and off (I was not able to test it, mine does not hat it)
+switch the buzzer on and off
 .IP -o
-switch the named outlet to "ON"
+switch the given outlet(s) to "ON"
 .IP -f
-switch the named outlet to "OFF"
+switch the given outlet(s) to "OFF"
+.IP -t
+toggle the state of the given outlet(s)
 .IP -g
-show the status of the named outlet
+show the status of the given outlet(s)
+.IP -m
+get power supply status for the given outlet(s)
 .IP -d
-Choose not the first but the named one in the sequence of detected devices (see scan option)
+Use not the first but the given device in the sequence of detected devices, starting with "0" for the first device (see scan option)
 .IP -D
 Same as -d, but choose by serial number (see scan option)
 .IP -n
 do not print "ON" and "OFF", but "1" and "0" instead
 .IP -q
 do neither print explanations nor disclaimers except it is requested
+.IP -a
+get plannification for given outlet
+.IP -A
+set plannification for given outlet
+ --Aat "date"   - sets an event time as a date '%Y-%m-%d %H:%M'
+ --Aafter N     - sets an event time as N minutes after the previous one
+ --Ado <on|off> - sets the current event's action
+ --Aloop N      - loops to 1st event's action after N minutes
 .IP -v
 print version & copyright
 
@@ -100,8 +141,8 @@ The sispmctl program provides a web interface when started with the
 option. No additional http server is needed.
 Each selected usb device is blocked by sispmctl while running.
 .P
-After installation, the first of three web-interfaces is selected. The default location of the HTML
-files is /usr/local/httpd/sispm_ctl/doc which is a symbolic link to /usr/local/httpd/sispm_ctl/skin1.
+After installation, the first of two web-interfaces is selected. The default location of the HTML
+files is /usr/local/httpd/sispmctl/doc which is a symbolic link to /usr/local/httpd/sispmctl/skin1.
 .P
 The http capabilities of sispmctl are limited.
 Technically speaking, only the first line of each http request is parsed.
@@ -115,15 +156,34 @@ alternative outputs which are separated by the first colon `:'.
 The command portion is a token followed by an embraced number that references the outlet, e.g.
 .IB $$command(1)?positive:negative$$
 while command is one of
-.B status
-,
-.B toggle
-,
-.B off
-,
-.B on .
+.B status,
+.B toggle,
+.B on
+or
+.B off.
 I strongly recommend to avoid the on/off/toggle commands in pages that may be reloaded.
 Best is to redirect to other pages that only include status requests.
+
+
+.SH PLANNIFICATIONS
+
+The sispmctl program provides plannifications, plannifications can be used to turn given outlets of the device "ON" or "OFF" at or after a given time. Plannifications can also be set to loop after a given number of minutes.
+.P
+To show the planned plannification for a given outlet use the option
+.I -a
+and specify the wanted outlet(s). The option
+.I -A
+plus any of the options
+.I --Aat
+,
+.I --Aafter
+,
+.I --Ado
+and
+.I --Aloop
+will create a new plannification for the given output. If only
+.I -A
+plus an outlet is called, the plannification for the outlet will be deleted.
 
 
 .SH EXAMPLES
@@ -134,6 +194,14 @@ Switch off the first outlet of the first SiS-PM and the third outlet of the seco
 Print the status of the forth outlet as zero or one:
 .P
 .B sispmctl -nqg 4
+
+Set a planification so outlet 2 on the first device gets turned "ON" on the given date and time:
+.P
+.B sispmctl -A 2 --Aat '2011-07-27 20:45' --Ado on
+
+Set a planification so outlet 3 on the second device gets turned "ON" after 2 minutes and "OFF" after another 10 minutes. The planification will loop after 1 hour:
+.P
+.B sispmctl -d 1 -A 3 --Aafter 2 --Ado on --Aafter 10 --Ado off --Aloop 60
 
 Run sispmctl on the second device as a web-server:
 .P
@@ -147,3 +215,5 @@ your webbrowser
 First version by Mondrian Nuessle, nuessle@uni-mannheim.de
 .P
 Web integration and man page by Andreas Neuper, ANeuper-at-web-dot-de
+.P
+Plannifications by Olivier Matheret
