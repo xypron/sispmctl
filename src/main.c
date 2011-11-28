@@ -55,7 +55,7 @@
 
 char* homedir=0;
 extern int errno;
-int debug=0;
+int debug=1;
 int verbose=1;
 
 
