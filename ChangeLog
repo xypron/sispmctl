@@ -1,3 +1,9 @@
+28 Nov 2011 - 3.1
+	cleanup web-themes
+	webserver daemonizes when send into listen mode (FREETZ patch)
+	fixes for the two mSIS-PM-versions (thanks to ksjh and exelnet)
+	several bugfixes and cleanups
+
 30 Mar 2011 - 3.0
 	Olivier Matheret added timer functionality
 	Heike Zimmerer added gemplug

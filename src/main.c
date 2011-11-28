@@ -55,7 +55,7 @@
 
 char* homedir=0;
 extern int errno;
-int debug=1;
+int debug=0;
 int verbose=1;
 
 
@@ -282,7 +282,7 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
 
 void print_disclaimer(char*name)
 {
-  fprintf(stderr, "\nSiS PM Control for Linux 3.0\n\n"
+  fprintf(stderr, "\nSiS PM Control for Linux 3.1\n\n"
 	 "(C) 2004-2011 by Mondrian Nuessle, (C) 2005, 2006 by Andreas Neuper.\n"
 	 "(C) 2010 by Olivier Matheret for the plannification part\n"
 	 "This program is free software.\n"
