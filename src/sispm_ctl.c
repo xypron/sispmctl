@@ -392,7 +392,7 @@ void usb_command_getplannif(usb_dev_handle *udev, int socket, struct plannif* pl
 // private : prints the buffer according to the plannification structure
 void plannif_printf(const struct plannif* plan, unsigned char* buffer)
 {
-	int bufindex = 0;
+  int bufindex = 0;
   ulong nextWord, time4next;
   int actionNo;
 
@@ -401,7 +401,11 @@ void plannif_printf(const struct plannif* plan, unsigned char* buffer)
   nextWord = plan->timeStamp;
   WRITENEXTDOUBLEWORD;
 
-  wmemset((wchar_t*)(buffer+5), (wchar_t)0x3FFF3FFF, (0x27-5)/sizeof(wchar_t));
+  int i;
+  for (i=bufindex; i<0x27; i=i+2) {
+    buffer[i] = 0xFF;
+    buffer[i+1] = 0x3F;
+  }
 
   if (plan->actions[0].timeForNext == -1) {
     //delete all
