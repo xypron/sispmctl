@@ -323,8 +323,9 @@ void print_usage(char* name)
           "           '--Aloop N'      - loops to 1st event's action after N minutes\n\n"
 #ifndef WEBLESS
           "Webinterface features:\n"
-          "sispmctl [-q] [-i <ip>] [-p <#port>] [-u <path>] -l\n"
+          "sispmctl [-q] [-i <ip>] [-p <#port>] [-u <path>] -l|L\n"
           "   'l'   - start port listener\n"
+          "   'L'   - same as 'l', but stay in foreground\n"
           "   'i'   - bind socket on interface with given IP (dotted decimal, i.e. 192.168.1.1)\n"
           "   'p'   - port number for listener (%d)\n"
           "   'u'   - repository for web pages (default=%s)\n\n"
@@ -419,7 +420,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
     bindaddr=BINDADDR;
 #endif
 
-  while( (c=getopt(argc, argv,"i:o:f:t:a:A:b:g:m:lqvhnsd:D:u:p:")) != -1 )
+  while( (c=getopt(argc, argv,"i:o:f:t:a:A:b:g:m:lLqvhnsd:D:u:p:")) != -1 )
   {
     if ((c != 'h') && (c != 'v') && (count == 0)) {
       fprintf(stderr, "No GEMBIRD SiS-PM found. Check USB connections, please!\n");
@@ -468,7 +469,7 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
     }
 
 #ifdef WEBLESS
-    if (c=='l' || c=='i' || c=='p' || c=='u' )
+    if (c=='l' || c=='L' || c=='i' || c=='p' || c=='u' )
     {
       fprintf(stderr,"Application was compiled without web-interface. Feature not available.\n");
       exit(-100);
@@ -702,12 +703,14 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 	        if (verbose) printf("Web server will bind on interface with IP %s\n",bindaddr);
 	        break;
         case 'l':
+        case 'L':
           {
                 int* s;
                 if (verbose)
                   printf("Server goes to listen mode now.\n");
                 if ((s = socket_init(bindaddr)) != NULL) {
-                  daemonize();
+                  if (c == 'l')
+                    daemonize();
                   while(1)
                     l_listen(s,dev[devnum],devnum);
                 }
