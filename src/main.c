@@ -477,9 +477,11 @@ void parse_command_line(int argc, char* argv[], int count, struct usb_device*dev
 #endif
 
     // using first available device
-    id = get_id(dev[devnum]);
-    if (((id == PRODUCT_ID_MSISPM_OLD) || (id == PRODUCT_ID_MSISPM_FLASH)) && (from != upto))
-      from = upto = 1;
+    if (c != 'h' && c != 'v') {
+      id = get_id(dev[devnum]);
+      if (((id == PRODUCT_ID_MSISPM_OLD) || (id == PRODUCT_ID_MSISPM_FLASH)) && (from != upto))
+        from = upto = 1;
+    }
     for (i=from; i <= upto; i++) {
       switch(c) {
         case 's':
