@@ -33,31 +33,17 @@ AC_SUBST(WEBDIR)
 AC_ARG_WITH(bindaddr,[  --with-bindaddr=IP bind listening socket to IP], [BINDADDR="$withval"])
 AC_SUBST(BINDADDR)
 
+dnl check for libusb
+PKG_CHECK_MODULES(LIBUSB, libusb >= 0.1.11)
+CFLAGS="$CFLAGS $LIBUSB_CFLAGS"
+LIBS="$LIBS $LIBUSB_LIBS"
 
-# Checks for libraries.
-dnl check for libusb-config
-AC_PATH_PROG(HAVELIBUSB, libusb-config, $PATH)
-
-if test -e "$HAVELIBUSB"; then
-   dnl   LIBUSB_CFLAGS=`$HAVELIBUSB --cflags`
-   LIBUSB_LIBS=`$HAVELIBUSB --libs`
-   CFLAGS="$CFLAGS $LIBUSB_CFLAGS"
-   LIBS="$LIBS $LIBUSB_LIBS"
-else
-   AC_MSG_ERROR([*** libusb-config not found. You need a working libusb installation. Version >=0.1.7])
-fi
-
-dnl check for version of libusb
-AC_MSG_CHECKING([if libusb version is >= 0.1.9])
-libusb_version_needed="1009"
-libusb_version=`$HAVELIBUSB --version | sed -e "s/libusb //" | awk 'BEGIN { FS = "."; } { printf "%d", ($''1 * 1000 + $''2) * 1000 + $''3;}'`
-
-if test $libusb_version -lt $libusb_version_needed; then
-   AC_MSG_RESULT(no)
-   AC_MSG_ERROR([*** libusb is too old ($libusb_version). You need a libusb installation newer or equal to 0.1.9.])
-else
-   AC_MSG_RESULT(yes)
-fi
+dnl Check for recent pkg-config which supports Requires.private
+case `$PKG_CONFIG --version` in
+0.?|0.1[0-7]) PKGCONFIG_REQUIRES="Requires"; ;;
+*) PKGCONFIG_REQUIRES="Requires.private"; ;;
+esac
+AC_SUBST(PKGCONFIG_REQUIRES)
 
 # Checks for header files.
 AC_HEADER_STDC
