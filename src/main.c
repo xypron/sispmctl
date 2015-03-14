@@ -380,7 +380,7 @@ const char *answer(char*in)
     }
 
   end = strchr(ptr,' ');
-  assert((end-ptr<1024,"filename buffer is defined to 1024 chars only"));
+  assert(("filename buffer is defined to 1024 chars only", end-ptr<1024));
   if (strncasecmp("/switch",ptr,6) == 0)
     ptr += 6;
 
