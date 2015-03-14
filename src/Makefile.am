@@ -26,7 +26,7 @@ sispmctl_SOURCES = \
 	main.h
 
 pkgdata1_DATA = \
-	web1/index.html web1/logo.png web1/off1.html  web1/off2.html \
+	web1/index.html web1/logo.png web1/off1.html web1/off2.html \
 	web1/off3.html web1/off4.html web1/on1.html web1/on2.html \
 	web1/on3.html web1/on4.html web1/status0.png web1/status1.png \
 	web1/style.css
