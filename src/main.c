@@ -366,20 +366,16 @@ const char *show_header(int type)
 const char *answer(char*in)
 {
   char *ptr = NULL, *end = NULL;
-  int type = 0;
 
   static char out[MAXANSWER+2];
   memset(out,0,MAXANSWER);
 
   if (strncasecmp("GET ",in,4) == 0) {
-    type = 1;
     ptr = &in[4];
   } else
     if (strncasecmp("POST ",in,5) == 0) {
-      type = 1;
       ptr = &in[5];
     } else {
-      type = 1;
       ptr = &in[0];
     }
 
