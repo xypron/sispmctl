@@ -12,7 +12,8 @@ AC_PROG_CC
 
 # check configure options
 AC_ARG_ENABLE(webless,
-[  --enable-webless  compile version of sispmctl without internal webserver],
+AC_HELP_STRING([--enable-webless],
+   [compile version of sispmctl without internal webserver]),
 [WEBLESS=true])
 AC_SUBST(WEBLESS)
 AM_CONDITIONAL(WEBLESSCOND, test x$WEBLESS = xtrue)
