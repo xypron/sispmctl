@@ -7,7 +7,13 @@ AC_CONFIG_AUX_DIR(admin)
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE
 
-# Checks for programs.
+dnl Archiver support
+AM_PROG_AR
+
+dnl Enhanced libtool support
+LT_INIT
+
+dnl Compiler check
 AC_PROG_CC
 
 # check configure options
