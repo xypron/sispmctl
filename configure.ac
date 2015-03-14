@@ -38,13 +38,6 @@ PKG_CHECK_MODULES(LIBUSB, libusb >= 0.1.11)
 CFLAGS="$CFLAGS $LIBUSB_CFLAGS"
 LIBS="$LIBS $LIBUSB_LIBS"
 
-dnl Check for recent pkg-config which supports Requires.private
-case `$PKG_CONFIG --version` in
-0.?|0.1[0-7]) PKGCONFIG_REQUIRES="Requires"; ;;
-*) PKGCONFIG_REQUIRES="Requires.private"; ;;
-esac
-AC_SUBST(PKGCONFIG_REQUIRES)
-
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([fcntl.h netinet/in.h stdlib.h string.h sys/socket.h unistd.h net/ethernet.h sys/ethernet.h])
