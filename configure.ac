@@ -5,7 +5,7 @@ AC_PREREQ(2.59)
 AC_INIT(sispmctl, 3.1, mondrian.nuessle@googlemail.com)
 AC_CONFIG_AUX_DIR(admin)
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE(sispmctl,3.1)
+AM_INIT_AUTOMAKE
 
 # Checks for programs.
 AC_PROG_CC
