@@ -16,6 +16,9 @@ LT_INIT
 dnl Compiler check
 AC_PROG_CC
 
+dnl Configure macros
+AC_CONFIG_MACRO_DIR([m4])
+
 # check configure options
 AC_ARG_ENABLE(webless,
 AC_HELP_STRING([--enable-webless],
