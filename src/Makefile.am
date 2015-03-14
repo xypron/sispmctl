@@ -39,7 +39,7 @@ endif
 
 man_MANS = sispmctl.1 
 
-INCLUDES= $(all_includes)
+AM_CPPFLAGS = $(all_includes)
 
 AM_LDFLAGS = $(all_libraries)
 
