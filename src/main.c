@@ -37,6 +37,7 @@
 #include <usb.h>
 #include <assert.h>
 #include <getopt.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
