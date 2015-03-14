@@ -1,4 +1,11 @@
+libsispmctl_la_LDFLAGS = \
+	-version-info 1:0:1
+
 bin_PROGRAMS = sispmctl 
+
+lib_LTLIBRARIES = libsispmctl.la
+
+sispmctl_LDADD = libsispmctl.la
 
 EXTRA_DIST =  \
 	web1/index.html web1/off1.html web1/off3.html web1/on1.html \
@@ -11,8 +18,6 @@ EXTRA_DIST =  \
 
 if WEBLESSCOND
 AM_CFLAGS=-Wall -DWEBLESS=@WEBLESS@
-
-sispmctl_SOURCES = sispm_ctl.c main.c sispm_ctl.h main.h
 else
 AM_CFLAGS=-Wall -DWEBDIR="\"@WEBDIR@\"" -DBINDADDR="\"@BINDADDR@\"" \
 -DDATADIR="\"$(datadir)/httpd/$(PACKAGE)/doc\""
@@ -20,10 +25,6 @@ AM_CFLAGS=-Wall -DWEBDIR="\"@WEBDIR@\"" -DBINDADDR="\"@BINDADDR@\"" \
 pkgdatadir = $(datadir)/httpd/$(PACKAGE)
 pkgdata1dir = $(datadir)/httpd/$(PACKAGE)/skin1
 pkgdata2dir = $(datadir)/httpd/$(PACKAGE)/skin2
-
-sispmctl_SOURCES = \
-	sispm_ctl.c nethelp.c main.c socket.c sispm_ctl.h nethelp.h socket.h \
-	main.h
 
 pkgdata1_DATA = \
 	web1/index.html web1/logo.png web1/off1.html web1/off2.html \
@@ -36,6 +37,11 @@ pkgdata2_DATA = \
 	web2/on2.html web2/on3.html web2/on4.html web2/on.gif web2/onoff.gif \
 	web2/style.css 
 endif
+
+libsispmctl_la_SOURCES = \
+	sispm_ctl.c nethelp.c socket.c sispm_ctl.h nethelp.h socket.h
+
+sispmctl_SOURCES = main.c main.h
 
 man_MANS = sispmctl.1 
 
