@@ -139,14 +139,20 @@ int*socket_init(char* bind_arg)
 
   /* locate socket */
   *s = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if( *s == -1 )
+  if( *s == -1 ) {
+    perror("Socket cannot be opened");
     return(NULL);
+  }
 
   /* set socket options */
-  if( setsockopt(*s, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(int)) == -1)
-    return(NULL);
-  if( setsockopt(*s, SOL_SOCKET, SO_RCVBUF, &mtu, sizeof(size_t)) == -1)
-    return(NULL);
+  if( setsockopt(*s, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(int)) == -1) {
+    perror("Socket option cannot be set");
+    goto socket_error;
+  }
+  if( setsockopt(*s, SOL_SOCKET, SO_RCVBUF, &mtu, sizeof(size_t)) == -1) {
+    perror("Socket option cannot be set");
+    goto socket_error;
+  }
 
   /* set socket essentials */
   addr.sin_family = AF_INET;
@@ -156,11 +162,11 @@ int*socket_init(char* bind_arg)
     result=inet_pton(AF_INET,bind_arg,(void*)&bind_addr);
     if (result<0) {
       perror("Inet_pton for given bind address failed");
-      return(NULL);
+      goto socket_error;
     }
     else if (result==0) {
       fprintf(stderr,"Given Bind address is not a valid INET4 address: %s\n",bind_arg);
-      return(NULL);
+      goto socket_error;
     }
   }
   else {
@@ -172,8 +178,12 @@ int*socket_init(char* bind_arg)
   /* bind socket now */
   if(bind(*s, (struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == -1) {
     perror("Bind failed");
-    return(NULL);
+    goto socket_error;
   }
 
   return(s);
+
+socket_error:
+  close(*s);
+  return NULL;
 }
