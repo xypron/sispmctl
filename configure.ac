@@ -27,10 +27,15 @@ AC_HELP_STRING([--enable-webless],
 AC_SUBST(WEBLESS)
 AM_CONDITIONAL(WEBLESSCOND, test x$WEBLESS = xtrue)
 
-AC_ARG_WITH(webdir,[  --with-webdir=DIR use DIR to look for html files for the web-interface], [WEBDIR="$withval"])
+AC_ARG_WITH(webdir,
+AC_HELP_STRING([--with-webdir=DIR],
+  [use DIR to look for html files for the web-interface]),
+[WEBDIR="$withval"])
 AC_SUBST(WEBDIR)
 
-AC_ARG_WITH(bindaddr,[  --with-bindaddr=IP bind listening socket to IP], [BINDADDR="$withval"])
+AC_ARG_WITH(bindaddr,
+AC_HELP_STRING([--with-bindaddr=IP], [bind listening socket to IP]),
+[BINDADDR="$withval"])
 AC_SUBST(BINDADDR)
 
 dnl check for libusb
