@@ -14,7 +14,7 @@ EXTRA_DIST =  \
 	web1/status1.png web2/index.html web2/off1.html web2/off3.html \
 	web2/on1.html web2/on3.html web2/style.css web2/logo.png \
 	web2/off2.html web2/off4.html web2/on2.html web2/on4.html \
-	web2/off.gif web2/on.gif web2/onoff.gif sispmctl.1 
+	web2/off.gif web2/on.gif web2/onoff.gif 
 
 if WEBLESSCOND
 AM_CFLAGS=-Wall -DWEBLESS=@WEBLESS@
@@ -42,8 +42,6 @@ libsispmctl_la_SOURCES = \
 	sispm_ctl.c nethelp.c socket.c sispm_ctl.h nethelp.h socket.h
 
 sispmctl_SOURCES = main.c main.h
-
-man_MANS = sispmctl.1 
 
 AM_CPPFLAGS = $(all_includes)
 

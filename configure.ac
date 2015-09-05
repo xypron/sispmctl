@@ -61,8 +61,10 @@ AC_CHECK_FUNC(nanosleep, [true], [AC_CHECK_LIB(rt, nanosleep)])
 AC_CHECK_FUNC(inet_pton, [true], [AC_CHECK_LIB(nsl, inet_pton)])
 AC_CHECK_FUNC(socket, [true], [AC_CHECK_LIB(socket, socket)])
 
-AC_CONFIG_FILES([Makefile
-                 src/Makefile])
+AC_CONFIG_FILES([
+  Makefile
+  man/Makefile
+  src/Makefile])
 AM_CONFIG_HEADER(config.h)
 AC_OUTPUT
 echo ""
