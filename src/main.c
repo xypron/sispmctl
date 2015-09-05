@@ -3,6 +3,8 @@
 
   Controls the GEMBIRD Silver Shield PM USB outlet device
 
+  (C) 2015, Heinrich Schuchardt <xypron.glpk@gmx.de>
+  (C) 2011-2012, Pete Hildebrandt <send2ph@googlemail.com>
   (C) 2004-2011, Mondrian Nuessle, Computer Architecture Group, University of Mannheim, Germany
   (C) 2005, Andreas Neuper, Germany
   (C) 2010, Olivier Matheret, France, for the plannification part
@@ -287,9 +289,11 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
 void print_disclaimer(char*name)
 {
   fprintf(stderr, "\nSiS PM Control for Linux " PACKAGE_VERSION "\n\n"
-          "(C) 2004-2011 by Mondrian Nuessle, "
-          "(C) 2005, 2006 by Andreas Neuper.\n"
-          "(C) 2010 by Olivier Matheret for the plannification part\n"
+          "(C) 2015, Heinrich Schuchardt <xypron.glpk@gmx.de>\n"
+          "(C) 2011-2012, Pete Hildebrandt <send2ph@googlemail.com>\n"
+          "(C) 2004-2011, Mondrian Nuessle\n"
+          "(C) 2005-2006, Andreas Neuper\n"
+          "(C) 2010, Olivier Matheret for the plannification part\n"
           "This program is free software.\n"
           "%s comes with ABSOLUTELY NO WARRANTY; for details \n"
           "see the file INSTALL. This is free software, and you are welcome\n"

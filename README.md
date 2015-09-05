@@ -1,13 +1,15 @@
-SiS-PM Control for Linux 3.1
-============================
-(c) 2005-2011 by Mondrian Nuessle et al.
+SiS-PM Control for Linux
+========================
+(c) 2015, Heinrich Schuchardt &lt;xypron.glpk@gmx.de&gt;
+(c) 2011-2012, Pete Hildebrandt &lt;send2ph@googlemail.de&gt;
+(c) 2005-2011, Mondrian Nuessle et al.
 
 Overview
 --------
 This projects adds support for the GEMBIRD SIS-PM device to linux.
 Follow the instructions in INSTALL to install the application
 (generic configure && make && make install).
-Call sispmctl (formerly: sispm_ctl) without commandline parameters,
+Call sispmctl (formerly: sispmi\_ctl) without commandline parameters,
 it will print the available options to stdout.
 Since version 2.3 also 1-outlet mSIS-PM devices are supported; this is still
 alpha, probably not working and needs testers/developers.
