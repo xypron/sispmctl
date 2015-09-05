@@ -1,0 +1,51 @@
+This package was debianized by Uwe Hermann <uwe@debian.org> on
+Sun,  8 Apr 2007 03:16:25 +0200.
+
+The current Debian maintainer is Uwe Hermann <uwe@debian.org>.
+
+It was downloaded from:
+
+   http://sispmctl.sourceforge.net
+
+Upstream Authors:
+
+   Mondrian Nuessle <nuessle@uni-mannheim.de>
+   Andreas Neuper <aneuper@web.de>
+ 
+-------------------------------------------------------------------------------
+
+Files: *
+Copyright: © 2004-2006 Mondrian Nuessle <nuessle@uni-mannheim.de>
+           © 2005 Andreas Neuper <aneuper@web.de>
+License: GPL-2+
+
+On Debian systems, the complete text of the GNU General
+Public License can be found in `/usr/share/common-licenses/GPL'.
+
+-------------------------------------------------------------------------------
+
+Files: src/nethelp.c
+Copyright: © 2003 Evan Buswell
+           © 1999 Jack Moffitt, Barath Raghavan, and Alexander Haväng
+License: GPL-2+
+
+-------------------------------------------------------------------------------
+
+Files: src/socket.c
+Copyright: © 2003 Evan Buswell
+License: GPL-2+
+
+-------------------------------------------------------------------------------
+
+Files: extras/sispmapplet.py:
+Copyright: © 2006 Mondrian Nuessle <nuessle@uni-mannheim.de>
+License: GPL-2+
+
+-------------------------------------------------------------------------------
+
+Files: debian/*
+Copyright: © 2007 - 2011 Uwe Hermann <uwe@debian.org>
+License: PD
+   The packaging done by Uwe Hermann <uwe@debian.org> is hereby
+   released as public domain.
+
