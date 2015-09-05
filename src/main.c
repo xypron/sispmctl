@@ -349,40 +349,6 @@ void print_usage(char* name)
 #endif
 }
 
-#ifndef WEBLESS
-const char *show_header(int type)
-{
-  char *content = NULL;
-  static char buffer[1024];
-  time_t now;
-  int http = 100 * (type>>4);
-
-  switch(type&0xf) {
-  case 1:
-    content="\nContent-Type: text/html";
-    break;
-  case 2:
-    content="\nContent-Type: text/plain";
-    break;
-  case 3:
-    content="\nContent-Type: image/gif";
-    break;
-  case 4:
-    content="\nContent-Type: image/jpg";
-    break;
-  default:
-    content="";
-    break;
-  }
-
-  now = time(NULL);
-  sprintf(buffer, "HTTP/1.0 %d Answer\nServer: sispm\n"
-          "Connection: close%s\nDate: %s\n\n", http, content, ctime(&now));
-
-  return(buffer);
-}
-#endif
-
 void parse_command_line(int argc, char* argv[], int count,
                         struct usb_device*dev[], char *usbdevsn[])
 {
