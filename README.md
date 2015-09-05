@@ -1,5 +1,5 @@
 SiS-PM Control for Linux 3.1
-----------------------------
+============================
 (c) 2005-2011 by Mondrian Nuessle et al.
 
 Overview
@@ -108,3 +108,5 @@ command before plugging in the device:
     for mSIS-PM:
 	update_drv -a -i '"usb4b4,fd10"' ugen
 	update_drv -a -i '"usb4b4,fd12"' ugen
+    for energenie:
+	update_drv -a -i '"usb4b4,fd13"' ugen
