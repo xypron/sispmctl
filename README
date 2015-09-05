@@ -83,18 +83,19 @@ Permissions
 -----------
 
 Per default, only root is allowed to use devices directly, therefor the SiS-PM
-also only works as root. If you use a Linux distribution that is using the
-ressource manager package (resmgrd), you can add a  line to /etc/resmgr.conf.
+also only works as root.
 
-The following line is an example for SuSE 10.0. It MAY be different on your
-system.
+To allow group sispmctl access create file /lib/udev/rules.d/60-sispmctl.rules
+with the following content
 
-add usb:vendor=0x04b4,product=0xfd11 usb
+    SUBSYSTEM=="usb", ATTR{idVendor}=="04b4", ATTR{idProduct}=="fd10", GROUP="sispmctl", MODE="660"
+    SUBSYSTEM=="usb", ATTR{idVendor}=="04b4", ATTR{idProduct}=="fd11", GROUP="sispmctl", MODE="660"
+    SUBSYSTEM=="usb", ATTR{idVendor}=="04b4", ATTR{idProduct}=="fd12", GROUP="sispmctl", MODE="660"
+    SUBSYSTEM=="usb", ATTR{idVendor}=="04b4", ATTR{idProduct}=="fd13", GROUP="sispmctl", MODE="660"
 
-This adds the SiS-PM device to the USB class which can be used by logged in
-users on SuSE 10.0. If you are using a mSiS-PM device you need to use the
-product ID of 0xFD10 or 0xFD12 (dependant on hardware revision, see output
-of /sbin/lsusb -v).
+Then reload the udev rules with
+
+    udevadm control --reload-rules
 
 Solaris Support
 ---------------
