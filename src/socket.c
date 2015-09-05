@@ -163,13 +163,11 @@ int*socket_init(char* bind_arg)
     if (result<0) {
       perror("Inet_pton for given bind address failed");
       goto socket_error;
-    }
-    else if (result==0) {
+    } else if (result==0) {
       fprintf(stderr,"Given Bind address is not a valid INET4 address: %s\n",bind_arg);
       goto socket_error;
     }
-  }
-  else {
+  } else {
     bind_addr=INADDR_ANY;
   }
   addr.sin_addr.s_addr = (uint32_t) bind_addr;

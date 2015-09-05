@@ -1,8 +1,8 @@
 /*
   SisPM_ctl.h
- 
+
   Controls the GEMBIRD Silver Shield PM USB outlet device
- 
+
   (C) 2004,2005,2006 Mondrian Nuessle, Computer Architecture Group, University of Mannheim, Germany
   (C) 2005, Andreas Neuper, Germany
   (C) 2010, Olivier Matheret, France, for the plannification part
@@ -11,12 +11,12 @@
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -48,14 +48,14 @@
 
 typedef unsigned long ulong;
 struct plannifAction {
-	ulong switchOn;      // action to do now
-	ulong timeForNext;  // wait this num of minutes before any next action ; 0 means "stop"
+  ulong switchOn;      // action to do now
+  ulong timeForNext;  // wait this num of minutes before any next action ; 0 means "stop"
 };
 
 struct plannif {
-	int socket;
-	ulong timeStamp;
-	struct plannifAction actions[17]; // 16 + the initial one
+  int socket;
+  ulong timeStamp;
+  struct plannifAction actions[17]; // 16 + the initial one
 };
 #define READNEXTBYTE {nextWord = (ulong)buffer[bufindex]; bufindex ++;}
 #define READWORD(idx) {nextWord = (ulong)buffer[idx] + (buffer[idx+1]<<8);}
@@ -81,7 +81,7 @@ usb_dev_handle*get_handle(struct usb_device*dev);
 int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected );
 
 #define sispm_buzzer_on(udev)		usb_command( udev, 0x02,        0x00, 0 )
-#define sispm_buzzer_off(udev)		usb_command( udev, 0x02,        0x04, 0 ) 
+#define sispm_buzzer_off(udev)		usb_command( udev, 0x02,        0x04, 0 )
 
 int get_id( struct usb_device* dev);
 char* get_serial(usb_dev_handle *udev);

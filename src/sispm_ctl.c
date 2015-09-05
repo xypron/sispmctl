@@ -48,40 +48,40 @@ int get_id( struct usb_device* dev)
   return dev->descriptor.idProduct;
 }
 
-int usb_control_msg_tries(usb_dev_handle *dev, int requesttype, int request, int value, int index, char *bytes, int size, int timeout) {
-   int ret, i=0;
-   do {
-      usleep(500*i);
-      ret = usb_control_msg(dev, requesttype, request, value, index, bytes, size, timeout);
-      i++;
-   } while ((ret != size) && (i < 5));
-   return ret;
+int usb_control_msg_tries(usb_dev_handle *dev, int requesttype, int request, int value, int index, char *bytes, int size, int timeout)
+{
+  int ret, i=0;
+  do {
+    usleep(500*i);
+    ret = usb_control_msg(dev, requesttype, request, value, index, bytes, size, timeout);
+    i++;
+  } while ((ret != size) && (i < 5));
+  return ret;
 }
 
 // for identification: reqtype=a1, request=01, b1=0x01, size=5
 char* get_serial(usb_dev_handle *udev)
 {
-   int  reqtype=0xa1; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /*request type*/,
-   int  req=0x01;
-   unsigned char buffer[6] = { 0, 0, 0, 0, 0, 0 };
+  int  reqtype=0xa1; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /*request type*/,
+  int  req=0x01;
+  unsigned char buffer[6] = { 0, 0, 0, 0, 0, 0 };
 
   if ( usb_control_msg_tries(udev /* handle*/,
-		       reqtype,
-		       req,
-		       (0x03<<8) | 1,
-		       0 /*index*/,
-		       (char*) buffer /*bytes*/ ,
-		       5, //1 /*size*/,
-                      5000) < 2 )
-  {
-      fprintf(stderr,"Error performing requested action\n"
-	          "Libusb error string: %s\nTerminating\n",usb_strerror());
-      usb_close (udev);
-      exit(-5);
+                             reqtype,
+                             req,
+                             (0x03<<8) | 1,
+                             0 /*index*/,
+                             (char*) buffer /*bytes*/ ,
+                             5, //1 /*size*/,
+                             5000) < 2 ) {
+    fprintf(stderr,"Error performing requested action\n"
+            "Libusb error string: %s\nTerminating\n",usb_strerror());
+    usb_close (udev);
+    exit(-5);
   }
 
   snprintf(serial_id, 15, "%02x:%02x:%02x:%02x:%02x", buffer[0],buffer[1],
-	  buffer[2],buffer[3],buffer[4]);
+           buffer[2],buffer[3],buffer[4]);
   return serial_id;
 }
 
@@ -93,24 +93,22 @@ int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected 
 
   buffer[0]=b1;
   buffer[1]=b2;
-  if(return_value_expected!=0)
-  {
-	reqtype|=USB_DIR_IN;
-	req=0x01;
+  if(return_value_expected!=0) {
+    reqtype|=USB_DIR_IN;
+    req=0x01;
   }
   if ( usb_control_msg_tries(udev /* handle*/,
-		       reqtype,
-		       req,
-		       (0x03<<8) | b1,
-		       0 /*index*/,
-		       buffer /*bytes*/ ,
-		       5, //1 /*size*/,
-		       5000) < 2 )
-  {
-      fprintf(stderr,"Error performing requested action\n"
-	          "Libusb error string: %s\nTerminating\n",usb_strerror());
-      usb_close (udev);
-      exit(-5);
+                             reqtype,
+                             req,
+                             (0x03<<8) | b1,
+                             0 /*index*/,
+                             buffer /*bytes*/ ,
+                             5, //1 /*size*/,
+                             5000) < 2 ) {
+    fprintf(stderr,"Error performing requested action\n"
+            "Libusb error string: %s\nTerminating\n",usb_strerror());
+    usb_close (udev);
+    exit(-5);
   }
 
   return buffer[1];//(buffer[1]!=0)?1:0;
@@ -119,35 +117,31 @@ int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected 
 
 usb_dev_handle* get_handle(struct usb_device*dev)
 {
-    usb_dev_handle *udev=NULL;
-    if( dev==NULL ) return NULL;
-    udev = usb_open( dev );
+  usb_dev_handle *udev=NULL;
+  if( dev==NULL ) return NULL;
+  udev = usb_open( dev );
 
-    /* prepare USB access */
-    if (udev == NULL)
-    {
-	fprintf(stderr,"Unable to open USB device %s\n",usb_strerror());
-        usb_close (udev);
-	exit(-1);
-    }
-    if (usb_set_configuration(udev,1) !=0)
-    {
-	fprintf(stderr,"USB set configuration %s\n",usb_strerror());
-        usb_close (udev);
-	exit(-2);
-    }
-    if ( usb_claim_interface(udev, 0) !=0)
-    {
-	fprintf(stderr,"USB claim interface %s\nMaybe device already in use?\n",usb_strerror());
-	exit(-3);
-    }
-    if (usb_set_altinterface(udev, 0) !=0)
-    {
-	fprintf(stderr,"USB set alt interface %s\n",usb_strerror());
-        usb_close (udev);
-	exit(-4);
-    }
-    return udev;
+  /* prepare USB access */
+  if (udev == NULL) {
+    fprintf(stderr,"Unable to open USB device %s\n",usb_strerror());
+    usb_close (udev);
+    exit(-1);
+  }
+  if (usb_set_configuration(udev,1) !=0) {
+    fprintf(stderr,"USB set configuration %s\n",usb_strerror());
+    usb_close (udev);
+    exit(-2);
+  }
+  if ( usb_claim_interface(udev, 0) !=0) {
+    fprintf(stderr,"USB claim interface %s\nMaybe device already in use?\n",usb_strerror());
+    exit(-3);
+  }
+  if (usb_set_altinterface(udev, 0) !=0) {
+    fprintf(stderr,"USB set alt interface %s\n",usb_strerror());
+    usb_close (udev);
+    exit(-4);
+  }
+  return udev;
 }
 
 int check_outlet_number(int id, int outlet)
@@ -188,16 +182,13 @@ int sispm_switch_off(usb_dev_handle * udev,int id, int outlet)
 
 int sispm_switch_toggle(usb_dev_handle * udev,int id, int outlet)
 {
-  if (sispm_switch_getstatus(udev,id,outlet)==0) //on
-    {
-      sispm_switch_on(udev,id,outlet);
-      return 1;
-    }
-  else
-    {
-      sispm_switch_off(udev,id,outlet);
-      return 0;
-    }
+  if (sispm_switch_getstatus(udev,id,outlet)==0) { //on
+    sispm_switch_on(udev,id,outlet);
+    return 1;
+  } else {
+    sispm_switch_off(udev,id,outlet);
+    return 0;
+  }
 
   return 0;
 }
@@ -220,7 +211,8 @@ int sispm_get_power_supply_status(usb_dev_handle * udev,int id, int outlet)
 
 
 // displays a plannification structure in a human readable way
-void plannif_display(const struct plannif* plan, int verbose, const char* progname) {
+void plannif_display(const struct plannif* plan, int verbose, const char* progname)
+{
   char datebuffer[80];
   struct tm * timeinfo;
   time_t date;
@@ -271,8 +263,7 @@ void plannif_display(const struct plannif* plan, int verbose, const char* progna
       printf("switch %s\n", (plan->actions[action+1].switchOn ? "on" : "off"));
       if (verbose)
         sprintf(cmdline+(strlen(cmdline)), "--Aat \"%s\" --Ado %s ", datebuffer, (plan->actions[action+1].switchOn ? "on" : "off"));
-    }
-    else {
+    } else {
       if (action > 0) {
         ulong loopdsp = loop;
         printf("  Loop every ");
@@ -293,8 +284,7 @@ void plannif_display(const struct plannif* plan, int verbose, const char* progna
         printf("\n");
         if (verbose)
           sprintf(cmdline+(strlen(cmdline)), "--Aloop %li ", loop);
-      }
-      else
+      } else
         printf("  No programmed event.\n");
     }
   }
@@ -307,45 +297,43 @@ void plannif_display(const struct plannif* plan, int verbose, const char* progna
 // private : scans the buffer, and fills the plannification structure accordingly
 void plannif_scanf(struct plannif* plan, const unsigned char* buffer)
 {
-	int bufindex = 0;
+  int bufindex = 0;
   ulong nextWord;
   int actionNo = 1;
 
   READNEXTBYTE;
-	plan->socket = (nextWord-1)/3;
-	READNEXTDOUBLEWORD;
-	plan->timeStamp = nextWord;
+  plan->socket = (nextWord-1)/3;
+  READNEXTDOUBLEWORD;
+  plan->timeStamp = nextWord;
 
-	// first time to wait is at the end of the buffer, but may be extended to the plannif rows space
-	READWORD(0x25);
-	plan->actions[0].timeForNext = nextWord;
-	if (plan->actions[0].timeForNext == 0xFD21) { // max value : means we may have extensions, which would have the flag 0x4000
+  // first time to wait is at the end of the buffer, but may be extended to the plannif rows space
+  READWORD(0x25);
+  plan->actions[0].timeForNext = nextWord;
+  if (plan->actions[0].timeForNext == 0xFD21) { // max value : means we may have extensions, which would have the flag 0x4000
     do {
       READNEXTWORD;
       if ((nextWord & 0x4000) == 0x4000) {
         plan->actions[0].timeForNext += nextWord & ~0x4000;
-      }
-      else {
+      } else {
         REVERTNEXTWORD;
       }
     } while (nextWord == 0x7FFF);
-	}
-	plan->actions[0].switchOn = 1; // whatever, it is useless for the initial waiting phase
+  }
+  plan->actions[0].switchOn = 1; // whatever, it is useless for the initial waiting phase
 
   // now we can read each plannification rows
   while (bufindex < 0x25) {
     READNEXTWORD;
     if (nextWord != 0x3FFF) { // 3FFF means "empty"
       // on/off is the MSB of the 1st word, whether it is extended or not
-	    plan->actions[actionNo].switchOn = nextWord >> 15;
+      plan->actions[actionNo].switchOn = nextWord >> 15;
       plan->actions[actionNo].timeForNext = nextWord & 0x7FFF;
       if (plan->actions[actionNo].timeForNext == 0x3FFE ) { // again, 3FFE is the max value : it might be extended to next words, if they have the flag 0x4000
         do {
           READNEXTWORD;
           if ((nextWord & 0x4000) == 0x4000) {
             plan->actions[actionNo].timeForNext += nextWord & ~0x4000;
-          }
-          else {
+          } else {
             REVERTNEXTWORD;
           }
         } while (nextWord == 0x7FFF);
@@ -364,18 +352,17 @@ void usb_command_getplannif(usb_dev_handle *udev, int socket, struct plannif* pl
   unsigned char buffer[0x27];
 
   if ( usb_control_msg_tries(udev /* handle*/,
-		       reqtype,
-		       req,
-		       ((0x03<<8) | (3*socket)) +1,
-		       0 /*index*/,
-		       (char*) buffer /*bytes*/ ,
-		       0x27, /*size*/
-		       5000) < 0x27 )
-  {
-      fprintf(stderr,"Error performing requested action\n"
-	          "Libusb error string: %s\nTerminating\n",usb_strerror());
-      usb_close (udev);
-      exit(-5);
+                             reqtype,
+                             req,
+                             ((0x03<<8) | (3*socket)) +1,
+                             0 /*index*/,
+                             (char*) buffer /*bytes*/ ,
+                             0x27, /*size*/
+                             5000) < 0x27 ) {
+    fprintf(stderr,"Error performing requested action\n"
+            "Libusb error string: %s\nTerminating\n",usb_strerror());
+    usb_close (udev);
+    exit(-5);
   }
 
   /* // debug
@@ -411,12 +398,11 @@ void plannif_printf(const struct plannif* plan, unsigned char* buffer)
     //delete all
     nextWord = 1;
     WRITEWORD(0x25);
-  }
-  else {
+  } else {
     time4next = plan->actions[0].timeForNext;
-  	// first time to wait is at the end of the buffer, but may be extended to the plannif rows space
+    // first time to wait is at the end of the buffer, but may be extended to the plannif rows space
     if (time4next > 0xFD21) {
-    	// max value is 0xFD21 : means we can set extensions, with the flag 0x4000
+      // max value is 0xFD21 : means we can set extensions, with the flag 0x4000
       time4next -= 0xFD21;
       while (time4next > 0x3FFF) { // each extension can handle 3FFF bytes
         nextWord = 0x3FFF | 0x4000;
@@ -426,8 +412,7 @@ void plannif_printf(const struct plannif* plan, unsigned char* buffer)
       nextWord = time4next | 0x4000;
       WRITENEXTWORD;
       nextWord = 0xFD21;
-    }
-    else
+    } else
       nextWord = time4next;
     WRITEWORD(0x25);
   }
@@ -436,7 +421,7 @@ void plannif_printf(const struct plannif* plan, unsigned char* buffer)
   for (actionNo = 1 ; (actionNo < sizeof(plan->actions)/sizeof(struct plannifAction)) && (plan->actions[actionNo].switchOn != -1); actionNo++) {
     time4next = plan->actions[actionNo].timeForNext;
     if (time4next > 0x3FFE) {
-    	// max value is 0x3FFE : means we can set extensions, with the flag 0x4000
+      // max value is 0x3FFE : means we can set extensions, with the flag 0x4000
       nextWord = 0x3FFE | (plan->actions[actionNo].switchOn << 15);
       WRITENEXTWORD;
       time4next -= 0x3FFE;
@@ -446,8 +431,7 @@ void plannif_printf(const struct plannif* plan, unsigned char* buffer)
         time4next -= 0x3FFF;
       }
       nextWord = time4next | 0x4000;
-    }
-    else
+    } else
       nextWord = time4next | (plan->actions[actionNo].switchOn << 15);
     WRITENEXTWORD;
   }
@@ -473,25 +457,25 @@ void usb_command_setplannif(usb_dev_handle *udev, struct plannif* plan)
   exit(0);
   //*/
   if ( usb_control_msg_tries(udev /* handle*/,
-		       reqtype,
-		       req,
-		       ((0x03<<8) | (3*plan->socket)) +1,
-		       0 /*index*/,
-		       (char*) buffer /*bytes*/ ,
-		       0x27, /*size*/
-		       5000) < 0x27 )
-  {
-      fprintf(stderr,"Error performing requested action\n"
-	          "Libusb error string: %s\nTerminating\n",usb_strerror());
-      usb_close (udev);
-      exit(-5);
+                             reqtype,
+                             req,
+                             ((0x03<<8) | (3*plan->socket)) +1,
+                             0 /*index*/,
+                             (char*) buffer /*bytes*/ ,
+                             0x27, /*size*/
+                             5000) < 0x27 ) {
+    fprintf(stderr,"Error performing requested action\n"
+            "Libusb error string: %s\nTerminating\n",usb_strerror());
+    usb_close (udev);
+    exit(-5);
   }
 
 }
 
 
 // prepares the plannif structure with initial values : compulsory before structure use !
-void plannif_reset (struct plannif* plan) {
+void plannif_reset (struct plannif* plan)
+{
   int i;
 
   plan->socket = 0;
