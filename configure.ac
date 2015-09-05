@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(sispmctl, 3.1, mondrian.nuessle@googlemail.com)
+AC_INIT([sispmctl], [4.0], [xypron.glpk@gmx.de])
 AC_CONFIG_AUX_DIR(admin)
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE
