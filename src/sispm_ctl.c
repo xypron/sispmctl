@@ -124,22 +124,22 @@ usb_dev_handle* get_handle(struct usb_device*dev)
   /* prepare USB access */
   if (udev == NULL) {
     fprintf(stderr,"Unable to open USB device %s\n",usb_strerror());
-    usb_close (udev);
-    exit(-1);
+    return NULL;
   }
   if (usb_set_configuration(udev,1) !=0) {
     fprintf(stderr,"USB set configuration %s\n",usb_strerror());
     usb_close (udev);
-    exit(-2);
+    return NULL;
   }
-  if ( usb_claim_interface(udev, 0) !=0) {
+  if (usb_claim_interface(udev, 0) !=0) {
     fprintf(stderr,"USB claim interface %s\nMaybe device already in use?\n",usb_strerror());
-    exit(-3);
+    usb_close(udev);
+    return NULL;
   }
   if (usb_set_altinterface(udev, 0) !=0) {
     fprintf(stderr,"USB set alt interface %s\n",usb_strerror());
     usb_close (udev);
-    exit(-4);
+    return NULL;;
   }
   return udev;
 }

@@ -105,6 +105,22 @@ void daemonize()
 
 #ifndef WEBLESS
 
+static void service_not_available(int out)
+{
+  char xbuffer[BSIZE+2];
+
+  sprintf(xbuffer, "HTTP/1.1 503 Service not available\n"
+          "Server: SisPM\nContent-Type: "
+          "text/html\n\n"
+          "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" "
+          "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
+          "<html><head>\n<title>503 Service not available</title>\n"
+          "<meta http-equiv=\"refresh\" content=\"2;url=/\">\n"
+          "</head><body>\n"
+          "<h1>503 Service not available</h1></body></html>\n\n");
+  send(out,xbuffer,strlen(xbuffer),0);
+}
+
 static void bad_request(int out)
 {
   char xbuffer[BSIZE+2];
@@ -178,12 +194,16 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
 
   /* get device-handle/-id */
   udev = get_handle(dev);
-  id = get_id(dev);
-  if (udev == NULL)
+  if (udev == NULL) {
     fprintf(stderr, "No access to Gembird #%d USB device %s\n", devnum,
             dev->filename );
+    service_not_available(out);
+    fclose(in);
+    return;
+  }
   else if (verbose)
     printf("Accessing Gembird #%d USB device %s\n", devnum, dev->filename );
+  id = get_id(dev);
 
   lastpos = ftell(in);
   retvalue = fgets(xbuffer, BSIZE-1, in);
@@ -429,12 +449,14 @@ void parse_command_line(int argc, char* argv[], int count,
       /* get device-handle/-id if it wasn't done already */
       if(udev==NULL) {
         udev = get_handle(dev[devnum]);
-        id = get_id(dev[devnum]);
-        if(udev==NULL)
+        if(udev==NULL) {
           fprintf(stderr, "No access to Gembird #%d USB device %s\n",
                   devnum, dev[devnum]->filename );
+                  exit(1);
+          }
         else if(verbose) printf("Accessing Gembird #%d USB device %s\n",
                                   devnum, dev[devnum]->filename );
+        id = get_id(dev[devnum]);
       }
     }
 
@@ -480,10 +502,11 @@ void parse_command_line(int argc, char* argv[], int count,
             printf("1\n");
           sudev = get_handle(dev[status]);
           id = get_id(dev[status]);
-          if(sudev==NULL)
+          if(sudev==NULL) {
             fprintf(stderr, "No access to Gembird #%d USB device %s\n",
                     status, dev[status]->filename );
-
+                    exit(1);
+                    }
           if (numeric == 0)
             printf("serial number:    %s\n",get_serial(sudev));
           else
