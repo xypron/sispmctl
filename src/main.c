@@ -286,7 +286,7 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
 
 void print_disclaimer(char*name)
 {
-  fprintf(stderr, "\nSiS PM Control for Linux 3.1\n\n"
+  fprintf(stderr, "\nSiS PM Control for Linux " PACKAGE_VERSION "\n\n"
           "(C) 2004-2011 by Mondrian Nuessle, "
           "(C) 2005, 2006 by Andreas Neuper.\n"
           "(C) 2010 by Olivier Matheret for the plannification part\n"
