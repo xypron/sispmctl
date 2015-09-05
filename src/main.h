@@ -30,13 +30,6 @@
 
 #define MAXANSWER	8192
 
-#ifndef WEBDIR
-#define WEBDIR ""
-#endif
-
-
-#define HOMEDIR	"/usr/local/share/httpd/sispmctl/doc"
-
 extern int verbose;
 
 void process(int out,char*v,struct usb_device*dev,int devnum);

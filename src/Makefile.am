@@ -19,12 +19,10 @@ EXTRA_DIST =  \
 if WEBLESSCOND
 AM_CFLAGS=-Wall -DWEBLESS=@WEBLESS@
 else
-AM_CFLAGS=-Wall -DWEBDIR="\"@WEBDIR@\"" -DBINDADDR="\"@BINDADDR@\"" \
--DDATADIR="\"$(datadir)/httpd/$(PACKAGE)/doc\""
+AM_CFLAGS=-Wall -DBINDADDR="\"@BINDADDR@\"" -DDATADIR="\"@WEBDIR@\""
 
-#pkgdatadir = $(datadir)/httpd/$(PACKAGE)
-pkgdata1dir = $(datadir)/httpd/$(PACKAGE)/skin1
-pkgdata2dir = $(datadir)/httpd/$(PACKAGE)/skin2
+pkgdata1dir = "$(docdir)/httpd/skin1"
+pkgdata2dir = "$(docdir)/httpd/skin2"
 
 pkgdata1_DATA = \
 	web1/index.html web1/logo.png web1/off1.html web1/off2.html \
@@ -50,18 +48,10 @@ AM_LDFLAGS = $(all_libraries)
 install-data-local:
 if WEBLESSCOND
 else
-	test -z "$(DESTDIR)$(datadir)/httpd/$(PACKAGE)"  \
-	|| mkdir -p -- "$(DESTDIR)$(datadir)/httpd/$(PACKAGE)"
-	test -z "$(DESTDIR)$(datadir)/httpd/$(PACKAGE)/skin1" \
-	|| mkdir -p -- "$(DESTDIR)$(datadir)/httpd/$(PACKAGE)/skin1"
-	if test ! -e $(DESTDIR)$(datadir)/httpd/$(PACKAGE)/doc ; then \
-	 cd $(DESTDIR)$(datadir)/httpd/$(PACKAGE) && ln -s skin1 doc ; \
-	fi 
+	mkdir -p "$(DESTDIR)$(docdir)/httpd/skin1"
+	cd "$(DESTDIR)$(docdir)" && ln -sf httpd/skin1 skin
 endif
 
 uninstall-local:
-	rm -f $(DESTDIR)$(datadir)/httpd/$(PACKAGE)/doc
-	rm -rf $(DESTDIR)$(datadir)/httpd/$(PACKAGE)/skin1
-	rm -rf $(DESTDIR)$(datadir)/httpd/$(PACKAGE)/skin2
-	rm -rf $(DESTDIR)$(datadir)/httpd/$(PACKAGE)
+	rm -rf $(DESTDIR)$(datadir)/$(PACKAGE)/httpd
 

@@ -27,10 +27,13 @@ AC_HELP_STRING([--enable-webless],
 AC_SUBST(WEBLESS)
 AM_CONDITIONAL(WEBLESSCOND, test x$WEBLESS = xtrue)
 
-AC_ARG_WITH(webdir,
-AC_HELP_STRING([--with-webdir=DIR],
-  [use DIR to look for html files for the web-interface]),
-[WEBDIR="$withval"])
+AM_CONFIG_HEADER(config.h)
+
+AC_ARG_WITH([webdir],
+  AC_HELP_STRING([--with-skin],
+    [directory with skin files for the web-interface]),
+  [WEBDIR="$withval"],
+  [WEBDIR="$docdir/skin"])
 AC_SUBST(WEBDIR)
 
 AC_ARG_WITH(bindaddr,
@@ -65,7 +68,6 @@ AC_CONFIG_FILES([
   Makefile
   man/Makefile
   src/Makefile])
-AM_CONFIG_HEADER(config.h)
 AC_OUTPUT
 echo ""
 echo "Good - your configure finished. Start make now"

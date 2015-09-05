@@ -56,7 +56,11 @@
 
 #define	BSIZE			 	 65536
 
+#ifdef DATADIR
+char* homedir=DATADIR;
+#else
 char* homedir=0;
+#endif
 extern int errno;
 int debug=1;
 int verbose=1;
@@ -100,6 +104,22 @@ void daemonize()
 #endif
 
 #ifndef WEBLESS
+
+static void bad_request(int out)
+{
+  char xbuffer[BSIZE+2];
+
+  sprintf(xbuffer, "HTTP/1.1 404 Not found\nServer: SisPM\nContent-Type: "
+          "text/html\n\n"
+          "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" "
+          "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
+          "<html><head>\n<title>404 Not found</title>\n"
+          "<meta http-equiv=\"refresh\" content=\"2;url=/\">\n"
+          "</head><body>\n"
+          "<h1>404 Not found</h1></body></html>\n\n");
+  send(out,xbuffer,strlen(xbuffer),0);
+}
+
 void process(int out ,char *request, struct usb_device *dev, int devnum)
 {
   char xbuffer[BSIZE+2];
@@ -142,13 +162,7 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
   }
 
   if (chdir(homedir) != 0) {
-    sprintf(xbuffer, "HTTP/1.1 4%02d Bad request\nServer: SisPM\nContent-Type: "
-            "text/html\n\n"
-            "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
-            "<html><head>\n<title>4%02d Bad Defaults</title>\n"
-            "</head><body>\n<h1>Bad Defaults</h1>\n<p>%s</p></body></html>\n\n",
-            errno,errno,strerror(errno));
-    send(out,xbuffer,strlen(xbuffer),0);
+    bad_request(out);
     return;
   }
 
@@ -158,13 +172,7 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
   in = fopen(ptr,"r");
 
   if (in == NULL) {
-    sprintf(xbuffer, "HTTP/1.1 4%02d Bad request\nServer: SisPM\nContent-Type: "
-            "text/html\n\n"
-            "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
-            "<html><head>\n<title>4%02d Bad Request</title>\n"
-            "</head><body>\n<h1>Bad Request</h1>\n<p>%s</p></body></html>\n\n",
-            errno,errno,strerror(errno));
-    send(out,xbuffer,strlen(xbuffer),0);
+    bad_request(out);
     return;
   }
 
@@ -179,11 +187,15 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
 
   lastpos = ftell(in);
   retvalue = fgets(xbuffer, BSIZE-1, in);
-  assert((retvalue != NULL) || feof(in));
   remlen = length = ftell(in) - lastpos;
   lastpos = ftell(in);
 
   while (!feof(in)) {
+    if (retvalue == NULL) {
+      bad_request(out);
+      break;
+    }
+
     char *mrk = xbuffer;
     char *ptr = xbuffer;
     /* search for:
@@ -272,7 +284,6 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
     send(out, mrk, remlen, 0);
     memset(xbuffer, 0, BSIZE);
     retvalue = fgets(xbuffer, BSIZE-1, in);
-    assert((retvalue != NULL) || feof(in));
     remlen = length = ftell(in) - lastpos;
     lastpos = ftell(in);
   }
@@ -744,13 +755,6 @@ int main(int argc, char** argv)
   usb_init();
   usb_find_busses();
   usb_find_devices();
-
-#ifndef WEBLESS
-  if (strlen(WEBDIR)==0)
-    homedir=HOMEDIR;
-  else
-    homedir=WEBDIR;
-#endif
 
   // initialize by setting device pointers to zero
   for (count=0; count < MAXGEMBIRD; ++count)
