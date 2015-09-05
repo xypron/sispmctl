@@ -22,7 +22,7 @@ else
 AM_CFLAGS=-Wall -DWEBDIR="\"@WEBDIR@\"" -DBINDADDR="\"@BINDADDR@\"" \
 -DDATADIR="\"$(datadir)/httpd/$(PACKAGE)/doc\""
 
-pkgdatadir = $(datadir)/httpd/$(PACKAGE)
+#pkgdatadir = $(datadir)/httpd/$(PACKAGE)
 pkgdata1dir = $(datadir)/httpd/$(PACKAGE)/skin1
 pkgdata2dir = $(datadir)/httpd/$(PACKAGE)/skin2
 
