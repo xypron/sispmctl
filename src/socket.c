@@ -141,6 +141,7 @@ int*socket_init(char* bind_arg)
   *s = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
   if( *s == -1 ) {
     perror("Socket cannot be opened");
+    free(s);
     return(NULL);
   }
 
