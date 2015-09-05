@@ -280,10 +280,10 @@ void plannif_display(const struct plannif* plan, int verbose, const char* progna
           loopdsp %= 60;
         }
         if (loopdsp > 0)
-          printf("%limin", loopdsp);
+          printf("%lumin", loopdsp);
         printf("\n");
         if (verbose)
-          sprintf(cmdline+(strlen(cmdline)), "--Aloop %li ", loop);
+          sprintf(cmdline+(strlen(cmdline)), "--Aloop %lu ", loop);
       } else
         printf("  No programmed event.\n");
     }
