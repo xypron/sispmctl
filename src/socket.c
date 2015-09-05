@@ -40,8 +40,8 @@
 #include "nethelp.h"
 #include "main.h"
 
+#ifndef WEBLESS
 int listenport=LISTENPORT;
-
 
 void l_listen(int*sock, struct usb_device*dev, int devnum)
 {
@@ -180,3 +180,4 @@ socket_error:
   close(*s);
   return NULL;
 }
+#endif // !WEBLESS
