@@ -108,13 +108,7 @@ void l_listen(int*sock, struct usb_device*dev, int devnum)
         }
         nanosleep(&waittime, NULL);
       } else {
-#if 0
-        const char*tosend=answer(buffer);
-        fprintf(stderr,"Buffer contains: »%s«\n",buffer);
-        send(s,tosend,strlen(tosend),0);
-#else
         process(s,buffer,dev,devnum);
-#endif
         memset(buffer,0,BUFFERSIZE);
         close(s);
         connected=0;

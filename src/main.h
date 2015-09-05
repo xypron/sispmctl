@@ -39,7 +39,6 @@
 
 extern int verbose;
 
-const char*answer(char*in);
 void process(int out,char*v,struct usb_device*dev,int devnum);
 extern int debug;
 

@@ -381,36 +381,6 @@ const char *show_header(int type)
 
   return(buffer);
 }
-
-
-
-const char *answer(char*in)
-{
-  char *ptr = NULL, *end = NULL;
-
-  static char out[MAXANSWER+2];
-  memset(out,0,MAXANSWER);
-
-  if (strncasecmp("GET ",in,4) == 0) {
-    ptr = &in[4];
-  } else if (strncasecmp("POST ",in,5) == 0) {
-    ptr = &in[5];
-  } else {
-    ptr = &in[0];
-  }
-
-  end = strchr(ptr,' ');
-  assert(("filename buffer is defined to 1024 chars only", end-ptr<1024));
-  if (strncasecmp("/switch",ptr,6) == 0)
-    ptr += 6;
-
-  strcpy(out,show_header((4<<4)+1));
-
-  strcat(out,"\n\n<HTML><HEAD><TITLE>TEST</TITLE></HEAD>"
-         "<BODY><H1>TEST</H1></BODY></HTML>\n");
-  strcat(out,show_header((4<<4)+1));
-  return(out);
-}
 #endif
 
 void parse_command_line(int argc, char* argv[], int count,
