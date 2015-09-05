@@ -44,21 +44,3 @@ int sock_write_bytes(int sockfd, const unsigned char *buff, int len)
   }
   return(t);
 }
-
-/*
- * Read len bytes from buf to the socket.
- * Returns the return value from recv()
- */
-int sock_read_bytes(int sockfd, const unsigned char *buff, int len)
-{
-  int t, n;
-
-  for(t = 0 ; len > 0 ; ) {
-    n = recv(sockfd, (void *) buff + t, len, MSG_NOSIGNAL);
-    if (n < 0)
-      return((t == 0) ? n : t);
-    t += n;
-    len -= n;
-  }
-  return(t);
-}
