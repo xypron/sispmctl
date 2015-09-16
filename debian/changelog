@@ -1,3 +1,9 @@
+sispmctl4 (4.0-1) unstable; urgency=medium
+
+  * Add udev rules
+
+ -- Heinrich Schuchardt <xypron.glpk@gmx.de>  Wed, 16 Sep 2015 21:58:13 +0200
+
 sispmctl4 (4.0-0) unstable; urgency=medium
 
   * New upstream release 
