@@ -1,5 +1,5 @@
 #!/bin/bash
-# postinst for sispmclt4
+# postinst for sispmctl4
 #
 # see: dh_installdeb(1)
 
