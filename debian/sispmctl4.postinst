@@ -22,6 +22,8 @@ case "$1" in
 
     echo creating group sispmctl
     groupadd -f --system sispmctl
+    udevadm control --reload-rules
+    udevadm trigger
     ;;
 
     *)
