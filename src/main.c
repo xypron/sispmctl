@@ -241,19 +241,25 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
 
         if (trm != NULL) {
 	  if (num == NULL) {
-	    fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
-	      "ERROR at #");
-	    exit(EXIT_FAILURE);
+            fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
+             "ERROR at #");
+             service_not_available(out);
+            fclose(in);
+            return;
 	  }
 	  if (pos == NULL) {
-	    fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
-	      "ERROR at ?");
-	    exit(EXIT_FAILURE);
+            fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
+              "ERROR at ?");
+            service_not_available(out);
+            fclose(in);
+            return;
 	  }
 	  if (neg == NULL) {
-	    fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
+            fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
 	      "ERROR at :");
-	    exit(EXIT_FAILURE);
+            service_not_available(out);
+            fclose(in);
+            return;
 	  }
           // if( (ptr=strchr(neg,'$')) == NULL ) ptr=cmd; else *ptr=0;
           // *pos=*neg=0;
@@ -273,9 +279,11 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
               send(out,neg,trm-neg,0);
           } else if (strncasecmp(cmd,"off(",4)==0) {
 	    if (trm[1] != '$') {
-	      fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
-	        "ERROR at final $");
-	      exit(EXIT_FAILURE);
+              fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
+                "ERROR at final $");
+              service_not_available(out);
+              fclose(in);
+              return;
 	    }
             if (debug)
               fprintf(stderr,"\nOFF(%s)\n",num);
@@ -285,9 +293,11 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
               send(out,neg,trm-neg,0);
           } else if (strncasecmp(cmd,"toggle(",7)==0) {
 	    if (trm[1] != '$') {
-	      fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
-	        "ERROR at final $");
-	      exit(EXIT_FAILURE);
+              fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
+                "ERROR at final $");
+              service_not_available(out);
+              fclose(in);
+              return;
 	    }
             if (debug)
               fprintf(stderr,"\nTOGGLE(%s)\n",num);
@@ -300,9 +310,11 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
             }
           } else if (strncasecmp(cmd,"status(",7)==0) {
 	    if (trm[1] != '$') {
-	      fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
-	        "ERROR at final $");
-	      exit(EXIT_FAILURE);
+              fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
+                "ERROR at final $");
+              service_not_available(out);
+              fclose(in);
+              return;
 	    }
             if (debug)
               fprintf(stderr,"\nSTATUS(%s)\n",num);
