@@ -37,7 +37,6 @@
 #include <time.h>
 #include <signal.h>
 #include <usb.h>
-#include <assert.h>
 #include <getopt.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -241,12 +240,21 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
         }
 
         if (trm != NULL) {
-          assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at #",
-                  num!=NULL));
-          assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at ?",
-                  pos!=NULL));
-          assert(("Command-Format: $$exec(#)?select:forget$$	ERROR at :",
-                  neg!=NULL));
+	  if (num == NULL) {
+	    fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
+	      "ERROR at #");
+	    exit(EXIT_FAILURE);
+	  }
+	  if (pos == NULL) {
+	    fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
+	      "ERROR at ?");
+	    exit(EXIT_FAILURE);
+	  }
+	  if (neg == NULL) {
+	    fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
+	      "ERROR at :");
+	    exit(EXIT_FAILURE);
+	  }
           // if( (ptr=strchr(neg,'$')) == NULL ) ptr=cmd; else *ptr=0;
           // *pos=*neg=0;
           ++num;
@@ -264,8 +272,11 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
             else
               send(out,neg,trm-neg,0);
           } else if (strncasecmp(cmd,"off(",4)==0) {
-            assert(("Command-Format: $$exec(#)?select:forget$$	"
-                    "ERROR at final $",(trm[1]=='$')));
+	    if (trm[1] != '$') {
+	      fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
+	        "ERROR at final $");
+	      exit(EXIT_FAILURE);
+	    }
             if (debug)
               fprintf(stderr,"\nOFF(%s)\n",num);
             if (sispm_switch_off(udev,id,atoi(num)) !=0)
@@ -273,8 +284,11 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
             else
               send(out,neg,trm-neg,0);
           } else if (strncasecmp(cmd,"toggle(",7)==0) {
-            assert(("Command-Format: $$exec(#)?select:forget$$	"
-                    "ERROR at final $",(trm[1]=='$')));
+	    if (trm[1] != '$') {
+	      fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
+	        "ERROR at final $");
+	      exit(EXIT_FAILURE);
+	    }
             if (debug)
               fprintf(stderr,"\nTOGGLE(%s)\n",num);
             if (sispm_switch_getstatus(udev,id,atoi(num)) == 0) {
@@ -285,8 +299,11 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
               send(out,neg,trm-neg,0);
             }
           } else if (strncasecmp(cmd,"status(",7)==0) {
-            assert(("Command-Format: $$exec(#)?select:forget$$	"
-                    "ERROR at final $",(trm[1]=='$')));
+	    if (trm[1] != '$') {
+	      fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
+	        "ERROR at final $");
+	      exit(EXIT_FAILURE);
+	    }
             if (debug)
               fprintf(stderr,"\nSTATUS(%s)\n",num);
             if (sispm_switch_getstatus(udev,id,atoi(num)) != 0)
