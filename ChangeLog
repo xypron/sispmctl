@@ -1,6 +1,14 @@
-05 Sep 2015 - 4.0
-	code cleanup
-	bug fixes
+18 Feb 2016 - 4.0
+	Adjust configuration files to autotools standard.
+	Separate the binary into an executable and a library.
+	Fix various bugs like a memory leak and unused variables.
+	Code cleanup.
+
+	By default only user root can access the Gembird devices.
+	File examples/60-sispmctl.rules has been added. It provides udev rules
+	which allow group sispmctl to read from and write to the devices. For
+	usage copy it to /lib/udev/rules.d/. Then reload the udev rules with
+    	udevadm control --reload-rules
 
 28 Nov 2011 - 3.1
 	cleanup web-themes

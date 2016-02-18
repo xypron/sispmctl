@@ -1,7 +1,7 @@
 SiS-PM Control for Linux
 ========================
-(c) 2015, Heinrich Schuchardt &lt;xypron.glpk@gmx.de&gt;
-(c) 2011-2012, Pete Hildebrandt &lt;send2ph@googlemail.de&gt;
+(c) 2015-2016, Heinrich Schuchardt &lt;xypron.glpk@gmx.de&gt;
+(c) 2011-2016, Pete Hildebrandt &lt;send2ph@gmail.de&gt;
 (c) 2005-2011, Mondrian Nuessle et al.
 
 Overview
