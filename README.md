@@ -22,7 +22,7 @@ Olivier Matheret.
 Installation
 ------------
 
-See the file INSTALLATION for generic installation instructions.
+See the file INSTALL for generic installation instructions.
 The following confiure options may be of interest:
 
 --prefix=dif
