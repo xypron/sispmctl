@@ -149,7 +149,7 @@ int check_outlet_number(int id, int outlet)
   if (id == PRODUCT_ID_MSISPM_OLD) {
     if (outlet < 0 || outlet > 1)
       if (verbose == 1)
-        fprintf(stderr,"mSIS-PM devices only feature one outlet. Number changed from %d to 1\n", outlet);
+        fprintf(stderr,"mSIS-PM devices only feature one outlet. Number changed from %d to 0\n", outlet);
     outlet = 0;
   }
   if (id == PRODUCT_ID_MSISPM_FLASH) {
