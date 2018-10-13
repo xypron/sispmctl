@@ -3,6 +3,7 @@
 
   Controls the GEMBIRD Silver Shield PM USB outlet device
 
+  (C) 2015-2018, Heinrich Schuchardt <xypron.glpk@gmx.de>
   (C) 2004,2005,2006 Mondrian Nuessle, Computer Architecture Group, University of Mannheim, Germany
   (C) 2005, Andreas Neuper, Germany
   (C) 2010, Olivier Matheret, France, for the plannification part
@@ -39,8 +40,7 @@
 #define PRODUCT_ID_MSISPM_OLD		0xFD10
 #define PRODUCT_ID_MSISPM_FLASH		0xFD12
 #define PRODUCT_ID_SISPM_FLASH_NEW	0xFD13
-
-
+#define PRODUCT_ID_SISPM_EG_PMS2	0xFD15
 
 #define USB_DIR_IN                      0x80            /* to host */
 #define USB_DIR_OUT                     0               /* to device */

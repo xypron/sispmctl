@@ -1,6 +1,6 @@
 SiS-PM Control for Linux
 ========================
-(c) 2015-2016, Heinrich Schuchardt &lt;xypron.glpk@gmx.de&gt;
+(c) 2015-2018, Heinrich Schuchardt &lt;xypron.glpk@gmx.de&gt;
 (c) 2011-2016, Pete Hildebrandt &lt;send2ph@gmail.de&gt;
 (c) 2005-2011, Mondrian Nuessle et al.
 
@@ -94,6 +94,7 @@ with the following content
     SUBSYSTEM=="usb", ATTR{idVendor}=="04b4", ATTR{idProduct}=="fd11", GROUP="sispmctl", MODE="660"
     SUBSYSTEM=="usb", ATTR{idVendor}=="04b4", ATTR{idProduct}=="fd12", GROUP="sispmctl", MODE="660"
     SUBSYSTEM=="usb", ATTR{idVendor}=="04b4", ATTR{idProduct}=="fd13", GROUP="sispmctl", MODE="660"
+    SUBSYSTEM=="usb", ATTR{idVendor}=="04b4", ATTR{idProduct}=="fd15", GROUP="sispmctl", MODE="660"
 
 Then reload the udev rules with
 
@@ -112,3 +113,5 @@ command before plugging in the device:
 	update_drv -a -i '"usb4b4,fd12"' ugen
     for energenie:
 	update_drv -a -i '"usb4b4,fd13"' ugen
+    for EG-PMS2:
+	update_drv -a -i '"usb4b4,fd15"' ugen

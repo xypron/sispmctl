@@ -3,6 +3,7 @@
 
   Controls the GEMBIRD Silver Shield PM USB outlet device
 
+  (C) 2015-2018, Heinrich Schuchardt <xypron.glpk@gmx.de>
   (C) 2004,2005,2006 Mondrian Nuessle, Computer Architecture Group, University of Mannheim, Germany
   (C) 2005, Andreas Neuper, Germany
   (C) 2010, Olivier Matheret, France, for the plannification part
@@ -158,7 +159,9 @@ int check_outlet_number(int id, int outlet)
         fprintf(stderr,"mSIS-PM devices only feature one outlet. Number changed from %d to 1\n", outlet);
     outlet = 1;
   }
-  if (id == PRODUCT_ID_SISPM || id == PRODUCT_ID_SISPM_FLASH_NEW) {
+  if ((id == PRODUCT_ID_SISPM) ||
+      (id == PRODUCT_ID_SISPM_FLASH_NEW) ||
+      (id == PRODUCT_ID_SISPM_EG_PMS2)) {
     if (outlet < 1 || outlet > 4) {
       if (verbose == 1)
         fprintf(stderr,"SIS-PM devices only feature 4 outlets. Number changed from %d to 1\n", outlet);

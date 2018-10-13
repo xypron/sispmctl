@@ -3,7 +3,7 @@
 
   Controls the GEMBIRD Silver Shield PM USB outlet device
 
-  (C) 2015-2016, Heinrich Schuchardt <xypron.glpk@gmx.de>
+  (C) 2015-2018, Heinrich Schuchardt <xypron.glpk@gmx.de>
   (C) 2011-2016, Pete Hildebrandt <send2ph@gmail.com>
   (C) 2004-2011, Mondrian Nuessle, Computer Architecture Group, University of Mannheim, Germany
   (C) 2005, Andreas Neuper, Germany
@@ -520,7 +520,9 @@ void parse_command_line(int argc, char* argv[], int count,
             printf("%d %s %s\n", status,
                    dev[status]->bus->dirname, dev[status]->filename);
           id = get_id(dev[status]);
-          if ((id == PRODUCT_ID_SISPM) || (id == PRODUCT_ID_SISPM_FLASH_NEW))
+          if ((id == PRODUCT_ID_SISPM) ||
+              (id == PRODUCT_ID_SISPM_FLASH_NEW) ||
+              (id == PRODUCT_ID_SISPM_EG_PMS2))
             if (numeric == 0)
               printf("device type:      4-socket SiS-PM\n");
             else
@@ -820,7 +822,8 @@ int main(int argc, char** argv)
           && ((dev->descriptor.idProduct == PRODUCT_ID_SISPM) ||
               (dev->descriptor.idProduct == PRODUCT_ID_MSISPM_OLD) ||
               (dev->descriptor.idProduct == PRODUCT_ID_MSISPM_FLASH) ||
-              (dev->descriptor.idProduct == PRODUCT_ID_SISPM_FLASH_NEW))) {
+              (dev->descriptor.idProduct == PRODUCT_ID_SISPM_FLASH_NEW) ||
+              (dev->descriptor.idProduct == PRODUCT_ID_SISPM_EG_PMS2))) {
         usbdev[count] = dev;
         ++count;
       }
