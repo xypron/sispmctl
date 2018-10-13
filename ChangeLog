@@ -1,3 +1,7 @@
+not yet released - 4.1
+	Support new device ID 0xfd15
+	Bugfixes
+
 18 Feb 2016 - 4.0
 	Adjust configuration files to autotools standard.
 	Separate the binary into an executable and a library.
@@ -8,7 +12,7 @@
 	File examples/60-sispmctl.rules has been added. It provides udev rules
 	which allow group sispmctl to read from and write to the devices. For
 	usage copy it to /lib/udev/rules.d/. Then reload the udev rules with
-    	udevadm control --reload-rules
+	udevadm control --reload-rules
 
 28 Nov 2011 - 3.1
 	cleanup web-themes
@@ -28,7 +32,7 @@
 03 Mar 2008 - 2.6
 	msis-pm (single socket) and sis-pm with new device id of 0xfd13 supported. Bugfixes.
 
-03 Dez 2007 - 2.5
+03 Dec 2007 - 2.5
 	some (small) bug-fixes
 
 17 Aug 2006 - 2.4
