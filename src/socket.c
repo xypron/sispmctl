@@ -48,7 +48,6 @@ void l_listen(int*sock, struct usb_device*dev, int devnum)
   int i;
   int s;
   int connected=0;
-  uid_t uid;
   int BUFFERSIZE=4096;
   int junk = 0;
   char *oob;
@@ -59,10 +58,6 @@ void l_listen(int*sock, struct usb_device*dev, int devnum)
 
   oob = (char *) malloc(32);
   buffer = (char *) malloc(BUFFERSIZE+4);
-
-  /* drop priveleges */
-  uid = getuid();
-  seteuid(uid);
 
   if (debug)
     fprintf(stderr, "Listening for local provider on port %d...\n", listenport);
