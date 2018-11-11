@@ -6,10 +6,10 @@ SiS-PM Control for Linux
 
 Overview
 --------
-This projects adds support for the GEMBIRD SIS-PM device to linux.
+This projects adds support for the GEMBIRD SIS-PM device to Linux.
 Follow the instructions in INSTALL to install the application
 (generic configure && make && make install).
-Call sispmctl (formerly: sispmi\_ctl) without commandline parameters,
+Call sispmctl (formerly: sispmi\_ctl) without command line parameters,
 it will print the available options to stdout.
 Since version 2.3 also 1-outlet mSIS-PM devices are supported; this is still
 alpha, probably not working and needs testers/developers.
@@ -23,7 +23,7 @@ Installation
 ------------
 
 See the file INSTALL for generic installation instructions.
-The following confiure options may be of interest:
+The following configure options may be of interest:
 
 --prefix=dif
         Set installation directory-prefix (default is /usr/local)
@@ -35,10 +35,10 @@ The following confiure options may be of interest:
 
 --with-webdir=directory
         Install the web-interface file to subdirectories of the
-        given directory. A doc linl in this directory will point
-        to skin1. And the path will be default path compiled into
+        given directory. A symbolic link in this directory will point
+        to skin1. And the path will be the default path compiled into
         the binary.
-        The default without this option is /usr/local/httpd/sispmctl.
+        The default without this option is /usr/local/share/doc/sispmctl/skin.
 
 --with-bindaddr=ipaddress
         Give the IP address (in dotted decimal form, i.e. 127.0.0.1) for
@@ -61,20 +61,20 @@ or using the inittab. Add the following line to your /etc/inittab:
 
 pm:2345:respawn:/usr/local/bin/sispmctl -l
 
-There are three kind of skins between you might select:
+There are two skins between you might select:
 	src/web1/	classic sispm_http style
 	src/web2/	a vertical sized frame
 The skins are installed under
-$(PREFIX)/httpd/sispmctl/skin1..2
+$(PREFIX)/share/doc/sispmctl/httpd/skin1..2
 
 The default skin is selected by the symbolic link
-$(PREFIX)/httpd/sispmctl/doc which point to skin1 after
+$(PREFIX)/share/doc/sispmctl/skin which points to skin1 after
 installation. You can easily select a different skin by
-chaning this symbolic link.
+changing this symbolic link.
 
 It is quite easy to change one or write a new one. Try it.
 
-The webinterface does not recognize if a mSIS-PM is connected, so always 4
+The web interface does not recognize if a mSIS-PM is connected, so always 4
 outlets will be displayed.
 
 Usage
