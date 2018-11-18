@@ -69,7 +69,7 @@ int verbose=1;
 void daemonize()
 {
   /* Our process ID and Session ID */
-  pid_t pid, sid;
+  pid_t pid;
 
   /* Fork off the parent process */
   pid = fork();
@@ -84,21 +84,17 @@ void daemonize()
   /* Change the file mode mask */
   umask(0);
 
-  /* Create a new SID for the child process */
-  sid = setsid();
-  if (sid < 0)
-    /* Log the failure */
-    exit(EXIT_FAILURE);
-
   /* Change the current working directory */
   if ((chdir("/var/tmp")) < 0)
     /* Log the failure */
     exit(EXIT_FAILURE);
 
-  /* Close out the standard file descriptors */
+  /*
+   * We do not expect any keyboard input anymore.
+   * STDERR is still needed for logging.
+   */
   close(STDIN_FILENO);
   close(STDOUT_FILENO);
-  close(STDERR_FILENO);
 }
 #endif
 
