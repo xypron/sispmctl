@@ -1,6 +1,8 @@
-not yet released - 4.1
-	Support new device ID 0xfd15
-	Bugfixes
+18 Nov 2018 - 4.1
+	Add support for Gembird EG-PMS2 with idVendor=04b4, idProduct=fd15.
+	Remove ineffective seteuid() call.
+	When the outlet number is replaced indicate the correct new number.
+	Update documenation.
 
 18 Feb 2016 - 4.0
 	Adjust configuration files to autotools standard.
@@ -27,10 +29,12 @@ not yet released - 4.1
 	several bugfixes and cleanups
 
 28 Mar 2008 - 2.7
-	-m switch for power status added, some other small additions, experimental support for ids
+	-m switch for power status added, some other small additions,
+	experimental support for ids
 
 03 Mar 2008 - 2.6
-	msis-pm (single socket) and sis-pm with new device id of 0xfd13 supported. Bugfixes.
+	msis-pm (single socket) and sis-pm with new device id of 0xfd13
+	supported. Bugfixes.
 
 03 Dec 2007 - 2.5
 	some (small) bug-fixes
