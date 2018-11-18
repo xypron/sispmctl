@@ -77,6 +77,27 @@ It is quite easy to change one or write a new one. Try it.
 The web interface does not recognize if a mSIS-PM is connected, so always 4
 outlets will be displayed.
 
+The web server can be started automatically with systemd. This requires the
+following steps
+
+Create user sispmctl in group sispmctl. The command on Debian and Ubuntu is
+
+    adduser sispmctl --system --group --disabled-login --no-create-home
+
+Provide the necessary authorizations via udev (see below).
+
+    cp examples/60-sispmctl.rules /lib/udev/rules.d/60-sispmctl.rules
+    udevadm control --reload-rules
+
+Adjust and copy the systemd service definition
+
+    cp examples/sispmctl.service /lib/systemd/system
+
+Enable and start the service with
+
+    systemctl enable sispmctl.service
+    systemctl start sispmctl.service
+
 Usage
 -----
 See the output of sispmctl when run without parameters and the man page.
