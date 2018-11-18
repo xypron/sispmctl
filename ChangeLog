@@ -1,5 +1,6 @@
 18 Nov 2018 - 4.1
 	Add support for Gembird EG-PMS2 with idVendor=04b4, idProduct=fd15.
+	Display version number in web server.
 	Remove ineffective seteuid() call.
 	When the outlet number is replaced indicate the correct new number.
 	Refactor code.

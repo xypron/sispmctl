@@ -100,8 +100,11 @@ If present the file is parsed and in absence of control sequences sent as is.
 The files must include the http header portion.
 .P
 Control sequences start and end with double dollar `$$'.
-They consist of a command portion separated by a question mark `?' from
-alternative outputs which are separated by the first colon `:'.
+.P
+To display the version of the software use
+.IR $$version()$$ .
+Other control sequences consist of a command portion separated by a question
+mark `?' from alternative outputs which are separated by the first colon `:'.
 The command portion is a token followed by an embraced number that references
 the outlet, e.g.
 .IB $$command(1)?positive:negative$$
@@ -111,10 +114,9 @@ while command is one of
 .B on
 or
 .BR off .
-I strongly recommend to avoid the on/off/toggle commands in pages that may be
+It is advisable to avoid the on/off/toggle commands in pages that may be
 reloaded.
 Best is to redirect to other pages that only include status requests.
-
 
 .SH PLANNING
 

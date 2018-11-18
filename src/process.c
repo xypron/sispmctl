@@ -32,7 +32,7 @@
 #include "config.h"
 #include "sispm_ctl.h"
 
-#define	BSIZE	65536
+#define BSIZE   65536
 int debug = 0;
 int verbose = 1;
 #ifdef DATADIR
@@ -155,16 +155,16 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
     char *mrk = xbuffer;
     char *ptr = xbuffer;
     /* search for:
-     *	$$exec(0)?.1.:.2.$$	to execute command(#)
-     *	$$stat(2)?.1.:.2.$$	to evaluate status(#)
+     *  $$exec(0)?.1.:.2.$$     to execute command(#)
+     *  $$stat(2)?.1.:.2.$$     to evaluate status(#)
+     *  $$version()$$           to evalute version
      */
     for (mrk = ptr = xbuffer; (ptr-xbuffer) < length; ++ptr) {
-      if (*ptr=='$' && ptr[1]=='$' && (ptr[2]=='e'
-                                       || ptr[2]=='s'|| ptr[2]=='o')) {
+      if (*ptr=='$' && ptr[1]=='$') {
         /*
-         * $$exec(1)?select:forget$$
-         *   ^cmd    ^pos	 ^trm
-         * ^ptr	 ^num	   ^neg
+         * $$exec(1)?positive:negative$$
+         *   ^cmd    ^pos             ^trm
+         * ^ptr   ^num        ^neg
          */
         char *cmd=&ptr[2];
         char *num=strchr(cmd,'(');
@@ -178,34 +178,29 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
 
         if (trm != NULL) {
           if (num == NULL) {
-            fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
+            fprintf(stderr, "Command-Format: $$exec(#)?positive:negative$$  "
                     "ERROR at #");
             service_not_available(out);
             fclose(in);
             return;
           }
-          if (pos == NULL) {
-            fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
-                    "ERROR at ?");
-            service_not_available(out);
-            fclose(in);
-            return;
-          }
-          if (neg == NULL) {
-            fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
-                    "ERROR at :");
-            service_not_available(out);
-            fclose(in);
-            return;
-          }
           ++num;
-          ++pos;
-          ++neg;
+          if (pos != NULL)
+            ++pos;
+          if (neg != NULL)
+            ++neg;
+
           send(out,mrk,ptr-mrk,0);
           remlen = remlen - (ptr - mrk);
           mrk=ptr;
 
           if (strncasecmp(cmd,"on(",3)==0) {
+            if (trm[1] != '$' || !pos || !neg) {
+              fprintf(stderr, "Command-Format: $$on(#)?positive:negative$$");
+              service_not_available(out);
+              fclose(in);
+              return;
+            }
             if (debug)
               fprintf(stderr,"\nON(%s)\n",num);
             if (sispm_switch_on(udev,id,atoi(num)) !=0)
@@ -213,9 +208,8 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
             else
               send(out,neg,trm-neg,0);
           } else if (strncasecmp(cmd,"off(",4)==0) {
-            if (trm[1] != '$') {
-              fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
-                      "ERROR at final $");
+            if (trm[1] != '$' || !pos || !neg) {
+              fprintf(stderr, "Command-Format: $$off(#)?positive:negative$$");
               service_not_available(out);
               fclose(in);
               return;
@@ -227,9 +221,8 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
             else
               send(out,neg,trm-neg,0);
           } else if (strncasecmp(cmd,"toggle(",7)==0) {
-            if (trm[1] != '$') {
-              fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
-                      "ERROR at final $");
+            if (trm[1] != '$' || !pos || !neg) {
+              fprintf(stderr, "Command-Format: $$toggle(#)?positive:negative$$");
               service_not_available(out);
               fclose(in);
               return;
@@ -244,9 +237,8 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
               send(out,neg,trm-neg,0);
             }
           } else if (strncasecmp(cmd,"status(",7)==0) {
-            if (trm[1] != '$') {
-              fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
-                      "ERROR at final $");
+            if (trm[1] != '$' || !pos || !neg) {
+              fprintf(stderr, "Command-Format: $$status(#)?positive:negative$$");
               service_not_available(out);
               fclose(in);
               return;
@@ -257,6 +249,16 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
               send(out,pos,neg-pos-1,0);
             else
               send(out,neg,trm-neg,0);
+          } else if (strncasecmp(cmd, "version(", 8) == 0) {
+            if (trm[1] != '$') {
+              fprintf(stderr, "Command-Format: $$version()$$");
+              service_not_available(out);
+              fclose(in);
+              return;
+            }
+            if (debug)
+              fprintf(stderr,"\nVERSION(%s)\n",num);
+            send(out, PACKAGE_VERSION, strlen(PACKAGE_VERSION), 0);
           } else {
             send(out,"$$",2,0);
           }
