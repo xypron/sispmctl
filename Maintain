@@ -1,0 +1,28 @@
+== Preparing a new release ==
+
+Update version information in
+
+ChangeLog	- release information
+configure.ac	- release number
+man/sispmctl.1	- date
+
+./autogen.sh
+./configure
+make clean
+git commit -as
+make clean
+make dist
+make
+make check
+git push origin
+git tag -s release-<release number>
+git push origin <tag>
+
+sftp user@frs.sourceforge.net
+cd /home/frs/project/sispmctl/sispmctl/
+mkdir sispmctl-<release number>
+cd sispmctl-<release number>
+put sispmctl-<release number>
+
+Update information in
+https://sourceforge.net/projects/sispmctl/files/
