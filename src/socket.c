@@ -33,12 +33,10 @@
 #ifdef HAVE_NET_ETHERNET_H
 #include <net/ethernet.h>
 #endif
-
-
 #include <usb.h>
+#include "sispm_ctl.h"
 #include "socket.h"
 #include "nethelp.h"
-#include "main.h"
 
 #ifndef WEBLESS
 int listenport=LISTENPORT;

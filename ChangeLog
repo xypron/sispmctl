@@ -2,6 +2,7 @@
 	Add support for Gembird EG-PMS2 with idVendor=04b4, idProduct=fd15.
 	Remove ineffective seteuid() call.
 	When the outlet number is replaced indicate the correct new number.
+	Refactor code.
 	Update documenation.
 
 18 Feb 2016 - 4.0

@@ -1,5 +1,5 @@
 libsispmctl_la_LDFLAGS = \
-	-version-info 1:0:1
+	-version-info 2:0:2
 
 bin_PROGRAMS = sispmctl 
 
@@ -37,9 +37,9 @@ pkgdata2_DATA = \
 endif
 
 libsispmctl_la_SOURCES = \
-	sispm_ctl.c nethelp.c socket.c sispm_ctl.h nethelp.h socket.h
+	process.c sispm_ctl.c nethelp.c socket.c sispm_ctl.h nethelp.h socket.h
 
-sispmctl_SOURCES = main.c main.h
+sispmctl_SOURCES = main.c
 
 AM_CPPFLAGS = $(all_includes)
 

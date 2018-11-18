@@ -28,10 +28,27 @@
 
 */
 
+typedef unsigned long ulong;
+struct plannifAction {
+  ulong switchOn;      // action to do now
+  ulong timeForNext;  // wait this num of minutes before any next action ; 0 means "stop"
+};
+
+struct plannif {
+  int socket;
+  ulong timeStamp;
+  struct plannifAction actions[17]; // 16 + the initial one
+};
+
+extern int debug;
+extern int verbose;
+extern char *homedir;
+
 #ifndef SISPM_CTL_H
 #define SISPM_CTL_H
 
 #define MAXGEMBIRD			32
+#define MAXANSWER			8192
 
 #define VENDOR_ID 			0x04B4
 
@@ -46,17 +63,7 @@
 #define USB_DIR_OUT                     0               /* to device */
 #define cpu_to_le16(a)                  (a)
 
-typedef unsigned long ulong;
-struct plannifAction {
-  ulong switchOn;      // action to do now
-  ulong timeForNext;  // wait this num of minutes before any next action ; 0 means "stop"
-};
 
-struct plannif {
-  int socket;
-  ulong timeStamp;
-  struct plannifAction actions[17]; // 16 + the initial one
-};
 #define READNEXTBYTE {nextWord = (ulong)buffer[bufindex]; bufindex ++;}
 #define READWORD(idx) {nextWord = (ulong)buffer[idx] + (buffer[idx+1]<<8);}
 #define READNEXTWORD {nextWord = (ulong)buffer[bufindex] + (buffer[bufindex+1]<<8); bufindex += 2;}
@@ -76,6 +83,7 @@ void plannif_reset (struct plannif* plan);
 void usb_command_getplannif(usb_dev_handle *udev, int socket, struct plannif* plan);
 void usb_command_setplannif(usb_dev_handle *udev, struct plannif* plan);
 void plannif_display(const struct plannif* plan, int verbose, const char* progname);
+void process(int out,char*v,struct usb_device*dev,int devnum);
 
 usb_dev_handle*get_handle(struct usb_device*dev);
 int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected );

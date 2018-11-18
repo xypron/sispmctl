@@ -38,9 +38,6 @@
 #include <assert.h>
 #include "sispm_ctl.h"
 
-
-extern int verbose;
-
 char serial_id[15];
 
 int get_id( struct usb_device* dev)
