@@ -5,9 +5,10 @@
 
   (C) 2015-2018, Heinrich Schuchardt <xypron.glpk@gmx.de>
   (C) 2011-2016, Pete Hildebrandt <send2ph@gmail.com>
-  (C) 2004-2011, Mondrian Nuessle, Computer Architecture Group, University of Mannheim, Germany
-  (C) 2005, Andreas Neuper, Germany
   (C) 2010, Olivier Matheret, France, for the plannification part
+  (C) 2004-2011, Mondrian Nuessle, Computer Architecture Group,
+      University of Mannheim, Germany
+  (C) 2005, Andreas Neuper, Germany
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,12 +23,8 @@
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-
-  nuessle@uni-mannheim.de
-  aneuper@web.de
-
 */
+
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
@@ -91,8 +88,8 @@ static void print_disclaimer(void)
           "(C) 2005-2006, Andreas Neuper\n"
           "(C) 2010, Olivier Matheret for the planning part\n\n"
           "This program comes with ABSOLUTELY NO WARRANTY.\n\n"
-	  "You may re-distribute it under the terms of the\n"
-	  "GNU General Public License version 2 or later.\n");
+          "You may re-distribute it under the terms of the\n"
+          "GNU General Public License version 2 or later.\n");
   return;
 }
 
@@ -148,7 +145,7 @@ static void print_usage(char* name)
 }
 
 static void parse_command_line(int argc, char* argv[], int count,
-                        struct usb_device*dev[], char *usbdevsn[])
+                               struct usb_device*dev[], char *usbdevsn[])
 {
   int numeric=0;
   int c;
@@ -215,10 +212,9 @@ static void parse_command_line(int argc, char* argv[], int count,
         if(udev==NULL) {
           fprintf(stderr, "No access to Gembird #%d USB device %s\n",
                   devnum, dev[devnum]->filename );
-                  exit(1);
-          }
-        else if(verbose) printf("Accessing Gembird #%d USB device %s\n",
-                                  devnum, dev[devnum]->filename );
+          exit(1);
+        } else if(verbose) printf("Accessing Gembird #%d USB device %s\n",
+                                    devnum, dev[devnum]->filename );
         id = get_id(dev[devnum]);
       }
     }
@@ -270,8 +266,8 @@ static void parse_command_line(int argc, char* argv[], int count,
           if(sudev==NULL) {
             fprintf(stderr, "No access to Gembird #%d USB device %s\n",
                     status, dev[status]->filename );
-                    exit(1);
-                    }
+            exit(1);
+          }
           if (numeric == 0)
             printf("serial number:    %s\n",get_serial(sudev));
           else

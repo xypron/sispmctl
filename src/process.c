@@ -1,13 +1,12 @@
 /*
-  process.c
-
-  Controls the GEMBIRD Silver Shield PM USB outlet device
+  process.c - process web requests
 
   (C) 2015-2018, Heinrich Schuchardt <xypron.glpk@gmx.de>
   (C) 2011-2016, Pete Hildebrandt <send2ph@gmail.com>
-  (C) 2004-2011, Mondrian Nuessle, Computer Architecture Group, University of Mannheim, Germany
-  (C) 2005, Andreas Neuper, Germany
   (C) 2010, Olivier Matheret, France, for the plannification part
+  (C) 2004-2011, Mondrian Nuessle, Computer Architecture Group,
+      University of Mannheim, Germany
+  (C) 2005, Andreas Neuper, Germany
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -35,11 +34,11 @@
 
 #define	BSIZE	65536
 int debug = 0;
-int verbose=1;
+int verbose = 1;
 #ifdef DATADIR
-char* homedir=DATADIR;
+char* homedir = DATADIR;
 #else
-char* homedir=0;
+char* homedir = 0;
 #endif
 
 #ifndef WEBLESS
@@ -74,7 +73,7 @@ static void bad_request(int out)
   send(out,xbuffer,strlen(xbuffer),0);
 }
 
-void process(int out ,char *request, struct usb_device *dev, int devnum)
+void process(int out,char *request, struct usb_device *dev, int devnum)
 {
   char xbuffer[BSIZE+2];
   char filename[1024];
@@ -138,8 +137,7 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
     service_not_available(out);
     fclose(in);
     return;
-  }
-  else if (verbose)
+  } else if (verbose)
     printf("Accessing Gembird #%d USB device %s\n", devnum, dev->filename );
   id = get_id(dev);
 
@@ -179,27 +177,27 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
         }
 
         if (trm != NULL) {
-	  if (num == NULL) {
+          if (num == NULL) {
             fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
-             "ERROR at #");
-             service_not_available(out);
-            fclose(in);
-            return;
-	  }
-	  if (pos == NULL) {
-            fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
-              "ERROR at ?");
+                    "ERROR at #");
             service_not_available(out);
             fclose(in);
             return;
-	  }
-	  if (neg == NULL) {
+          }
+          if (pos == NULL) {
             fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
-	      "ERROR at :");
+                    "ERROR at ?");
             service_not_available(out);
             fclose(in);
             return;
-	  }
+          }
+          if (neg == NULL) {
+            fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
+                    "ERROR at :");
+            service_not_available(out);
+            fclose(in);
+            return;
+          }
           ++num;
           ++pos;
           ++neg;
@@ -215,13 +213,13 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
             else
               send(out,neg,trm-neg,0);
           } else if (strncasecmp(cmd,"off(",4)==0) {
-	    if (trm[1] != '$') {
+            if (trm[1] != '$') {
               fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
-                "ERROR at final $");
+                      "ERROR at final $");
               service_not_available(out);
               fclose(in);
               return;
-	    }
+            }
             if (debug)
               fprintf(stderr,"\nOFF(%s)\n",num);
             if (sispm_switch_off(udev,id,atoi(num)) !=0)
@@ -229,13 +227,13 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
             else
               send(out,neg,trm-neg,0);
           } else if (strncasecmp(cmd,"toggle(",7)==0) {
-	    if (trm[1] != '$') {
+            if (trm[1] != '$') {
               fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
-                "ERROR at final $");
+                      "ERROR at final $");
               service_not_available(out);
               fclose(in);
               return;
-	    }
+            }
             if (debug)
               fprintf(stderr,"\nTOGGLE(%s)\n",num);
             if (sispm_switch_getstatus(udev,id,atoi(num)) == 0) {
@@ -246,13 +244,13 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
               send(out,neg,trm-neg,0);
             }
           } else if (strncasecmp(cmd,"status(",7)==0) {
-	    if (trm[1] != '$') {
+            if (trm[1] != '$') {
               fprintf(stderr, "Command-Format: $$exec(#)?select:forget$$  "
-                "ERROR at final $");
+                      "ERROR at final $");
               service_not_available(out);
               fclose(in);
               return;
-	    }
+            }
             if (debug)
               fprintf(stderr,"\nSTATUS(%s)\n",num);
             if (sispm_switch_getstatus(udev,id,atoi(num)) != 0)

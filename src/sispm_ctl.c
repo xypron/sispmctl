@@ -69,7 +69,7 @@ char* get_serial(usb_dev_handle *udev)
                              req,
                              (0x03<<8) | 1,
                              0 /*index*/,
-                             (char*) buffer /*bytes*/ ,
+                             (char*) buffer /*bytes*/,
                              5, //1 /*size*/,
                              5000) < 2 ) {
     fprintf(stderr,"Error performing requested action\n"
@@ -100,7 +100,7 @@ int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected 
                              req,
                              (0x03<<8) | b1,
                              0 /*index*/,
-                             buffer /*bytes*/ ,
+                             buffer /*bytes*/,
                              5, //1 /*size*/,
                              5000) < 2 ) {
     fprintf(stderr,"Error performing requested action\n"
@@ -356,7 +356,7 @@ void usb_command_getplannif(usb_dev_handle *udev, int socket, struct plannif* pl
                              req,
                              ((0x03<<8) | (3*socket)) +1,
                              0 /*index*/,
-                             (char*) buffer /*bytes*/ ,
+                             (char*) buffer /*bytes*/,
                              0x27, /*size*/
                              5000) < 0x27 ) {
     fprintf(stderr,"Error performing requested action\n"
@@ -461,7 +461,7 @@ void usb_command_setplannif(usb_dev_handle *udev, struct plannif* plan)
                              req,
                              ((0x03<<8) | (3*plan->socket)) +1,
                              0 /*index*/,
-                             (char*) buffer /*bytes*/ ,
+                             (char*) buffer /*bytes*/,
                              0x27, /*size*/
                              5000) < 0x27 ) {
     fprintf(stderr,"Error performing requested action\n"
