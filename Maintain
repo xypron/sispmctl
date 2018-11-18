@@ -23,7 +23,7 @@ sftp user@frs.sourceforge.net
 cd /home/frs/project/sispmctl/sispmctl/
 mkdir sispmctl-<release number>
 cd sispmctl-<release number>
-put sispmctl-<release number>
+put sispmctl-<release number>.tar.gz
 
 Update information in
 https://sourceforge.net/projects/sispmctl/files/
