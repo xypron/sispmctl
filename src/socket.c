@@ -152,7 +152,7 @@ int*socket_init(char* bind_arg)
       perror("Inet_pton for given bind address failed");
       goto socket_error;
     } else if (result==0) {
-      fprintf(stderr,"Given Bind address is not a valid INET4 address: %s\n",bind_arg);
+      fprintf(stderr,"Given bind address is not a valid IPv4 address: %s\n",bind_arg);
       goto socket_error;
     }
   } else {

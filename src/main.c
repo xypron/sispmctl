@@ -115,8 +115,8 @@ static void print_usage(char* name)
           "   'D'   - apply to device with given serial number\n"
           "   'n'   - show result numerically\n"
           "   'q'   - quiet mode, no explanations - but errors\n"
-          "   'a'   - get plannification for outlet\n"
-          "   'A'   - set plannification for outlet\n"
+          "   'a'   - get plan for outlet\n"
+          "   'A'   - set plan for outlet\n"
           "           '-A<num>'        - select outlet\n"
           "           '--Aat \"date\"'   - sets an event time as a date "
           "'%%Y-%%m-%%d %%H:%%M'\n"
@@ -126,7 +126,7 @@ static void print_usage(char* name)
           "           '--Aloop N'      - loops to 1st event's action after "
           "N minutes\n\n"
 #ifndef WEBLESS
-          "Webinterface features:\n"
+          "Web interface features:\n"
           "sispmctl [-q] [-i <ip>] [-p <#port>] [-u <path>] -l|L\n"
           "   'l'   - start port listener\n"
           "   'L'   - same as 'l', but stay in foreground\n"
@@ -368,7 +368,7 @@ static void parse_command_line(int argc, char* argv[], int count,
           }
           if (actionNo+1 >= sizeof(plan.actions)/sizeof(struct plannifAction)) {
             // last event is reserved for loop or stop
-            fprintf(stderr,"Too many plannification events\nTerminating\n");
+            fprintf(stderr,"Too many planned events\nTerminating\n");
             exit(-7);
           }
           switch (opt) {

@@ -89,7 +89,7 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
   if (debug)
     fprintf(stderr,"\nRequested is (%s)\n",request);
 
-  // extract the filename
+  // extract the file name
   if (strchr(request,'\n') != NULL) {
     memset(filename, 0, 1023);
     strncpy(filename, strchr(request,' ')+1, strchr(request,'\n')-request);
@@ -98,7 +98,7 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
       *ptr = 0;
   }
 
-  // avoid to read other directories, %-codes are not evalutated
+  // avoid to read other directories, %-codes are not evaluated
   ptr = strrchr(filename,'/');
   if (ptr != NULL)
     ++ptr;
@@ -109,8 +109,8 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
     ptr="index.html";
 
   if (debug) {
-    fprintf(stderr,"\nrequested filename(%s)\n", filename);
-    fprintf(stderr,"resulting filename(%s)\n", ptr);
+    fprintf(stderr,"\nrequested file name(%s)\n", filename);
+    fprintf(stderr,"resulting file name(%s)\n", ptr);
     fprintf(stderr,"change directory to (%s)\n", homedir);
   }
 
@@ -157,7 +157,7 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
     /* search for:
      *  $$exec(0)?.1.:.2.$$     to execute command(#)
      *  $$stat(2)?.1.:.2.$$     to evaluate status(#)
-     *  $$version()$$           to evalute version
+     *  $$version()$$           to evaluate version
      */
     for (mrk = ptr = xbuffer; (ptr-xbuffer) < length; ++ptr) {
       if (*ptr=='$' && ptr[1]=='$') {

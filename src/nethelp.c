@@ -27,7 +27,7 @@
 #endif
 
 /*
- * Write len bytes from buf to the socket.
+ * Write len bytes from buff to the socket.
  * Returns the return value from send()
  */
 int sock_write_bytes(int sockfd, const unsigned char *buff, int len)
