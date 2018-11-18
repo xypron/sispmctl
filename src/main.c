@@ -5,7 +5,7 @@
 
   (C) 2015-2018, Heinrich Schuchardt <xypron.glpk@gmx.de>
   (C) 2011-2016, Pete Hildebrandt <send2ph@gmail.com>
-  (C) 2010, Olivier Matheret, France, for the plannification part
+  (C) 2010, Olivier Matheret, France, for the scheduling part
   (C) 2004-2011, Mondrian Nuessle, Computer Architecture Group,
       University of Mannheim, Germany
   (C) 2005, Andreas Neuper, Germany
@@ -86,7 +86,7 @@ static void print_disclaimer(void)
           "(C) 2011-2016, Pete Hildebrandt <send2ph@gmail.com>\n"
           "(C) 2004-2011, Mondrian Nuessle\n"
           "(C) 2005-2006, Andreas Neuper\n"
-          "(C) 2010, Olivier Matheret for the planning part\n\n"
+          "(C) 2010, Olivier Matheret for the scheduling part\n\n"
           "This program comes with ABSOLUTELY NO WARRANTY.\n\n"
           "You may re-distribute it under the terms of the\n"
           "GNU General Public License version 2 or later.\n");
@@ -115,8 +115,8 @@ static void print_usage(char* name)
           "   'D'   - apply to device with given serial number\n"
           "   'n'   - show result numerically\n"
           "   'q'   - quiet mode, no explanations - but errors\n"
-          "   'a'   - get plan for outlet\n"
-          "   'A'   - set plan for outlet\n"
+          "   'a'   - get schedule for outlet\n"
+          "   'A'   - set schedule for outlet\n"
           "           '-A<num>'        - select outlet\n"
           "           '--Aat \"date\"'   - sets an event time as a date "
           "'%%Y-%%m-%%d %%H:%%M'\n"
@@ -163,6 +163,7 @@ static void parse_command_line(int argc, char* argv[], int count,
 #endif
   unsigned int outlet;
   struct plannif plan;
+
   plannif_reset(&plan);
 
 #ifdef BINDADDR
@@ -368,7 +369,7 @@ static void parse_command_line(int argc, char* argv[], int count,
           }
           if (actionNo+1 >= sizeof(plan.actions)/sizeof(struct plannifAction)) {
             // last event is reserved for loop or stop
-            fprintf(stderr,"Too many planned events\nTerminating\n");
+            fprintf(stderr,"Too many scheduled events\nTerminating\n");
             exit(-7);
           }
           switch (opt) {

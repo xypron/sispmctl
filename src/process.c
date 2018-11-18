@@ -3,7 +3,7 @@
 
   (C) 2015-2018, Heinrich Schuchardt <xypron.glpk@gmx.de>
   (C) 2011-2016, Pete Hildebrandt <send2ph@gmail.com>
-  (C) 2010, Olivier Matheret, France, for the plannification part
+  (C) 2010, Olivier Matheret, France, for the scheduling part
   (C) 2004-2011, Mondrian Nuessle, Computer Architecture Group,
       University of Mannheim, Germany
   (C) 2005, Andreas Neuper, Germany

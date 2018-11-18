@@ -4,9 +4,10 @@
   Controls the GEMBIRD Silver Shield PM USB outlet device
 
   (C) 2015-2018, Heinrich Schuchardt <xypron.glpk@gmx.de>
-  (C) 2004,2005,2006 Mondrian Nuessle, Computer Architecture Group, University of Mannheim, Germany
+  (C) 2004,2005,2006 Mondrian Nuessle, Computer Architecture Group,
+      University of Mannheim, Germany
   (C) 2005, Andreas Neuper, Germany
-  (C) 2010, Olivier Matheret, France, for the plannification part
+  (C) 2010, Olivier Matheret, France, for the scheduling part
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -210,7 +211,7 @@ int sispm_get_power_supply_status(usb_dev_handle * udev,int id, int outlet)
 }
 
 
-// displays a plannification structure in a human readable way
+// displays a schedule structure in a human readable way
 void plannif_display(const struct plannif* plan, int verbose, const char* progname)
 {
   char datebuffer[80];
@@ -294,7 +295,7 @@ void plannif_display(const struct plannif* plan, int verbose, const char* progna
 }
 
 
-// private : scans the buffer, and fills the plannification structure accordingly
+// private : scans the buffer, and fills the schedule structure accordingly
 void plannif_scanf(struct plannif* plan, const unsigned char* buffer)
 {
   int bufindex = 0;
@@ -321,7 +322,7 @@ void plannif_scanf(struct plannif* plan, const unsigned char* buffer)
   }
   plan->actions[0].switchOn = 1; // whatever, it is useless for the initial waiting phase
 
-  // now we can read each plannification rows
+  // now we can read all schedule rows
   while (bufindex < 0x25) {
     READNEXTWORD;
     if (nextWord != 0x3FFF) { // 3FFF means "empty"
@@ -344,7 +345,7 @@ void plannif_scanf(struct plannif* plan, const unsigned char* buffer)
 
 }
 
-// queries the device, and fills the plannification structure
+// queries the device, and fills the schedule structure
 void usb_command_getplannif(usb_dev_handle *udev, int socket, struct plannif* plan)
 {
   int  reqtype=0x21 | USB_DIR_IN; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /*request type*/,
@@ -376,7 +377,7 @@ void usb_command_getplannif(usb_dev_handle *udev, int socket, struct plannif* pl
 }
 
 
-// private : prints the buffer according to the plannification structure
+// private : prints the buffer according to the schedule structure
 void plannif_printf(const struct plannif* plan, unsigned char* buffer)
 {
   int bufindex = 0;
@@ -417,7 +418,7 @@ void plannif_printf(const struct plannif* plan, unsigned char* buffer)
     WRITEWORD(0x25);
   }
 
-  // now we can write each plannification rows, if non empty
+  // now we can write all schedule rows, if non empty
   for (actionNo = 1 ; (actionNo < sizeof(plan->actions)/sizeof(struct plannifAction)) && (plan->actions[actionNo].switchOn != -1); actionNo++) {
     time4next = plan->actions[actionNo].timeForNext;
     if (time4next > 0x3FFE) {
