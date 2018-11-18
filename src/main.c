@@ -119,7 +119,7 @@ static void print_usage(char* name)
           "   'A'   - set schedule for outlet\n"
           "           '-A<num>'        - select outlet\n"
           "           '--Aat \"date\"'   - sets an event time as a date "
-          "'%%Y-%%m-%%d %%H:%%M'\n"
+          "'%%Y-%%m-%%d %%H:%%M' in the current time zone\n"
           "           '--Aafter N'     - sets an event time as N minutes "
           "after the previous one\n"
           "           '--Ado <on|off>' - sets the current event's action\n"
@@ -131,7 +131,7 @@ static void print_usage(char* name)
           "   'l'   - start port listener\n"
           "   'L'   - same as 'l', but stay in foreground\n"
           "   'i'   - bind socket on interface with given IP (dotted decimal, "
-          "i.e. 192.168.1.1)\n"
+          "e.g. 192.168.1.1)\n"
           "   'p'   - port number for listener (%d)\n"
           "   'u'   - repository for web pages (default=%s)\n\n"
           ,listenport, homedir

@@ -74,10 +74,15 @@ do neither print explanations nor disclaimers except it is requested
 get schedule for given outlet
 .IP \-A
 set schedule for given outlet
- \-\-Aat "date"   \- sets an event time as a date '%Y\-%m\-%d %H:%M'
- \-\-Aafter N     \- sets an event time as N minutes after the previous one
- \-\-Ado <on|off> \- sets the current event's action
- \-\-Aloop N      \- loops to 1st event's action after N minutes
+.br
+\-\-Aat date     \- sets an event time as a date '%Y\-%m\-%d %H:%M' in the
+current local time zone (not considering day light saving time switches)
+.br
+\-\-Aafter N     \- sets an event time as N minutes after the previous one
+.br
+\-\-Ado <on|off> \- sets the current event's action
+.br
+\-\-Aloop N      \- loops to 1st event's action after N minutes
 .IP \-v
 print version & copyright
 
