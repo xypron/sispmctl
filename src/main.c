@@ -346,25 +346,23 @@ void process(int out ,char *request, struct usb_device *dev, int devnum)
 }
 #endif
 
-void print_disclaimer(char*name)
+static void print_disclaimer(void)
 {
   fprintf(stderr, "\nSiS PM Control for Linux " PACKAGE_VERSION "\n\n"
           "(C) 2015-2018, Heinrich Schuchardt <xypron.glpk@gmx.de>\n"
           "(C) 2011-2016, Pete Hildebrandt <send2ph@gmail.com>\n"
           "(C) 2004-2011, Mondrian Nuessle\n"
           "(C) 2005-2006, Andreas Neuper\n"
-          "(C) 2010, Olivier Matheret for the planning part\n"
-          "This program is free software.\n"
-          "%s comes with ABSOLUTELY NO WARRANTY; for details \n"
-          "see the file INSTALL. This is free software, and you are welcome\n"
-          "to redistribute it under certain conditions; see the file INSTALL\n"
-          "for details.\n\n", name );
+          "(C) 2010, Olivier Matheret for the planning part\n\n"
+          "This program comes with ABSOLUTELY NO WARRANTY.\n\n"
+	  "You may re-distribute it under the terms of the\n"
+	  "GNU General Public License version 2 or later.\n");
   return;
 }
 
 void print_usage(char* name)
 {
-  print_disclaimer(name);
+  print_disclaimer();
   fprintf(stderr,"\n"
           "sispmctl -s\n"
           "sispmctl [-q] [-n] [-d 0...] [-D ...] -b <on|off>\n"
@@ -467,7 +465,7 @@ void parse_command_line(int argc, char* argv[], int count,
       if (from<1 || upto>4) {
         fprintf(stderr,"Invalid outlet number given: %s\n"
                 "Expected: 1, 2, 3, 4, or all.\nTerminating.\n",optarg);
-        print_disclaimer( argv[0] );
+        print_disclaimer();
         exit(-6);
       }
     } else {
@@ -772,7 +770,7 @@ void parse_command_line(int argc, char* argv[], int count,
         }
         break;
       case 'v':
-        print_disclaimer( argv[0] );
+        print_disclaimer();
         break;
       case '?':
       case 'h':
