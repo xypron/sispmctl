@@ -1,0 +1,14 @@
+service sispm_http 
+{
+	type		= UNLISTED
+  disable = no
+  socket_type   = stream
+  protocol  = tcp
+  wait   = no
+	# uncomment the following line and enter you net address
+	#only_from	= XXX.ZZZ.YYY.AAA
+	port		= 10001
+  user    = root
+  server  = /usr/bin/sispm_http
+}
+

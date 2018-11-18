@@ -1,0 +1,3477 @@
+<!DOCTYPE html PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html><head>
+  <title>SIS-PM Control for Linux</title>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=UTF-8">
+  <style>
+<!-- BODY,DIV,TABLE,THEAD,TBODY,TFOOT,TR,TH,TD,P { font-family:"Arial"; font-size:x-small }
+--></style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=UTF-8">
+  <meta name="author" content="Mondrian Nuessle">
+  <meta name="description" content="Linux support for USB Outlet SIS PM / Intelli-Plug">
+  <meta name="keywords" content="linux,usb,usb outlet,sis pm,intelli plug,intelliplug,intelli-plug,sis-pm">
+</head>
+<body style="color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);" vlink="#551a8b" link="#0000ee" alink="#ff0000">
+<center>
+<h1><a class="mozTocH1" name="mozTocId698233"></a>SiS-PM&nbsp; (Silver Shield PM) Control for Linux 3.0</h1>
+<br>
+<img alt="Sis-PM image" src="SIS-PM%20Control%20for%20Linux-2018-11-17_files/SIS-PM-banner.jpg" style="width: 100px; height: 59px;"><br>
+<br>
+<h3><a class="mozTocH2" name="mozTocId550327"></a>(Silver Shield PM Control for Linux 3.0, (C) 2004-2011 Mondrian Nuessle)</h3>
+<br>
+<ul style="text-align: left;" id="mozToc">
+
+<!--mozToc h2 1--><li><a href="#mozTocId835268">Overview</a></li>
+
+  <li><a href="#mozTocId958055">News</a></li>
+
+  <li><a href="#mozTocId361603">Changelog</a></li>
+
+  <li><a href="#mozTocId413887">Supported Devices &amp; identifying devices</a></li>
+
+  <li><a href="#mozTocId935482">Obtaining a device</a></li>
+
+  <li><a href="#mozTocId312888">Supported&nbsp;OS</a></li>
+
+  <li><a href="#mozTocId38274">Supported architectures</a></li>
+
+  <li><a href="#mozTocId968387">Reported Use-Cases</a></li>
+
+  <li><a href="#mozTocId601307">Contributed Software</a></li>
+
+  <li><a href="#mozTocId127686">Download &amp; Installation:</a></li>
+
+  <li><a href="#mozTocId756141">Documentation:</a></li>
+
+  <li><a href="#mozTocId368604">Troubleshooting:</a></li>
+
+  <li><a href="#mozTocId461891">Permissions</a></li>
+
+  <li><a href="#mozTocId216643">Older Versions:</a></li>
+
+  <li><a href="#mozTocId434726">Contact</a></li>
+
+</ul>
+
+
+
+
+
+
+
+
+
+<big></big>
+<br>
+
+
+
+
+
+
+
+
+
+
+</center>
+
+
+
+
+
+
+
+
+
+
+<center><img src="SIS-PM%20Control%20for%20Linux-2018-11-17_files/col_line.html" width="551" height="4"></center>
+<big><a href="http://sourceforge.net/projects/sispmctl">To the sourceforge.net pages.</a><br>
+</big>
+
+<h2><a class="mozTocH2" name="mozTocId835268"></a><big>Overview</big></h2>
+<big><big><span style="font-weight: bold;">SIS-PM Control for Linux aka sispmctl</span> is an
+application enabling the use of the <span style="font-style: italic;">GEMBIRD (m)SiS-PM</span>
+device family under Linux.<br>
+The&nbsp; SiS-PM is an itelligent advanced surge protector with
+unique
+features: 4 sockets are manageable from the PC via USB port (<a href="http://www.gembird.com/">GEMBIRD LTD</a>).<br>
+The&nbsp; mSiS-PM is an itelligent advanced surge protector with
+unique
+features: 1 socket is manageable from the PC via USB port (<a href="http://www.gembird.com/">GEMBIRD LTD</a>).</big><big><br>
+<br>
+The software works on many different platforms. I would be glad to here
+from you, on what platforms you are using this software. Also, send me
+any Howto's etc on how you got it to work on your router box etc.<br>
+</big></big>
+<big>
+<br>
+<big>
+
+
+
+
+
+
+
+This software comes with ABSOLUTELY NO WARRANTY; for details see the <a href="http://sispmctl.sourceforge.net/sisctl.html?name=lsra/persons/mondrian/LICENCE">LICENCE</a>
+file. This is
+free software, and you are
+welcome to&nbsp; redistribute it<br>
+
+
+
+
+
+
+
+
+
+
+under certain conditions; see the <a href="http://sispmctl.sourceforge.net/sisctl.html?name=lsra/persons/mondrian/LICENCE">LICENCE</a>
+file
+for details.<br>
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+Thanks go out to <a href="http://www.gembird.com/">Gembird</a>&nbsp;
+for the
+kind support, the <a href="http://libusb.sourceforge.net/">libusb</a>
+project, the <a href="http://www.wingmanteam.com/usbsnoopy/">USB
+snoopy team</a>, Andreas Neuper and the other contributors.<br>
+
+
+</big>
+
+
+
+
+
+
+
+
+<br>
+
+
+
+</big>
+<h2><a class="mozTocH2" name="mozTocId958055"></a><big>News</big></h2>
+
+
+
+
+
+
+
+
+
+
+<ul>
+  <big>
+  </big>
+  <li><big><big>version 3.0 released</big></big></li>
+  <li><big><big>version 2.7 released</big></big></li>
+  <li><big><big>the german computer magazine c't published a review of the SIS-PM in 06/08. They also put a link to this project up <a href="http://www.heise.de/ct/08/06/links/079.shtml">http://www.heise.de/ct/08/06/links/079.shtml</a> :-)<br>
+
+
+    </big></big></li>
+
+
+  <li><big><big>version 2.2 released on sourceforge</big></big></li>
+
+
+  <big>
+  </big><li><big><big>moved to subversion on sourceforge</big></big></li>
+
+
+  <big>
+  </big><li><big><big>version 2.1 released on sourceforge</big></big></li>
+
+
+  <big>
+  </big><li><big><big>Started CVS repository on sourceforge.net</big></big></li>
+
+
+  <big>
+  </big><li><big><big>Started to move the project to Sourceforge.net. First version of the website available.</big></big></li>
+
+
+  <big>
+  </big><li><big><big>Andreas Neuper contributed a lot of new stuff,
+available in the current 2.1 version. Check it out!</big></big></li>
+
+
+  <big>
+  </big>
+</ul>
+
+
+
+
+
+
+
+
+
+
+<ul>
+
+
+
+  <li><big><big>Wolfram Schlich added sispm_ctl to the <a href="http://www.gentoo-portage.com/">Gentoo/Portage</a>
+tree. It is available there under <a href="http://packages.gentoo.org/packages/?category=sys-power;name=sispm_ctl">sys-power/sispm_ctl</a>
+(marked unstable).</big></big></li>
+
+
+
+  <li><big><big>Uwe Herman added sispm_ctl to the Debian/Unstable tree.</big></big></li>
+
+
+
+  <li><big><big>A lot of people pointed bugs out to me, I hope I fixed them all :-)</big><br>
+
+
+
+    </big></li>
+
+
+
+</ul>
+
+
+
+<br>
+
+
+
+<h2><a class="mozTocH2" name="mozTocId361603"></a><big>Changelog</big></h2>
+
+
+
+
+
+
+
+
+
+
+<table style="text-align: left; width: 100%;" cellspacing="1" cellpadding="1" border="0">
+
+
+
+
+
+
+
+
+
+
+  <tbody>
+
+
+
+
+
+
+
+
+
+
+    <tr>
+
+
+
+
+
+
+
+
+
+
+      <td>
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <ul>
+
+
+
+
+
+
+
+
+
+
+        <li><big>version 1.0b</big></li>
+
+
+
+
+
+
+
+
+
+
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      </ul>
+
+
+
+
+
+
+
+
+
+
+      </td>
+
+
+
+
+
+
+
+
+
+
+      <td><big> Initial Release</big></td>
+
+
+
+
+
+
+
+
+
+
+    </tr>
+
+
+
+
+
+
+
+
+
+
+    <tr>
+
+
+
+
+
+
+
+
+
+
+      <td>
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <ul>
+
+
+
+
+
+
+
+
+
+
+        <li><big>version 1.1, 24 Feb 2005&nbsp;</big></li>
+
+
+
+
+
+
+
+
+
+
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      </ul>
+
+
+
+
+
+
+
+
+
+
+      </td>
+
+
+
+
+
+
+
+
+
+
+      <td><big>Fixed
+small error in configure script, relaxed dependency for libusb to
+include version &gt;=0.1.5, added new command line arguments -q and
+-v,added Troubleshooting section,added sispm_http from Marius Konitzer</big></td>
+
+
+
+
+
+
+
+
+
+
+    </tr>
+
+
+
+
+
+
+
+
+
+
+    <tr>
+
+
+
+
+
+
+
+
+
+
+      <td>
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <ul>
+
+
+
+
+
+
+
+
+
+
+        <li><big>version 1.2, 16 Jan 2006</big></li>
+
+
+
+
+
+
+
+
+
+
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      </ul>
+
+
+
+
+
+
+
+
+
+
+      </td>
+
+
+
+
+
+
+
+
+
+
+      <td><big>Fixed type of variable c. Thanks to Michael
+Holzt.</big></td>
+
+
+
+
+
+
+
+
+
+
+    </tr>
+
+
+
+
+
+
+
+
+
+
+    <tr>
+
+
+
+
+
+
+
+
+
+
+      <td>
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <ul>
+
+
+
+
+
+
+
+
+
+
+        <li><big>version 2.0, 06 Feb 2006 </big></li>
+
+
+
+
+
+
+
+
+
+
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      </ul>
+
+
+
+
+
+
+
+
+
+
+      </td>
+
+
+
+
+
+
+
+
+
+
+      <td><big>new version with new functionality: multiple
+devices, built-in web
+interface, new options, man-page. Renamed to pmctl. Courtesy of <span style="font-weight: bold;">Andreas
+Neuper</span></big></td>
+
+
+
+
+
+
+
+
+
+
+    </tr>
+
+
+
+
+
+
+
+
+
+
+    <tr>
+
+
+
+
+
+
+
+
+
+
+      <td>
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <ul>
+
+
+
+
+
+
+
+
+
+
+        <li><big>version 2.1, 09 Feb 2006</big></li>
+
+
+
+
+
+
+
+
+
+
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      </ul>
+
+
+
+
+
+
+
+
+
+
+      </td>
+
+
+
+
+
+
+
+
+
+
+      <td><big>fixed several install/configure/make
+problems, cleaned up code</big></td>
+
+
+
+
+
+
+
+
+
+
+    </tr>
+
+
+
+
+
+
+
+
+
+
+  
+  <tr>
+
+
+
+
+
+
+
+      <td>
+      
+      
+      
+      
+      
+      
+      
+      <ul>
+
+
+
+
+
+
+
+        <li><big>version 2.2, 03 Mar 2006</big></li>
+
+
+
+
+
+
+
+      
+      
+      
+      
+      
+      
+      
+      </ul>
+
+
+
+
+
+
+
+      </td>
+
+
+
+
+
+
+
+      <td><big>added better control for the webinterface including
+leaving it out of a compiled version, limiting it to a single network
+interface, small other fixes</big></td>
+
+
+
+
+
+
+
+    </tr>
+
+
+
+
+
+
+
+  
+  <tr>
+
+
+
+
+
+      <td>
+      
+      
+      
+      
+      
+      <ul>
+
+
+
+
+
+        <li><big>version 2.3a, 23 Mar 2006</big></li>
+
+
+
+
+
+      
+      
+      
+      
+      
+      </ul>
+
+
+
+
+
+      </td>
+
+
+
+
+
+      <td><big>added experimental support for the mSiS-PM device, which
+is &nbsp;a one socket version of the SiS-PM. If anybody has such a
+device, please try the software, and contact me!</big></td>
+
+
+
+
+
+    </tr>
+
+
+
+
+
+  <tr>
+
+
+
+
+      <td>
+      
+      
+      
+      
+      <ul>
+
+
+
+
+        <li><big>version 2.4a, 17 Aug 2006</big></li>
+
+
+
+
+      
+      
+      
+      
+      </ul>
+
+
+
+
+      </td>
+
+
+
+
+      <td><big>dde fixed several bugs (thanks to Marius Konitzer);
+patch to support Solaris 10 (thanks to Casper Dik); several other
+fixes; added Python GUI script (see directory <span style="font-style: italic;">extra </span>and there the README)</big></td>
+
+
+
+
+    </tr>
+
+
+
+
+  <tr>
+
+
+
+      <td>
+      
+      
+      <ul>
+
+
+        <li><big>version 2.4b, 30 Oct 2006</big></li>
+
+
+      
+      
+      </ul>
+
+
+      </td>
+
+
+
+      <td><big>small fix, return value of the application </big><br>
+
+
+
+      </td>
+
+
+
+    </tr>
+
+
+
+    <tr>
+
+
+
+      <td>
+      
+      
+      <ul>
+
+
+        <li><big>version 2.5, 04 Dez 2007</big></li>
+
+
+      
+      
+      </ul>
+
+
+      </td>
+
+
+
+      <td><big>mSIS is supported, usb_close fd bug fix</big></td>
+
+
+
+    </tr>
+
+
+
+    <tr>
+
+
+
+      <td>
+      
+      
+      <ul>
+
+
+        <li><big>version 2.6, 03 Mar 2008</big></li>
+
+
+      
+      
+      </ul>
+
+
+      </td>
+
+
+
+      <td><big>added support for devices with device of 0xfd13</big></td>
+
+
+
+    </tr>
+
+
+
+    <tr>
+      <td>
+      <ul>
+        <li><big>version 2.7, 28 Mar 2008</big></li>
+      </ul>
+      </td>
+      <td><big>added power supply status, first serial implementation, sorting of devs, bugfixes</big></td>
+    </tr>
+
+    <tr>
+      <td>
+      <ul>
+        <li><big>version 3.0, 30 Mar 2011</big></li>
+      </ul>
+      </td>
+      <td><big>	added timer functionality, added gemplug script (see 
+extras directory), added -D option to select device by serial number, 
+several bugfixes and cleanups</big></td>
+    </tr>
+
+
+  
+  
+  
+  </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+<h2><a class="mozTocH2" name="mozTocId413887"></a><big>Supported Devices &amp; identifying devices</big></h2>
+
+
+
+<big>Gembird
+has produced a whole family of manageable surge protectors. The
+following table simmarizes the devices that are known to work with this
+software:<br>
+
+
+
+</big>
+<table style="text-align: left; width: 100%;" cellspacing="2" cellpadding="2" border="1">
+
+
+
+  <tbody>
+
+
+
+    <tr>
+
+
+
+      <td style="font-weight: bold;"><big><big>Name</big></big></td>
+
+
+
+      <td style="font-weight: bold;"><big>USB id</big></td>
+
+
+
+      <td style="font-weight: bold;"><big>description</big></td>
+
+
+
+    </tr>
+
+
+
+    <tr>
+
+
+
+      <td><big>SIS-PM Silver Shield aka Revolt Intelliplug...</big></td>
+
+
+
+      <td><big>04b4:fd11</big></td>
+
+
+
+      <td><big>original 4 socket, USB manageable</big></td>
+
+
+
+    </tr>
+
+
+
+    <tr>
+
+
+
+      <td><big>SIS-PMS Silver Shield</big></td>
+
+
+
+      <td><big>04b4:fd13</big></td>
+
+
+
+      <td><big>newer version (?) 4 socket, USB manageable</big></td>
+
+
+
+    </tr>
+
+
+
+    <tr>
+
+
+
+      <td><big>mSIS-PM</big></td>
+
+
+
+      <td><big>04b4:fd10</big></td>
+
+
+
+      <td><big>one socket, USB manageable</big></td>
+
+
+
+    </tr>
+
+
+
+    <tr>
+
+
+
+      <td><big>mSIS-PM</big></td>
+
+
+
+      <td><big>04b4:fd12</big></td>
+
+
+
+      <td><big>one socket, USB manageable</big></td>
+
+
+
+    </tr>
+
+
+
+  
+  
+  
+  </tbody>
+</table>
+
+
+
+<big><br>
+
+
+
+</big>
+
+
+
+
+
+
+<big><br>
+
+
+
+So you may find&nbsp; this device sold
+under
+different names. You can identify it, though, without opening the case
+by issuing the followin commands: <br>
+
+
+
+
+
+
+
+
+
+
+~ $ lsusb<br>
+
+
+
+
+
+
+
+
+
+
+[...]<br>
+
+
+
+
+
+
+
+
+
+
+Bus 001 Device 002: <span style="font-weight: bold;">ID
+04b4:fd11</span>
+Cypress Semiconductor Corp.<br>
+
+
+
+
+
+
+
+
+
+
+[...]<br>
+
+
+
+
+
+
+
+
+
+
+Of course, the Bus and Device number will be different, depending
+on&nbsp; your setup. Different devices have different IDs, see table above.<br>
+
+
+</big>
+<h2><a class="mozTocH2" name="mozTocId935482"></a><big>Obtaining a device</big></h2>
+
+
+<big>In Germany you used to be able to buy a device from <a href="http://www.pearl.de/">Pearl</a>
+(PE-3057-908, ~30 Euros) </big><big>sold under the name&nbsp;<span style="font-style: italic;">
+Revolt
+"Intelli-Plug"</span>. </big><big><br>
+
+
+Today you can grab one for example from <a href="http://sispmctl.sourceforge.net/www.reichelt.de">www.reichelt.de</a> or <a href="http://sispmctl.sourceforge.net/www.conrad.com">www.conrad.com</a> under the name Gembird SIS-PM.<br>
+In Denmark you can grab one for example from <a href="http://elektronik-lavpris.dk/index.php?cPath=6009_6291">Elektronik Lavpris.</a><br>
+<br>
+
+
+Anyone out there knows about other countries?<br>
+
+
+
+</big><br>
+
+
+
+<h2><a class="mozTocH2" name="mozTocId312888"></a><big>Supported&nbsp;OS</big></h2>
+
+
+
+<big>Generally all operating systems with support of libusb and that are POSIX compatible&nbsp;should work. </big><br>
+
+
+
+<br>
+
+
+
+<ul>
+
+
+
+  <li><big>Gentoo Linux - <big>&nbsp;</big>This software is available a a <a href="http://www.gentoo-portage.com/">Gentoo/Portage</a> package called <span style="font-style: italic;">sispmctl</span> (courtesy Wolfram Schlich)</big></li>
+
+
+
+  <li><big>Debian
+Unstable - This software is also available from the Debian unstable
+tree, probably also for many derived distributions (courtesy Uwe
+Hermann)</big></li>
+
+
+
+</ul>
+
+
+
+<big>There have been reports that siscpmctl was successfully compiled and worked under:<br>
+
+
+
+</big>
+<ul>
+
+
+
+  <li><big>SuSE Linux (all recent versions)</big></li>
+
+
+
+  <li><big>Ubuntu</big></li>
+
+
+
+  <li><big>Solaris 10</big></li>
+
+  <li><big>MacOS X 10.4 and MacOS X 10.5<br>
+
+    </big></li>
+
+
+
+</ul>
+
+
+
+<big><br>
+
+
+
+If
+you have gotten it to work on your box, and you use an OS/distro not
+mentioned here, feel free to send me a mail with your experience!<br>
+
+
+
+</big><big><br>
+
+
+
+</big>
+<h2><a class="mozTocH2" name="mozTocId38274"></a><big>Supported architectures</big></h2>
+
+
+
+<big>siispmctl
+is mostly processor architecture agnostic. All 32-bit/64-bit related
+bugs etc should be fixed by now. sispmctl has been reported to run on<br>
+
+
+
+</big>
+<ul>
+
+
+
+  <li><big>X86</big></li>
+
+
+
+  <li><big>x86-64</big></li>
+
+  <li><big>PowerPC G5 (iMac G5)<br>
+
+    </big></li>
+
+
+
+  <li><big>several embedded MIPS, ARM etc </big></li>
+
+
+
+</ul>
+
+
+
+<big>processors.<br>
+Several people mentioned they are using it on there broadband router
+boxes at home, especially since a package is available for OpenWRT.<br>
+The following routers and NAS boxes have been reported to me to definetely&nbsp;work:<br>
+</big>
+<ul>
+  <li><big>ASUS WL500GP (running OpenWRT)</big></li>
+  <li><big>Linksys NSLU2 (running Debian on ARM)<br>
+    </big></li>
+</ul>
+<big>
+
+
+<br>
+
+
+
+I
+would really like to get an overview of boxes sispmctl is used on, so
+please send me an email, if your box is not mentioned here (yet).</big><a class="mozTocH2" name="mozTocId961091"></a><br>
+
+<h2><a class="mozTocH2" name="mozTocId968387"></a><big>Reported Use-Cases</big></h2>
+
+<big>Reportedly sispmctl is used to control a host of different devices including<br>
+
+</big>
+<ul>
+
+  <li><big>Development machines for kernel level and BIOS level developments</big></li>
+
+  <li><big>NAS devices</big></li>
+
+  <li><big>Servers</big></li>
+
+  <li><big>backup-disks</big></li>
+
+  <li><big>flatbed document-scanner</big></li>
+
+  <li><big>DLT tapeunit</big></li>
+  <li><big>Printers<br>
+    </big></li>
+
+  <li><big>even fish-tank related stuff...</big></li>
+
+</ul>
+
+<br>
+
+
+<h2><a class="mozTocH2" name="mozTocId601307"></a><big>Contributed Software</big></h2>
+
+
+<big>If you have software that uses sispm_ctl, mail me and I add it to the list below:</big>
+<ul>
+
+
+  <li><big>SuperKaramba design to use your SiS-PM from the desktop: <a href="http://www.hopfenwiesen.de/projekte.php">http://www.hopfenwiesen.de/projekte.php</a></big><big>(only in German)</big></li>
+
+  <li><big>dbus integration and GNOME applet for that. This is
+currently targeted vs. Ubunutu 7.10 (Gutsy Gibbon), but hoperfully will
+evolve also for other distros. See here for more info and download here.</big></li>
+
+  <li><big>gemplug a wrapper script for sispmctl that is <span style="font-weight: bold;">much</span> more
+comfortable. It allows saving and recalling of outlet
+configuration, at controlled jobs and lots more. The gemplug script
+comes with man page documentation, an install script and is available
+in the extras directory of the sispmctl svn repository. Gemplug also
+comes with udev rules to enable simple acess to the device as
+non-priviliged user.</big></li>
+  <li><big>a python module to access the sispm directly form your
+python scripts. This module is contributed by Mikael Lindqvist and is
+available in the extras directory within the sispmctl directory.</big></li>
+
+
+</ul>
+
+
+<h2><a class="mozTocH2" name="mozTocId127686"></a><big>Download &amp; Installation:</big></h2>
+
+
+
+
+
+
+
+
+
+
+<big>In short: Download latest <a href="http://sourceforge.net/project/showfiles.php?group_id=159834">sispm_ctl-XX.tar.gz</a>
+(~156kB) from the sourceforge.net pages, unpack &amp; follow the README
+file or see the <a href="http://sourceforge.net/project/shownotes.php?group_id=159834&amp;release_id=395020">release notes</a>.<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+You need libusb-0.15 or newer installed on your system (if you have an
+older version of libusb it MIGHT work, you'll have to
+tweak configure.in though and call scripts/bootstrap. Nevermind if this
+is just glibberish for you :-)).<br>
+
+
+
+
+
+
+
+
+
+
+&nbsp;<br>
+
+
+
+
+
+
+
+
+
+
+sis_pmctl is only available as sourcecode distribution. To install on
+your system run:<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+<span style="font-family: monospace;">tar xzvf
+sispm_ctl-2.1.tar.gz</span><br style="font-family: monospace;">
+
+
+
+
+
+
+
+
+
+
+<span style="font-family: monospace;">cd sispm_ctl-2.1</span><br style="font-family: monospace;">
+
+
+
+
+
+
+
+
+
+
+<span style="font-family: monospace;">./configure</span><br style="font-family: monospace;">
+
+
+
+
+
+
+
+
+
+
+<span style="font-family: monospace;">make</span><br style="font-family: monospace;">
+
+
+
+
+
+
+
+
+
+
+<span style="font-family: monospace;">make install</span><br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+<span style="font-style: italic;">Note: The compiled
+application is named sispmctl since 2.0 without the underscore!<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+</span>
+This installs the applicationsis <span style="font-style: italic;">pmctl</span> in
+/usr/local/bin. If you want to install the
+application to a different directory,<br>
+
+
+
+
+
+
+
+
+
+
+call ./configure --prefix=/your/preferred/dir.<br>
+
+
+
+
+
+
+
+
+
+
+The web-interface skins are installed under
+$prefix/httpd/sispm_ctl/skin?; the default skin is pre-selected with
+the doc symbolic link in the $prefix/httpd/sispm_ctl directory.<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+</big>
+<h2><a class="mozTocH2" name="mozTocId756141"></a><big>Documentation:</big></h2>
+
+
+
+
+
+
+
+
+
+
+<big>The sispmctl utility is called from the command line. The
+following
+documentation is from the man-page of sispmctl (included in distribution): <br>
+
+
+
+Somewhat outdated at the moment...<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+</big>
+<h4><a class="mozTocH4" name="mozTocId796712"></a><big><span style="font-weight: bold;">SYNOPSIS</span></big></h4>
+
+
+
+
+
+
+
+
+
+
+<big>sispmctl [ -u &lt;path&gt; ] [ -p &lt;#port&gt;
+] -l<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+sispmctl -s<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+sispmctl [ -q ] [ -n ] [ -d 1... ] -b &lt;on|off&gt;<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+sispmctl [ -q ] [ -n ] [ -d 1... ] &lt; -o | -f | -g &gt;
+&lt;1..4|all&gt;<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+</big>
+<h4><a class="mozTocH4" name="mozTocId381859"></a><big><span style="font-weight: bold;">DESCRIPTION</span></big></h4>
+
+
+
+
+
+
+
+
+
+
+<big>sispmctl is a tool to switch the USB controlled outlets of
+Gembird
+Silver Shield PM.&nbsp; It is known by many names, e.g. Revolt
+Power
+Switch.<br>
+
+
+
+
+
+
+
+
+
+
+It is coded in C and does use the usb specific library
+(LibUSB).&nbsp; This allows you a portable and fast solution.<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+</big>
+<h4><a class="mozTocH4" name="mozTocId343365"></a><big>OPTIONS</big></h4>
+
+
+
+
+
+
+
+
+
+
+<big>-h &nbsp; &nbsp;Print usage information<br>
+
+
+
+
+
+
+
+
+
+
+-s&nbsp;&nbsp;&nbsp;&nbsp; Scan all universal serial
+buses for devices with the ID 04B4:FD11.<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+-l&nbsp;&nbsp;&nbsp;&nbsp; stay listening on network
+port for http protocol.<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+-p&nbsp;&nbsp;&nbsp;&nbsp; IP network port (default:
+2638) for listener. There is no authentication implemented yet.<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+-u&nbsp;&nbsp;&nbsp;&nbsp; give the directory path
+where pages lay,
+that are served (default: /usr/local/httpd/pmctl ).&nbsp; The Web
+path
+component is completely ignored for security reasons.<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+-b&nbsp;&nbsp;&nbsp;&nbsp; switch the buzzer on and off
+(I was not able to test it, mine does not hat it)<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+-o&nbsp;&nbsp;&nbsp;&nbsp; switch the named outlet to
+"ON"<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+-f&nbsp;&nbsp;&nbsp;&nbsp; switch the named outlet to
+"OFF"<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+-g&nbsp;&nbsp;&nbsp;&nbsp; show the status of the named
+outlet<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+-d&nbsp;&nbsp;&nbsp;&nbsp; Choose not the first but the
+named one in the sequence of detected devices (see scan option)<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+-n&nbsp;&nbsp;&nbsp;&nbsp; do not print "ON" and "OFF",
+but "1" and "0" instead<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+-q&nbsp;&nbsp;&nbsp;&nbsp; do neither print
+explanations nor disclaimers except it is requested<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+-v&nbsp;&nbsp;&nbsp;&nbsp; print version &amp;
+copyright<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+</big>
+<h4><a class="mozTocH4" name="mozTocId200729"></a><big>WEB INTERFACE</big></h4>
+
+
+
+
+
+
+
+
+
+
+<big>The sispmctl program provides a web interface when started with
+the
+-l option. No additional http server is needed.&nbsp; Each selected
+usb
+device is blocked by pmctl while running.<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+After&nbsp; installation,&nbsp; the&nbsp; first&nbsp;
+of&nbsp;
+three&nbsp; web-interfaces&nbsp; is&nbsp;
+selected.&nbsp; The&nbsp;
+default&nbsp; location&nbsp; of&nbsp; the&nbsp;
+HTML&nbsp; files&nbsp;
+is&nbsp; /usr/local/httpd/sispm_ctl/doc which is a symbolic link
+to&nbsp;/usr/local/httpd/sispm_ctl/skin1.<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+The http capabilities of pmctl are limited.&nbsp; Technically
+speaking,
+only the first line of each http request is parsed.&nbsp; The
+terminating path component, i.e. file name, is looked up&nbsp; in
+the
+repository directory.&nbsp; If present the file is parsed and in
+absence of control sequences sent as is.&nbsp; The files must
+include
+the http header portion.<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+Control&nbsp; sequences&nbsp; start and end with double dollar
+`$$'.&nbsp; They consist of a command portion separated by a
+question
+mark `?' from alternative outputs which are separated by the first
+colon `:'.&nbsp; The command portion is a token followed by an
+embraced
+number that references the outlet, e.g.&nbsp;
+$$command(1)?positive:negative$$ while command is one of status
+,&nbsp;
+toggle,&nbsp;off , on .&nbsp; I strongly recommend to avoid the
+on/off/toggle commands in pages that may be reloaded.&nbsp; Best is
+to
+redirect to other pages that only include status requests.<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+</big>
+<h4><a class="mozTocH4" name="mozTocId964255"></a><big>EXAMPLES</big></h4>
+
+
+
+
+
+
+
+
+
+
+<big>Switch off the first outlet of the first SiS-PM and the
+third outlet of the second SiS-PM:<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+$ sispmctl -f 1 -d 1 -f 3<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+Print the status of the forth outlet as zero or one:<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+$ sispmctl -nqg 4<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+Run pmctl on the second device as a web-server:<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+$ sispmctl -d 1 -l<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+You can connect to it from the same machine by pointing to
+http://localhost:2638 with your webbrowser<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+</big>
+<big><span style="font-family: monospace;"></span></big><br>
+
+
+<h2><a class="mozTocH2" name="mozTocId368604"></a><big>Troubleshooting:</big></h2>
+
+
+
+
+
+
+
+
+
+
+<h3><a class="mozTocH3" name="mozTocId698610"></a><big>Question</big></h3>
+
+
+
+
+
+
+
+
+
+
+<ul>
+
+
+
+
+
+
+
+
+
+
+  <li><big>My kernel supports USB, I loaded all the correct
+modules but when
+I plug&nbsp; in the device,</big></li>
+
+
+
+
+
+
+
+
+
+
+</ul>
+
+
+
+
+
+
+
+
+
+
+<div style="margin-left: 40px;"><big>
+it does not appear in the output of lsusb,<br>
+
+
+
+
+
+
+
+
+
+
+<span style="font-style: italic;">sispmctl</span>
+does not work,<br>
+
+
+
+
+
+
+
+
+
+
+the following output is added to the system log (output <span style="font-style: italic;">dmesg</span>): <br>
+
+
+
+
+
+
+
+
+
+
+usb 1-2: new low speed USB device using address 2<br>
+
+
+
+
+
+
+
+
+
+
+usb 1-2: Product: Gembird Silver Shield PM<br>
+
+
+
+
+
+
+
+
+
+
+usb 1-2: Manufacturer: Gembird Electronics<br>
+
+
+
+
+
+
+
+
+
+
+drivers/usb/input/hid-core.c: couldn't find an input interrupt endpoint<br>
+
+
+
+
+
+
+
+
+
+
+hid: probe of 1-2:1.0 failed with error -5<br>
+
+
+
+
+
+
+
+
+
+
+</big></div>
+
+
+
+
+
+
+
+
+
+
+<pre><big><br></big></pre>
+
+
+
+
+
+
+
+
+
+
+<h3><a class="mozTocH3" name="mozTocId414905"></a><big>(possible) Solution:</big></h3>
+
+
+
+
+
+
+
+
+
+
+<div style="margin-left: 40px;"><big>
+This may happen if you have not mounted usbfs. <br>
+
+
+
+
+
+
+
+
+
+
+Try "<span style="font-style: italic;">mount usbfs</span>"
+as root.
+This could possibly fix your
+problem.<br>
+
+
+
+
+
+
+
+
+
+
+(Thanks to Martin Koniczek for pointing this out to me).<br>
+
+
+
+
+
+
+
+
+
+
+</big></div>
+
+
+
+
+
+
+
+
+
+
+<big><br>
+
+
+
+
+
+
+</big>
+<h2><a class="mozTocH2" name="mozTocId461891"></a><big>Permissions</big></h2>
+
+
+
+
+
+
+<big>Per default, only root is allowed to use devices directly, therefor the SiS-PM<br>
+
+
+
+
+
+
+also only works as root. If you use a Linux distribution that is using the<br>
+
+
+
+
+
+
+ressource manager package (resmgrd), you can add a&nbsp; line to <span style="font-style: italic;">/etc/resmgr.conf.<br>
+
+
+
+
+
+</span>The following line is an example for SuSE 10.0. It MAY be different on your system.<br>
+
+
+
+
+
+
+<br>
+
+
+
+
+
+<span style="font-style: italic;">
+add usb:vendor=0x04b4,product=0xfd11 usb</span><br>
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+This adds the SiS-PM device to the USB class which can be used by logged in users on SuSE 10.0.<br>
+
+
+
+
+
+
+If you are using a mSiS-PM device you need to use the product ID of <span style="font-style: italic;">0xFD10</span> or <span style="font-style: italic;">0xFD12</span> (dependant<br>
+
+
+
+
+
+
+on hardware revision, see output of <span style="font-style: italic;">/sbin/lsusb -v</span>).<br>
+
+
+
+
+
+<br>
+
+
+
+
+
+</big><big><span style="font-style: italic;">Actually this solution works for all kinds of USB devices, that you want to directly <br>
+
+
+
+
+
+access as normal user, i.e. your USB handheld, USB scanner etc.<br>
+
+
+
+
+
+Instead of identifying the device by vendor and product ID, you can also use the <br>
+
+
+
+
+
+Bus/device addressing scheme (see also man resmgr.conf)!<br>
+
+
+
+
+
+</span>
+</big><br>
+
+
+
+
+
+<big>
+<br>
+
+
+
+
+
+
+
+
+
+
+</big>
+<h2><a class="mozTocH2" name="mozTocId216643"></a><big>Older Versions:</big></h2>
+
+
+
+
+
+
+
+
+
+
+<big>Older Releases are also available from the sourceforge.net release section of the project. See </big><big><a href="http://sourceforge.net/project/showfiles.php?group_id=159834">Releases</a></big><big>. In the following list, these releases are described shortly: </big><big></big>
+<ul>
+
+
+
+
+
+
+
+
+
+  <li><big>Version 1.0b<br>
+
+
+
+
+
+
+
+
+
+    </big></li>
+
+
+
+
+
+
+
+
+
+
+</ul>
+
+
+
+
+
+
+
+
+
+
+<div style="margin-left: 40px;"><big><span style="font-family: monospace;">Usage of old vesions: </span><br>
+
+
+
+
+
+
+
+
+
+
+<span style="font-family: monospace;">sispm_ctl -o
+1..4&nbsp;&nbsp;&nbsp;&nbsp; - turn on the specified
+socket</span><span style="font-family: monospace;"></span><br>
+
+
+
+
+
+
+
+
+
+
+<span style="font-family: monospace;">sispm_ctl -o
+all&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - turn on all
+sockets</span><span style="font-family: monospace;"></span><br>
+
+
+
+
+
+
+
+
+
+
+<span style="font-family: monospace;">sispm_ctl&nbsp;
+-f
+1..4&nbsp;&nbsp;&nbsp; - turn off specified sockets</span><span style="font-family: monospace;"></span><br>
+
+
+
+
+
+
+
+
+
+
+<span style="font-family: monospace;">sispm_ctl&nbsp;
+-f
+all&nbsp;&nbsp;&nbsp;&nbsp; - turn off all sockets</span><span style="font-family: monospace;"></span><br>
+
+
+
+
+
+
+
+
+
+
+<span style="font-family: monospace;">sispm_ctl&nbsp;
+-g
+1..4&nbsp;&nbsp;&nbsp; - query status of socket (1 if on, 0
+if off)</span><span style="font-family: monospace;"></span><br>
+
+
+
+
+
+
+
+
+
+
+<span style="font-family: monospace;">sispm_ctl&nbsp;
+-g
+all&nbsp;&nbsp;&nbsp;&nbsp; - query and print status of
+all sockets</span><span style="font-family: monospace;"></span><br>
+
+
+
+
+
+
+
+
+
+
+<span style="font-family: monospace;">sispm_ctl&nbsp;
+-b
+on&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - buzzer on</span><br>
+
+
+
+
+
+
+
+
+
+
+<span style="font-family: monospace;"></span>sispm_ctl&nbsp;
+-b
+off&nbsp;&nbsp;&nbsp;&nbsp; - buzzer off<span style="font-family: monospace;"></span><br>
+
+
+
+
+
+
+
+
+
+
+Option -q disables output from following commands specified on the
+command line.<br>
+
+
+
+
+
+
+
+
+
+
+Option -v prints detailed version and licence information<br>
+
+
+
+
+
+
+
+
+
+
+sisspm_ctl returns 0 on success, 1 on error and 2 if no SIS-PM or
+compatible device could be found.<br>
+
+
+
+
+
+
+
+
+
+</big></div>
+
+
+
+
+
+
+
+
+
+<ul>
+
+
+
+
+
+
+
+
+
+  <li><big>Version 1.1</big></li>
+
+
+
+
+
+
+
+
+
+</ul>
+
+
+
+
+
+
+
+
+
+<ul>
+
+
+
+
+
+
+
+
+
+  <li><big>Version 1.2</big></li>
+
+
+
+
+
+
+
+
+
+</ul>
+
+
+
+
+
+
+
+
+
+<ul>
+
+
+
+
+
+
+
+
+
+  <li><big>Bash script</big><big><a href="http://sispmctl.sourceforge.net/lsra/persons/mondrian/sispm_http-0.1.tar.bz2"></a> to use webinterface for 1.x versions (not necessary
+with 2.x)</big></li>
+
+
+
+
+
+
+
+
+
+</ul>
+
+
+
+
+
+
+
+
+
+<ul>
+
+
+
+
+
+
+
+
+
+
+</ul>
+
+
+
+
+
+
+
+
+
+
+<div style="margin-left: 40px;"><big>Marius Konitzer
+wrote a bash script that enables control of the USB socket via a
+webbrowser.<br>
+
+
+
+
+
+
+
+
+
+
+You need to download <a href="http://sourceforge.net/project/showfiles.php?group_id=159834">sispm_http-0.1.tar.bz2</a>.<br>
+
+
+
+
+
+
+
+
+
+
+<span style="font-family: monospace;"></span><br>
+
+
+
+
+
+
+
+
+
+
+<span style="font-family: monospace;">
+tar xjvf sispm_http-0.1.tar.bz2</span><br style="font-family: monospace;">
+
+
+
+
+
+
+
+
+
+
+<span style="font-family: monospace;">cd sispm_http-0.1</span><br>
+
+
+
+
+
+
+
+
+
+
+<span style="font-family: monospace;">
+</span><br>
+
+
+
+
+
+
+
+
+
+
+<span style="font-family: monospace;">
+</span>Follow the README file to install it.<br>
+
+
+
+
+
+
+
+
+
+
+If you are using a Linux distro that uses xinetd, the following file <a href="http://sispmctl.sourceforge.net/lsra/persons/mondrian/sispm">sispm</a> can be
+copied into /etc/xinetd.d/ to configure the xinetd to work with
+sispm_http.<br>
+
+
+
+
+
+
+
+
+
+
+Thanks to Marius Konitzer for contributing this script. The original
+download can be found at <a class="moz-txt-link-freetext" href="http://marko82.de/prog_sispm_http.php">http://marko82.de/prog_sispm_http.php.</a></big></div>
+
+
+
+
+
+
+
+
+
+
+<h2><a class="mozTocH2" name="mozTocId434726"></a><big>Contact</big></h2>
+
+
+
+
+
+
+
+
+
+
+<big><span style="font-family: monospace;"><br>
+
+
+
+
+
+
+
+
+
+
+</span></big><br>
+
+
+
+
+
+
+
+
+
+
+<big>Post questions, bugreports, remarks the available <a href="http://sourceforge.net/forum/forum.php?forum_id=539852">forum</a>
+of sourceforge.net.<span style="font-family: monospace;"></span></big><br>
+
+
+
+
+
+
+
+
+
+
+<big><span style="font-family: monospace;"></span>For
+other information send mail to<span style="font-weight: bold;">&nbsp;
+nuessle AT uni-mannheim.de</span><span style="font-family: monospace;"> </span></big>
+<big><span style="font-family: monospace;"></span><br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+&nbsp;
+</big>
+<center>
+<p><big><img src="SIS-PM%20Control%20for%20Linux-2018-11-17_files/col_line.html" width="551" height="4"><br>
+
+
+
+
+
+
+
+
+
+
+Last modified: 30th March 2011</big></p>
+
+
+
+
+
+
+
+
+
+
+<big>
+</big>
+<a href="http://sourceforge.net/"><img src="SIS-PM%20Control%20for%20Linux-2018-11-17_files/sflogo.png" alt="SourceForge.net Logo" width="125" height="37" border="0"></a></center>
+
+
+
+
+
+
+
+
+
+
+
+
+</body></html>
