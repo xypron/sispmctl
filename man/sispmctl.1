@@ -97,12 +97,12 @@ After installation, the first of two web\-interfaces is selected.
 The default location of the HTML files is /usr/local/share/doc/sispmctl/skin
 which is a symbolic link to /usr/local/shared/doc/sispmctl/httpd/skin1.
 .P
-The http capabilities of sispmctl are limited.
-Technically speaking, only the first line of each http request is parsed.
+The HTTP capabilities of sispmctl are limited.
+Technically speaking, only the first line of each HTTP request is parsed.
 The terminating path component, i.e. file name, is looked up in the repository
 directory.
 If present the file is parsed and in absence of control sequences sent as is.
-The files must include the http header portion.
+The files must include the HTTP header portion.
 .P
 Control sequences start and end with double dollar `$$'.
 .P
