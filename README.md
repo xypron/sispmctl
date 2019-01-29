@@ -1,23 +1,26 @@
 SiS-PM Control for Linux
 ========================
+
 (c) 2015-2018, Heinrich Schuchardt &lt;xypron.glpk@gmx.de&gt;
 (c) 2011-2016, Pete Hildebrandt &lt;send2ph@gmail.de&gt;
 (c) 2005-2011, Mondrian Nuessle et al.
 
 Overview
 --------
-This projects adds support for the GEMBIRD SIS-PM device to Linux.
-Follow the instructions in INSTALL to install the application
-(generic configure && make && make install).
-Call sispmctl (formerly: sispmi\_ctl) without command line parameters,
-it will print the available options to stdout.
-Since version 2.3 also 1-outlet mSIS-PM devices are supported; this is still
-alpha, probably not working and needs testers/developers.
-Since version 2.4 a GUI is available in the extra sub-directory. See the
-README there.
-Version 3.0 added the possibility to program the internal timer, thanks to
-Olivier Matheret.
 
+This project provides a management software for the following USB controlled
+powerstrips:
+
+* Gembird SIS-PMS SilverShield
+* Gembird MSIS-PM
+* EnerGenie EG-PMS2
+* EnerGenie EG-PMS2
+
+Follow the instructions in INSTALL to install the application
+(generic ./configure && make && make install).
+
+When you call `sispmct` without command line parameters, it will print the
+available options. `man sispmctl` shows the  man page.
 
 Installation
 ------------
@@ -25,7 +28,7 @@ Installation
 See the file INSTALL for generic installation instructions.
 The following configure options may be of interest:
 
---prefix=dif
+--prefix=directory-prefix
         Set installation directory-prefix (default is /usr/local)
 
 --enable-webless
@@ -51,11 +54,13 @@ The following configure options may be of interest:
 
 Dependencies
 ------------
+
 - libusb 0.1.9+ must be installed, libusb-config in $PATH
 
 
 Web-Interface
 ------------
+
 The web interface may be started manually (i.e. sispmctl -l)
 or using the inittab. Add the following line to your /etc/inittab:
 
@@ -100,7 +105,10 @@ Enable and start the service with
 
 Usage
 -----
-See the output of sispmctl when run without parameters and the man page.
+
+You can display the man page with
+
+    man sispmctl
 
 Permissions
 -----------
