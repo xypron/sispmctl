@@ -77,7 +77,7 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
 {
   char xbuffer[BSIZE+2];
   char filename[1024];
-  char *ptr = NULL;
+  char *eol, *ptr;
   FILE *in = NULL;
   long length = 0;
   long lastpos = 0;
@@ -86,15 +86,21 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
   unsigned int id; //product id of current device
   char *retvalue = NULL;
 
+  /* Make sure the string is terminated */
+  request[BUFFERSIZE - 1] = 0;
   if (debug)
-    fprintf(stderr,"\nRequested is (%s)\n",request);
+    fprintf(stderr,"\nRequested is\n(%s)\n",request);
 
-  // extract the file name
-  if (strchr(request,'\n') != NULL) {
-    memset(filename, 0, 1023);
-    strncpy(filename, strchr(request,' ')+1, strchr(request,'\n')-request);
+  /* Extract the file name */
+  memset(filename, 0, sizeof(filename));
+  eol = strchr(request, '\n');
+  if (eol) {
+    *eol = 0;
+    ptr = strchr(request, ' ');
+    if (ptr)
+      strncpy(filename, strchr(request, ' ') + 1, sizeof(filename) - 1);
     ptr = strchr(filename, ' ');
-    if (ptr != NULL)
+    if (ptr)
       *ptr = 0;
   }
 
