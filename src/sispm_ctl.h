@@ -39,6 +39,9 @@
 #define PRODUCT_ID_SISPM_FLASH_NEW      0xFD13
 #define PRODUCT_ID_SISPM_EG_PMS2        0xFD15
 
+/* Size of socket receive buffer */
+#define BUFFERSIZE                      4096
+
 #define USB_DIR_IN                      0x80            /* to host */
 #define USB_DIR_OUT                     0               /* to device */
 #define cpu_to_le16(a)                  (a)

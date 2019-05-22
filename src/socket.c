@@ -46,7 +46,6 @@ void l_listen(int*sock, struct usb_device*dev, int devnum)
   int i;
   int s;
   int connected=0;
-  int BUFFERSIZE=4096;
   int junk = 0;
   char *oob;
   char *buffer;
@@ -54,8 +53,8 @@ void l_listen(int*sock, struct usb_device*dev, int devnum)
   waittime.tv_sec = 0;
   waittime.tv_nsec = 250000000; /* a quarter second */
 
-  oob = (char *) malloc(32);
-  buffer = (char *) malloc(BUFFERSIZE+4);
+  oob = (char *)malloc(32);
+  buffer = (char *)malloc(BUFFERSIZE + 4);
 
   if (debug)
     fprintf(stderr, "Listening for local provider on port %d...\n", listenport);
@@ -76,6 +75,7 @@ void l_listen(int*sock, struct usb_device*dev, int devnum)
            strncmp(oob, "flush", 5))
         fprintf(stderr,"OUT-OF-BAND MESSAGE 1");
 
+      memset(buffer, 0, BUFFERSIZE + 4);
       i = recv(s, buffer, BUFFERSIZE, 0);
       if (i == -1 || i == 0) {
         if ((i == -1) && (errno != EAGAIN) && (errno != EINTR)) {
@@ -106,7 +106,6 @@ void l_listen(int*sock, struct usb_device*dev, int devnum)
         nanosleep(&waittime, NULL);
       } else {
         process(s,buffer,dev,devnum);
-        memset(buffer,0,BUFFERSIZE);
         close(s);
         connected=0;
       }
