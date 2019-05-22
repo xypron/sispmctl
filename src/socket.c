@@ -60,7 +60,7 @@ void l_listen(int*sock, struct usb_device*dev, int devnum)
   if (debug)
     fprintf(stderr, "Listening for local provider on port %d...\n", listenport);
   listen(*sock, 1); /* We only get one connection on this port.
-		       Everything else is refused. */
+                       Everything else is refused. */
   while(1) {
     while((s = accept(*sock, NULL, NULL)) == -1) {
       sleep(1);
@@ -72,7 +72,8 @@ void l_listen(int*sock, struct usb_device*dev, int devnum)
     connected=1;
 
     while(connected) {
-      if ((recv(s, oob, 32, MSG_OOB | MSG_DONTWAIT) > 0) && strncmp(oob, "flush", 5))
+      if ((recv(s, oob, 32, MSG_OOB | MSG_DONTWAIT) > 0) &&
+           strncmp(oob, "flush", 5))
         fprintf(stderr,"OUT-OF-BAND MESSAGE 1");
 
       i = recv(s, buffer, BUFFERSIZE, 0);
@@ -88,7 +89,10 @@ void l_listen(int*sock, struct usb_device*dev, int devnum)
           connected=0;
         }
         /* see if provider is still there */
-        i = sock_write_bytes(s, (unsigned char*)"ping", 4); /* we get tcp acks, so there's no need to send						       a pong from the provider */
+        i = sock_write_bytes(s, (unsigned char*)"ping", 4);
+        /*
+         * We get tcp acks, so there's no need to send a pong from the provider
+         */
         if((i == -1) && (errno != EINTR)) {
           if(junk != 0) {
             fprintf(stderr, "%d bytes\n", junk);
