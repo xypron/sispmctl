@@ -1,3 +1,9 @@
+sispmctl4 (4.2-0) unstable; urgency=medium
+
+  * Release 4.2
+
+ -- Heinrich Schuchardt <xypron.glpk@gmx.de>  Tue, 31 Dec 2019 11:06:53 +0000
+
 sispmctl4 (4.0-1) unstable; urgency=medium
 
   * Add udev rules
