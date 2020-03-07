@@ -148,13 +148,13 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
   id = get_id(dev);
 
   lastpos = ftell(in);
-  retvalue = fgets(xbuffer, BSIZE-1, in);
-  remlen = length = ftell(in) - lastpos;
-  lastpos = ftell(in);
 
   while (!feof(in)) {
+    memset(xbuffer, 0, BSIZE);
+    retvalue = fgets(xbuffer, BSIZE-1, in);
+    remlen = length = ftell(in) - lastpos;
+    lastpos = ftell(in);
     if (retvalue == NULL) {
-      bad_request(out);
       break;
     }
 
@@ -274,10 +274,6 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
       }
     }
     send(out, mrk, remlen, 0);
-    memset(xbuffer, 0, BSIZE);
-    retvalue = fgets(xbuffer, BSIZE-1, in);
-    remlen = length = ftell(in) - lastpos;
-    lastpos = ftell(in);
   }
 
   if (udev != NULL) {
