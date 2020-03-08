@@ -161,8 +161,10 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
     char *mrk = xbuffer;
     char *ptr = xbuffer;
     /* search for:
-     *  $$exec(0)?.1.:.2.$$     to execute command(#)
-     *  $$stat(2)?.1.:.2.$$     to evaluate status(#)
+     *  $$off(#)?.1.:.2.$$      to switch off(#)
+     *  $$on(#)?.1.:.2.$$       to switch on(#)
+     *  $$toggle(#)?.1.:.2.$$   to toggle(#)
+     *  $$status(#)?.1.:.2.$$   to evaluate status(#)
      *  $$version()$$           to evaluate version
      */
     for (mrk = ptr = xbuffer; (ptr-xbuffer) < length; ++ptr) {
