@@ -72,7 +72,7 @@ void l_listen(int*sock, struct usb_device*dev, int devnum)
 
     while(connected) {
       if ((recv(s, oob, 32, MSG_OOB | MSG_DONTWAIT) > 0) &&
-           strncmp(oob, "flush", 5))
+          strncmp(oob, "flush", 5))
         fprintf(stderr,"OUT-OF-BAND MESSAGE 1");
 
       memset(buffer, 0, BUFFERSIZE + 4);
