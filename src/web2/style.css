@@ -1,50 +1,60 @@
 HTTP/1.0 200 OK
 Server: sispm_http
-Date: Sat, 04 Feb 2006 16:03:35 +0100
+Date: Sun, 08 Mar 2020 10:00:00 +0100
 Content-Type: text/css
 Connection: close
 
 body {
 	font-family:Verdana,Helvetica,sans-serif;
-	font-size:12px;
+	font-size:3em;
 	font-style:normal;
-	color:#86CFFF;
-	background-color:#FFFFFF;
+	color:#f70;
+	background-color:#000;
 	margin:0px;
+	padding:0px;
 }
 
 a:visited, a:link, a:active {
 	text-decoration:none;
-    	color:#9DC9FF;
+    	color:#777;
 }
 
 a img {
-	border:0px solid #000000;
+	border:2px solid blue;
 }
 
-table {
-	font:inherit;
-	border:0px solid #FFFFFF;
-	background-color:#FFFFFF;
-}
-
-th {
-	border:0px solid #86CFFF;
-	background-color:#FFFFFF;
-	font-size:24px;
+div {
+	border:0;
+	padding:1em;
+	margin:.5em;
+	border:.1em solid #777;
+	border-radius: 1em;
 	text-align:center;
 }
 
-td {
-	border:0px solid #86CFFF;
-	background-color:#FFFFFF;
-	padding:8px;
+.title {
+	border:0;
 }
 
-th.title1, th.title3, td.gif1, td.gif3 {
-	background-color:#DDDDDD;
+.span {
+	position:absolute;
+	top:0;
+	right:0;
+	border:0;
 }
 
-th.title2, th.title4, td.gif2, td.gif4 {
-	background-color:#EEEEEE;
+.on {
+	background-color:#fff;
+}
+
+.off {
+	background-color:#000;
+}
+
+a.on:visited, a.on:link, a.on:active {
+	color:#000;
+}
+
+a.off:visited, a.off:link, a.off:active {
+	color:#fff;
 }
