@@ -47,7 +47,7 @@ install-data-local:
 if WEBLESSCOND
 else
 	mkdir -p "$(DESTDIR)$(docdir)/httpd/skin1"
-	cd "$(DESTDIR)$(docdir)" && ln -sf httpd/skin1 skin
+	cd "$(DESTDIR)$(docdir)" && ln -sf httpd/skin2 skin
 endif
 
 uninstall-local:
