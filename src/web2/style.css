@@ -16,11 +16,12 @@ body {
 
 a:visited, a:link, a:active {
 	text-decoration:none;
-    	color:#777;
+	color:#f70;
+	border:0;
 }
 
-a img {
-	border:2px solid blue;
+img {
+	border:0;
 }
 
 div {
@@ -57,4 +58,16 @@ a.on:visited, a.on:link, a.on:active {
 
 a.off:visited, a.off:link, a.off:active {
 	color:#fff;
+}
+
+@media (orientation: landscape) {
+body {
+	font-size:1.5em;
+}
+
+div {
+	padding:.5em;
+	margin:.25em;
+	border:.05em solid #777;
+}
 }
