@@ -13,8 +13,7 @@ EXTRA_DIST =  \
 	web1/off2.html web1/off4.html web1/on2.html web1/on4.html \
 	web1/status1.png web2/index.html web2/off1.html web2/off3.html \
 	web2/on1.html web2/on3.html web2/style.css web2/logo.png \
-	web2/off2.html web2/off4.html web2/on2.html web2/on4.html \
-	web2/off.gif web2/on.gif web2/onoff.gif 
+	web2/off2.html web2/off4.html web2/on2.html web2/on4.html
 
 if WEBLESSCOND
 AM_CFLAGS=-Wall -DWEBLESS=@WEBLESS@
@@ -31,9 +30,8 @@ pkgdata1_DATA = \
 	web1/style.css
 pkgdata2_DATA = \
 	web2/index.html web2/logo.png web2/off1.html web2/off2.html \
-	web2/off3.html web2/off4.html web2/off.gif web2/on1.html \
-	web2/on2.html web2/on3.html web2/on4.html web2/on.gif web2/onoff.gif \
-	web2/style.css 
+	web2/off3.html web2/off4.html web2/on1.html web2/on2.html \
+	web2/on3.html web2/on4.html web2/style.css
 endif
 
 libsispmctl_la_SOURCES = \
