@@ -1,0 +1,23 @@
+HTTP/1.0 200 OK
+Server: sispm_http
+Date: Sun, 08 Mar 2020 10:00:00 +0100
+Content-Type: text/html
+Connection: close
+Vary: *
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>SiS PM Control for Linux $$version()$$</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+<meta charset="UTF-8">
+</head>
+<body>
+<div class="title">SiS PM Control $$version()$$</div>
+<div class="span"><a href="https://sourceforge.net/projects/sispmctl/"><img src="logo.svg" alt=""></a></div>
+$$status(1)?<a class="on" href="off1.html"><div class="on">On</div></a>:<a class="off" href="on1.html"><div class="off">Off</div></a>$$
+$$status(2)?<a class="on" href="off2.html"><div class="on">On</div></a>:<a class="off" href="on2.html"><div class="off">Off</div></a>$$
+$$status(3)?<a class="on" href="off3.html"><div class="on">On</div></a>:<a class="off" href="on3.html"><div class="off">Off</div></a>$$
+$$status(4)?<a class="on" href="off4.html"><div class="on">On</div></a>:<a class="off" href="on4.html"><div class="off">Off</div></a>$$
+</body>
+</html>

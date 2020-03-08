@@ -1,0 +1,85 @@
+HTTP/1.0 200 OK
+Server: sispm_http
+Date: Sun, 08 Mar 2020 10:00:00 +0100
+Content-Type: text/css
+Connection: close
+
+body {
+	font-family:Verdana,Helvetica,sans-serif;
+	font-size:3em;
+	font-style:normal;
+	color:#333;
+	background-color:#fff;
+	margin:0px;
+	padding:0px;
+}
+
+a:visited, a:link, a:active {
+	text-decoration:none;
+	color:#f70;
+	border:0;
+}
+
+img {
+	border:0;
+	height:2.5em;
+}
+
+div {
+	border:0;
+	padding:1em;
+	margin:.5em;
+	border:.1em solid #777;
+	border-radius: 1em;
+	text-align:center;
+}
+
+.title {
+	font-weight:bold;
+	border:0;
+}
+
+.span {
+	position:absolute;
+	top:0;
+	right:0;
+	border:0;
+	padding:0;
+}
+
+.on {
+	background-color:#06c;
+}
+
+.off {
+	background-color:#fff;
+}
+
+a.on:visited, a.on:link, a.on:active {
+	color:#fff;
+}
+
+.on:hover {
+	font-weight:bolder;
+}
+
+a.off:visited, a.off:link, a.off:active {
+	color:#333;
+}
+
+.off:hover {
+	font-weight:bolder;
+}
+
+@media (orientation: landscape) {
+body {
+	font-size:1.5em;
+}
+
+div {
+	padding:.5em;
+	margin:.25em;
+	border:.05em solid #777;
+	border-radius:.5em;
+}
+}
