@@ -58,8 +58,16 @@ a.on:visited, a.on:link, a.on:active {
 	color:#000;
 }
 
+.on:hover {
+	font-weight:bolder;
+}
+
 a.off:visited, a.off:link, a.off:active {
 	color:#fff;
+}
+
+.off:hover {
+	font-weight:bolder;
 }
 
 @media (orientation: landscape) {
