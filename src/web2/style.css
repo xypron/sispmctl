@@ -22,6 +22,7 @@ a:visited, a:link, a:active {
 
 img {
 	border:0;
+	height:2.5em;
 }
 
 div {
@@ -42,6 +43,7 @@ div {
 	top:0;
 	right:0;
 	border:0;
+	padding:0;
 }
 
 .on {
@@ -69,5 +71,6 @@ div {
 	padding:.5em;
 	margin:.25em;
 	border:.05em solid #777;
+	border-radius:.5em;
 }
 }
