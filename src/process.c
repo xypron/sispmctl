@@ -24,6 +24,7 @@
 */
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -42,6 +43,8 @@ char* homedir = 0;
 #endif
 
 #ifndef WEBLESS
+char *challenge;
+
 static void service_not_available(int out)
 {
   char xbuffer[BSIZE+2];
@@ -58,6 +61,22 @@ static void service_not_available(int out)
   send(out,xbuffer,strlen(xbuffer),0);
 }
 
+static void unauthorized(int out)
+{
+  char xbuffer[BSIZE+2];
+
+  sprintf(xbuffer,
+          "HTTP/1.1 401 Unauthorized\nServer: SisPM\n"
+          "WWW-Authenticate: Basic realm=\"SisPM\n\""
+          "Content-Type: text/html\n\n"
+          "<!DOCTYPE HTML>\n"
+          "<html><head>\n<title>401 Unauthorized</title>\n"
+          "<meta http-equiv=\"refresh\" content=\"10;url=/\">\n"
+          "</head><body>\n"
+          "<h1>401 Unauthorized</h1></body></html>\n\n");
+  send(out,xbuffer,strlen(xbuffer),0);
+}
+
 static void bad_request(int out)
 {
   char xbuffer[BSIZE+2];
@@ -71,6 +90,27 @@ static void bad_request(int out)
           "</head><body>\n"
           "<h1>404 Not found</h1></body></html>\n\n");
   send(out,xbuffer,strlen(xbuffer),0);
+}
+
+char *next_word(char *ptr)
+{
+  bool flag = false;
+
+  if (!ptr) {
+    return ptr;
+  }
+  for (;; ++ptr) {
+    char c = *ptr;
+
+    if (c < ' ') {
+      return NULL;
+    }
+    if (c == ' ') {
+      flag = true;
+    } else if (flag) {
+      return ptr;
+    }
+  }
 }
 
 void process(int out,char *request, struct usb_device *dev, int devnum)
@@ -102,6 +142,31 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
     ptr = strchr(filename, ' ');
     if (ptr)
       *ptr = 0;
+  }
+  /* Look for authentication */
+  if (challenge) {
+    char *password = NULL;
+
+    for(; eol;) {
+      ptr = eol + 1;
+      if (strncmp(ptr, "Authorization: ", 15)) {
+        eol = strchr(ptr, '\n');
+        continue;
+      }
+      ptr = next_word(ptr);
+      password = next_word(ptr);
+      if (!password) {
+        break;
+      }
+      for (ptr = password; *ptr > ' '; ++ptr)
+        ;
+      *ptr = '\0';
+      break;
+    }
+    if (!password || strcmp(challenge, password)) {
+      unauthorized(out);
+      return;
+    }
   }
 
   // avoid to read other directories, %-codes are not evaluated

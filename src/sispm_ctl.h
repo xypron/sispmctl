@@ -139,5 +139,7 @@ int sispm_switch_toggle(usb_dev_handle * udev,int id, int outlet);
 extern int debug;
 extern int verbose;
 extern char *homedir;
+/* Base64 encoded user:password */
+extern char *challenge;
 
 #endif
