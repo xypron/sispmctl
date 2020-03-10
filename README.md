@@ -153,6 +153,7 @@ Then reload the udev rules with
 
 Solaris Support
 ---------------
+
 Solaris 10 and later come with sufficient libusb support; the ugen (generic USB)
 driver needs to be associated with the SIS-PM devices by issueing the following
 command before plugging in the device:
@@ -166,3 +167,9 @@ command before plugging in the device:
 	update_drv -a -i '"usb4b4,fd13"' ugen
     for EG-PMS2:
 	update_drv -a -i '"usb4b4,fd15"' ugen
+
+License
+-------
+
+SiS-PM Control for Linux is published under the GNU Public License Version 2 or
+(at your option) any later version.
