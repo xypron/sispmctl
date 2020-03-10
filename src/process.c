@@ -43,7 +43,7 @@ char* homedir = 0;
 #endif
 
 #ifndef WEBLESS
-char *challenge;
+char *secret;
 
 static void service_not_available(int out)
 {
@@ -144,7 +144,7 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
       *ptr = 0;
   }
   /* Look for authentication */
-  if (challenge) {
+  if (secret) {
     char *password = NULL;
 
     for(; eol;) {
@@ -163,7 +163,7 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
       *ptr = '\0';
       break;
     }
-    if (!password || strcmp(challenge, password)) {
+    if (!password || strcmp(secret, password)) {
       unauthorized(out);
       return;
     }

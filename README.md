@@ -103,6 +103,17 @@ Enable and start the service with
     systemctl enable sispmctl.service
     systemctl start sispmctl.service
 
+The webserver supports basic authentication. To set the password create file
+/etc/sispmctl/password. The first line must contain the base64 encoded user
+and password, e.g user:password is encoded as dXNlcjpwYXNzd29yZA==. You can
+use the base64 command for encoding. Enter CRTL+D twice after the password.
+
+    mkdir /etc/sispmctl
+    # enter the base64 encoded user and password in the editor
+    nano /etc/sispmctl/password
+    chown sispmctl:sispmctl /etc/sispmctl/password
+    chmod 400 /etc/sispmctl/password
+
 Usage
 -----
 

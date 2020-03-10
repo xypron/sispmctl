@@ -140,6 +140,6 @@ extern int debug;
 extern int verbose;
 extern char *homedir;
 /* Base64 encoded user:password */
-extern char *challenge;
+extern char *secret;
 
 #endif

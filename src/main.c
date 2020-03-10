@@ -47,6 +47,41 @@
 #endif
 
 #ifndef WEBLESS
+
+#define BUFSIZE 256
+
+static void read_password(void)
+{
+  FILE *file;
+  const char filename[] = "/etc/sispmctl/password";
+  char buf[BUFSIZE];
+  char *pos;
+
+  file = fopen(filename, "r");
+  if (!file) {
+    if (errno != ENOENT) {
+      perror(filename);
+      exit(EXIT_FAILURE);
+    }
+    /* It is ok if there is no password file */
+    return;
+  }
+  memset(buf, 0, BUFSIZE);
+  fread(buf, 1, BUFSIZE - 1, file);
+  pos = strchr(buf, '\n');
+  if (pos) {
+    *pos = '\0';
+  }
+  secret = strdup(buf);
+  if (secret) {
+    memset(buf, 0, 256);
+  } else {
+    fprintf(stderr, "Out of memory\n");
+    exit(EXIT_FAILURE);
+  }
+  fclose(file);
+}
+
 static void daemonize()
 {
   /* Our process ID and Session ID */
@@ -475,6 +510,8 @@ static void parse_command_line(int argc, char* argv[], int count,
       case 'l':
       case 'L': {
         int* s;
+
+        read_password();
         if (verbose)
           printf("Server goes to listen mode now.\n");
         if ((s = socket_init(bindaddr)) != NULL) {
