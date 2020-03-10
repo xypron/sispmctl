@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 test -f configure.ac || {
   echo "Please, run this script in the top level project directory."
   exit
