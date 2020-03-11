@@ -3,7 +3,7 @@
 
   Controls the GEMBIRD Silver Shield PM USB outlet device
 
-  (C) 2015-2018, Heinrich Schuchardt <xypron.glpk@gmx.de>
+  (C) 2015-2020, Heinrich Schuchardt <xypron.glpk@gmx.de>
   (C) 2011-2016, Pete Hildebrandt <send2ph@gmail.com>
   (C) 2010, Olivier Matheret, France, for the scheduling part
   (C) 2004-2011, Mondrian Nuessle, Computer Architecture Group,
@@ -117,7 +117,7 @@ static void daemonize()
 static void print_disclaimer(void)
 {
   fprintf(stderr, "\nSiS PM Control for Linux " PACKAGE_VERSION "\n\n"
-          "(C) 2015-2018, Heinrich Schuchardt <xypron.glpk@gmx.de>\n"
+          "(C) 2015-2020, Heinrich Schuchardt <xypron.glpk@gmx.de>\n"
           "(C) 2011-2016, Pete Hildebrandt <send2ph@gmail.com>\n"
           "(C) 2004-2011, Mondrian Nuessle\n"
           "(C) 2005-2006, Andreas Neuper\n"

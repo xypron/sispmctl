@@ -1,7 +1,7 @@
 /*
   process.c - process web requests
 
-  (C) 2015-2018, Heinrich Schuchardt <xypron.glpk@gmx.de>
+  (C) 2015-2020, Heinrich Schuchardt <xypron.glpk@gmx.de>
   (C) 2011-2016, Pete Hildebrandt <send2ph@gmail.com>
   (C) 2010, Olivier Matheret, France, for the scheduling part
   (C) 2004-2011, Mondrian Nuessle, Computer Architecture Group,
