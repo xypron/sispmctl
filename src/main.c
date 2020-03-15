@@ -56,6 +56,7 @@ static void read_password(void)
   const char filename[] = "/etc/sispmctl/password";
   char buf[BUFSIZE];
   char *pos;
+  size_t len;
 
   file = fopen(filename, "r");
   if (!file) {
@@ -67,7 +68,11 @@ static void read_password(void)
     return;
   }
   memset(buf, 0, BUFSIZE);
-  fread(buf, 1, BUFSIZE - 1, file);
+  len = fread(buf, 1, BUFSIZE - 1, file);
+  if (!len) {
+    fprintf(stderr, "Failed to read password\n");
+    exit(EXIT_FAILURE);
+  }
   pos = strchr(buf, '\n');
   if (pos) {
     *pos = '\0';
