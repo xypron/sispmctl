@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #define __USE_XOPEN
 #include <signal.h>
+#include <syslog.h>
 #include <time.h>
 #include <usb.h>
 #include <sys/stat.h>
@@ -516,6 +517,7 @@ static void parse_command_line(int argc, char* argv[], int count,
       case 'L': {
         int* s;
 
+	openlog("sispmctl", LOG_PID, LOG_INFO);
         read_password();
         if (verbose)
           printf("Server goes to listen mode now.\n");
