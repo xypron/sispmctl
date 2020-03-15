@@ -45,13 +45,8 @@ void l_listen(int*sock, struct usb_device*dev, int devnum)
 {
   int i;
   int s;
-  int connected=0;
-  int junk = 0;
   char *oob;
   char *buffer;
-  struct timespec waittime;
-  waittime.tv_sec = 0;
-  waittime.tv_nsec = 250000000; /* a quarter second */
 
   oob = (char *)malloc(32);
   buffer = (char *)malloc(BUFFERSIZE + 4);
@@ -60,57 +55,34 @@ void l_listen(int*sock, struct usb_device*dev, int devnum)
     fprintf(stderr, "Listening for local provider on port %d...\n", listenport);
   listen(*sock, 1); /* We only get one connection on this port.
                        Everything else is refused. */
-  while(1) {
+  for (;;) {
     while((s = accept(*sock, NULL, NULL)) == -1) {
       perror("Accepting connection failed");
       sleep(1);
-      /* retry after error.  Really bad errors shouldn't happen. */
+      /* Retry after error. Really bad errors shouldn't happen. */
     }
     if(debug)
       fprintf(stderr, "Provider connected.\n");
 
-    connected=1;
-
-    while(connected) {
+    for (;;) {
       if ((recv(s, oob, 32, MSG_OOB | MSG_DONTWAIT) > 0) &&
           strncmp(oob, "flush", 5))
         fprintf(stderr,"OUT-OF-BAND MESSAGE 1");
 
       memset(buffer, 0, BUFFERSIZE + 4);
       i = recv(s, buffer, BUFFERSIZE, 0);
-      if (i == -1 || i == 0) {
-        if ((i == -1) && (errno != EAGAIN) && (errno != EINTR)) {
-          if(junk != 0) {
-            fprintf(stderr, "%d bytes\n", junk);
-            junk = 0;
-          }
-          /* wait for a new connection */
-          perror("Lost provider connection");
-          close(s);
-          connected=0;
+      if (i == -1) {
+        if (errno == EINTR) {
+          continue;
         }
-        /* see if provider is still there */
-        i = sock_write_bytes(s, (unsigned char*)"ping", 4);
-        /*
-         * We get tcp acks, so there's no need to send a pong from the provider
-         */
-        if((i == -1) && (errno != EINTR)) {
-          if(junk != 0) {
-            fprintf(stderr, "%d bytes\n", junk);
-            junk = 0;
-          }
-          /* wait for a new connection */
-          perror("Lost provider connection");
-          close(s);
-          connected=0;
-        }
-        nanosleep(&waittime, NULL);
-      } else {
+        /* wait for a new connection */
+        perror("Lost provider connection");
+      } else if (i > 0) {
         process(s,buffer,dev,devnum);
-        close(s);
-        connected=0;
       }
+      break;
     }
+    close(s);
   }
 }
 
