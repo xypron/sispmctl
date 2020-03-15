@@ -62,6 +62,7 @@ void l_listen(int*sock, struct usb_device*dev, int devnum)
                        Everything else is refused. */
   while(1) {
     while((s = accept(*sock, NULL, NULL)) == -1) {
+      perror("Accepting connection failed");
       sleep(1);
       /* retry after error.  Really bad errors shouldn't happen. */
     }
