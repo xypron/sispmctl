@@ -154,6 +154,7 @@ static void print_usage(char* name)
           "   'm'   - get power supply status outlet(s) on/off\n"
           "   'd'   - apply to device 'n'\n"
           "   'D'   - apply to device with given serial number\n"
+          "   'U'   - apply to device connected to USB Bus:Device\n"
           "   'n'   - show result numerically\n"
           "   'q'   - quiet mode, no explanations - but errors\n"
           "   'a'   - get schedule for outlet\n"
@@ -212,7 +213,7 @@ static void parse_command_line(int argc, char* argv[], int count,
     bindaddr=BINDADDR;
 #endif
 
-  while( (c=getopt(argc, argv,"i:o:f:t:a:A:b:g:m:lLqvh?nsd:D:u:p:")) != -1 ) {
+  while( (c=getopt(argc, argv,"i:o:f:t:a:A:b:g:m:lLqvh?nsd:D:u:p:U:")) != -1 ) {
     if (count == 0) {
       switch(c) {
       case '?':
@@ -360,6 +361,32 @@ static void parse_command_line(int argc, char* argv[], int count,
           exit(-8);
         }
         break;
+      case 'U': // by USB Bus:Device
+        for (j=0; j < count; ++j) {
+	  char tmp[8194];
+	  sprintf(tmp, "%s:%s", dev[j]->bus->dirname, dev[j]->filename);
+
+          if (debug)
+            fprintf(stderr, "now comparing %s and %s\n", tmp, optarg);
+          if (strcasecmp(tmp, optarg) == 0) {
+            if (udev != NULL) {
+              usb_close(udev);
+              udev = NULL;
+            }
+            devnum = j;
+            break;
+          }
+        }
+        if (devnum != j) {
+          fprintf(stderr, "No device at USB Bus:Device %s found.\n"
+                  "Terminating\n",optarg);
+          if (udev != NULL) {
+            usb_close(udev);
+            udev = NULL;
+          }
+          exit(-8);
+        }
+	break;
       case 'o':
         outlet=check_outlet_number(id, i);
         sispm_switch_on(udev,id,outlet);
