@@ -1,3 +1,6 @@
+01 Apr 2020 - 4.6
+	Add option to specify powerstrip by USB Bus:Device
+	Improve stability of webserver
 11 Mar 2020 - 4.5
 	Provide basic authentication.
 	Provide new skin 3.
