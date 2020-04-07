@@ -4,7 +4,7 @@
   Controls the GEMBIRD Silver Shield PM USB outlet device
 
   (C) 2015-2018, Heinrich Schuchardt <xypron.glpk@gmx.de>
-  (C) 2004,2005,2006 Mondrian Nuessle, Computer Architecture Group,
+  (C) 2004, 2005, 2006 Mondrian Nuessle, Computer Architecture Group,
       University of Mannheim, Germany
   (C) 2005, Andreas Neuper, Germany
   (C) 2010, Olivier Matheret, France, for the scheduling part
@@ -37,52 +37,56 @@
 
 char serial_id[15];
 
-int get_id( struct usb_device* dev)
+int get_id(struct usb_device *dev)
 {
   assert(dev!=0);
   return dev->descriptor.idProduct;
 }
 
-int usb_control_msg_tries(usb_dev_handle *dev, int requesttype, int request, int value, int index, char *bytes, int size, int timeout)
+int usb_control_msg_tries(usb_dev_handle *dev, int requesttype, int request,
+                          int value, int index, char *bytes, int size,
+                          int timeout)
 {
   int ret, i=0;
+
   do {
     usleep(500*i);
-    ret = usb_control_msg(dev, requesttype, request, value, index, bytes, size, timeout);
+    ret = usb_control_msg(dev, requesttype, request, value, index, bytes, size,
+                          timeout);
     i++;
   } while ((ret != size) && (i < 5));
   return ret;
 }
 
 // for identification: reqtype=a1, request=01, b1=0x01, size=5
-char* get_serial(usb_dev_handle *udev)
+char *get_serial(usb_dev_handle *udev)
 {
-  int  reqtype=0xa1; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /*request type*/,
+  int  reqtype=0xa1; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /* request type */,
   int  req=0x01;
-  unsigned char buffer[6] = { 0, 0, 0, 0, 0, 0 };
+  char buffer[6] = {0, 0, 0, 0, 0, 0};
 
-  if ( usb_control_msg_tries(udev /* handle*/,
-                             reqtype,
-                             req,
-                             (0x03<<8) | 1,
-                             0 /*index*/,
-                             (char*) buffer /*bytes*/,
-                             5, //1 /*size*/,
-                             5000) < 2 ) {
-    fprintf(stderr,"Error performing requested action\n"
-            "Libusb error string: %s\nTerminating\n",usb_strerror());
+  if (usb_control_msg_tries(udev,               /* handle */
+                            reqtype,
+                            req,
+                            (0x03 << 8) | 1,
+                            0,                  /* index  */
+                            buffer,             /* bytes  */
+                            5,                  /* size   */
+                            5000) < 2 ) {
+    fprintf(stderr, "Error performing requested action\n"
+            "Libusb error string: %s\nTerminating\n", usb_strerror());
     usb_close (udev);
     exit(-5);
   }
 
-  snprintf(serial_id, 15, "%02x:%02x:%02x:%02x:%02x", buffer[0],buffer[1],
-           buffer[2],buffer[3],buffer[4]);
+  snprintf(serial_id, 15, "%02x:%02x:%02x:%02x:%02x", buffer[0], buffer[1],
+           buffer[2], buffer[3], buffer[4]);
   return serial_id;
 }
 
-int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected )
+int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected)
 {
-  int  reqtype=0x21; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /*request type*/,
+  int  reqtype=0x21; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /* request type */,
   int  req=0x09;
   char buffer[5];
 
@@ -92,16 +96,16 @@ int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected 
     reqtype|=USB_DIR_IN;
     req=0x01;
   }
-  if ( usb_control_msg_tries(udev /* handle*/,
-                             reqtype,
-                             req,
-                             (0x03<<8) | b1,
-                             0 /*index*/,
-                             buffer /*bytes*/,
-                             5, //1 /*size*/,
-                             5000) < 2 ) {
-    fprintf(stderr,"Error performing requested action\n"
-            "Libusb error string: %s\nTerminating\n",usb_strerror());
+  if (usb_control_msg_tries(udev,               /* handle */
+                            reqtype,
+                            req,
+                            (0x03 << 8) | b1,
+                            0,                  /* index  */
+                            buffer,             /* bytes  */
+                            5,                  /* size   */
+                            5000) < 2 ) {
+    fprintf(stderr, "Error performing requested action\n"
+            "Libusb error string: %s\nTerminating\n", usb_strerror());
     usb_close (udev);
     exit(-5);
   }
@@ -110,29 +114,31 @@ int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected 
 }
 
 
-usb_dev_handle* get_handle(struct usb_device*dev)
+usb_dev_handle *get_handle(struct usb_device*dev)
 {
   usb_dev_handle *udev=NULL;
-  if( dev==NULL ) return NULL;
-  udev = usb_open( dev );
+  if(!dev)
+    return NULL;
+  udev = usb_open(dev);
 
   /* prepare USB access */
-  if (udev == NULL) {
-    fprintf(stderr,"Unable to open USB device %s\n",usb_strerror());
+  if (!udev) {
+    fprintf(stderr, "Unable to open USB device %s\n", usb_strerror());
     return NULL;
   }
-  if (usb_set_configuration(udev,1) !=0) {
-    fprintf(stderr,"USB set configuration %s\n",usb_strerror());
+  if (usb_set_configuration(udev, 1)) {
+    fprintf(stderr, "USB set configuration %s\n", usb_strerror());
     usb_close (udev);
     return NULL;
   }
-  if (usb_claim_interface(udev, 0) !=0) {
-    fprintf(stderr,"USB claim interface %s\nMaybe device already in use?\n",usb_strerror());
+  if (usb_claim_interface(udev, 0)) {
+    fprintf(stderr, "USB claim interface %s\nMaybe device already in use?\n",
+            usb_strerror());
     usb_close(udev);
     return NULL;
   }
-  if (usb_set_altinterface(udev, 0) !=0) {
-    fprintf(stderr,"USB set alt interface %s\n",usb_strerror());
+  if (usb_set_altinterface(udev, 0)) {
+    fprintf(stderr, "USB set alt interface %s\n", usb_strerror());
     usb_close (udev);
     return NULL;;
   }
@@ -144,13 +150,17 @@ int check_outlet_number(int id, int outlet)
   if (id == PRODUCT_ID_MSISPM_OLD) {
     if (outlet < 0 || outlet > 1)
       if (verbose == 1)
-        fprintf(stderr,"mSIS-PM devices only feature one outlet. Number changed from %d to 0\n", outlet);
+        fprintf(stderr,
+                "mSIS-PM devices only feature one outlet. Number changed from %d to 0\n",
+                outlet);
     outlet = 0;
   }
   if (id == PRODUCT_ID_MSISPM_FLASH) {
     if (outlet != 1)
       if (verbose == 1)
-        fprintf(stderr,"mSIS-PM devices only feature one outlet. Number changed from %d to 1\n", outlet);
+        fprintf(stderr,
+                "mSIS-PM devices only feature one outlet. Number changed from %d to 1\n",
+                outlet);
     outlet = 1;
   }
   if ((id == PRODUCT_ID_SISPM) ||
@@ -158,84 +168,91 @@ int check_outlet_number(int id, int outlet)
       (id == PRODUCT_ID_SISPM_EG_PMS2)) {
     if (outlet < 1 || outlet > 4) {
       if (verbose == 1)
-        fprintf(stderr,"SIS-PM devices only feature 4 outlets. Number changed from %d to 1\n", outlet);
+        fprintf(stderr,
+                "SIS-PM devices only feature 4 outlets. Number changed from %d to 1\n",
+                outlet);
       outlet = 1;
     }
   }
   return outlet;
 }
 
-int sispm_switch_on(usb_dev_handle * udev,int id, int outlet)
+int sispm_switch_on(usb_dev_handle *udev, int id, int outlet)
 {
-  outlet=check_outlet_number(id,outlet);
-  return usb_command( udev, 3*outlet, 0x03, 0 ) ;
+  outlet=check_outlet_number(id, outlet);
+  return usb_command(udev, 3 * outlet, 0x03, 0 ) ;
 }
 
-int sispm_switch_off(usb_dev_handle * udev,int id, int outlet)
+int sispm_switch_off(usb_dev_handle *udev, int id, int outlet)
 {
-  outlet=check_outlet_number(id,outlet);
-  return usb_command( udev, 3*outlet, 0x00, 0 );
+  outlet=check_outlet_number(id, outlet);
+  return usb_command(udev, 3 * outlet, 0x00, 0 );
 }
 
-int sispm_switch_toggle(usb_dev_handle * udev,int id, int outlet)
+int sispm_switch_toggle(usb_dev_handle *udev, int id, int outlet)
 {
-  if (sispm_switch_getstatus(udev,id,outlet)==0) { //on
-    sispm_switch_on(udev,id,outlet);
+  if (!sispm_switch_getstatus(udev, id, outlet)) { //on
+    sispm_switch_on(udev, id, outlet);
     return 1;
   } else {
-    sispm_switch_off(udev,id,outlet);
+    sispm_switch_off(udev, id, outlet);
     return 0;
   }
 
   return 0;
 }
 
-int sispm_switch_getstatus(usb_dev_handle * udev,int id, int outlet)
+int sispm_switch_getstatus(usb_dev_handle * udev, int id, int outlet)
 {
   int result;
-  outlet=check_outlet_number(id,outlet);
-  result=(usb_command( udev, 3*outlet, 0x03, 1 ) ); //take bit 1, which gives the relais status
+
+  outlet=check_outlet_number(id, outlet);
+  result=(usb_command(udev, 3 * outlet, 0x03, 1)); //take bit 1, which gives the relais status
   return result & 1;
 }
 
-int sispm_get_power_supply_status(usb_dev_handle * udev,int id, int outlet)
+int sispm_get_power_supply_status(usb_dev_handle *udev, int id, int outlet)
 {
   int result;
-  outlet=check_outlet_number(id,outlet);
-  result=(usb_command( udev, 3*outlet, 0x03, 1 ) ); //take bit 0, which gives the power supply status
-  return (result >>1 )& 1;
+
+  outlet = check_outlet_number(id, outlet);
+  result = usb_command(udev, 3 * outlet, 0x03, 1); //take bit 0, which gives the power supply status
+  return (result >> 1) & 1;
 }
 
-
 // displays a schedule structure in a human readable way
-void plannif_display(const struct plannif* plan, int verbose, const char* progname)
+void plannif_display(const struct plannif *plan, int verbose,
+                     const char *progname)
 {
   char datebuffer[80];
   struct tm * timeinfo;
   time_t date;
   int action;
-  ulong loop=0, lastActionTime=0;
+  ulong loop = 0, lastActionTime = 0;
   char cmdline[1024] = "";
 
   printf("\nGet outlet %d status :\n", plan->socket);
 
   date = plan->timeStamp;
-  timeinfo = localtime( &date );
-  strftime (datebuffer,80,"%e-%b-%Y %H:%M:%S",timeinfo);
+  timeinfo = localtime(&date);
+  strftime (datebuffer, 80, "%e-%b-%Y %H:%M:%S", timeinfo);
   printf("  programmed on : %s\n", datebuffer);
 
   // action dates are on round minutes
-  date = ((time_t)(date/60))*60;
+  date = ((time_t)(date / 60)) * 60;
 
   // count loop time, as the sum of all but first events
-  for (action=sizeof(plan->actions)/sizeof(struct plannifAction)-1 ; action>=0 && plan->actions[action].switchOn == -1; action--); // skip void entries
-  if (action>=1 && plan->actions[action].timeForNext > 0) {  // we have a loop
-    for ( ; action>=1; action--)
+  for (action=sizeof(plan->actions) / sizeof(struct plannifAction) - 1;
+       action>=0 && plan->actions[action].switchOn == -1; --action); // skip void entries
+  if (action >= 1 && plan->actions[action].timeForNext > 0) {  // we have a loop
+    for (; action >= 1; --action)
       loop += plan->actions[action].timeForNext;
   }
 
   // compute last action time
-  for (action=0 ; action+1<sizeof(plan->actions)/sizeof(struct plannifAction) && (plan->actions[action+1].switchOn != -1); action++)
+  for (action = 0;
+       action + 1 < sizeof(plan->actions) / sizeof(struct plannifAction) &&
+       (plan->actions[action + 1].switchOn != -1); ++action)
     lastActionTime += plan->actions[action].timeForNext;
 
   // if loop is enabled, do not display initial times, but next trigger times
@@ -244,33 +261,38 @@ void plannif_display(const struct plannif* plan, int verbose, const char* progna
     time_t now;
     ulong numOfLoops;
     time (&now);
-    if (date+(lastActionTime*60) <= now) {
-      numOfLoops = 1 + (now-(date+(lastActionTime*60))) / (loop*60);
-      date += numOfLoops * (loop*60);
+    if (date + (lastActionTime * 60) <= now) {
+      numOfLoops = 1 + (now-(date+(lastActionTime * 60))) / (loop * 60);
+      date += numOfLoops * (loop * 60);
     }
   }
 
   // now read all filled rows, except the possibly last "stop" row
-  for (action=0 ; action<sizeof(plan->actions)/sizeof(struct plannifAction) && (plan->actions[action].switchOn != -1) && (plan->actions[action].timeForNext > 0); action++) {
+  for (action = 0;
+       action < sizeof(plan->actions) / sizeof(struct plannifAction) &&
+       (plan->actions[action].switchOn != -1) &&
+       (plan->actions[action].timeForNext > 0); ++action) {
     date += 60 * plan->actions[action].timeForNext;
-    if ((action+1 < sizeof(plan->actions)/sizeof(struct plannifAction)) && (plan->actions[action+1].switchOn != -1)) {
-      timeinfo = localtime( &date );
-      strftime (datebuffer,80,"%Y-%m-%d %H:%M",timeinfo);
+    if ((action + 1 < sizeof(plan->actions)/sizeof(struct plannifAction)) &&
+        (plan->actions[action+1].switchOn != -1)) {
+      timeinfo = localtime(&date);
+      strftime (datebuffer, 80, "%Y-%m-%d %H:%M", timeinfo);
       printf("  On %s ", datebuffer);
       printf("switch %s\n", (plan->actions[action+1].switchOn ? "on" : "off"));
       if (verbose)
-        sprintf(cmdline+(strlen(cmdline)), "--Aat \"%s\" --Ado %s ", datebuffer, (plan->actions[action+1].switchOn ? "on" : "off"));
+        sprintf(cmdline+(strlen(cmdline)), "--Aat \"%s\" --Ado %s ", datebuffer,
+                (plan->actions[action+1].switchOn ? "on" : "off"));
     } else {
       if (action > 0) {
         ulong loopdsp = loop;
         printf("  Loop every ");
-        if (loopdsp >= 60*24*7) {
-          printf("%li week(s) ", loopdsp / (60*24*7));
-          loopdsp %= (60*24*7);
+        if (loopdsp >= 60 * 24 * 7) {
+          printf("%li week(s) ", loopdsp / (60 * 24 * 7));
+          loopdsp %= (60 * 24 * 7);
         }
-        if (loopdsp >= 60*24) {
-          printf("%li day(s) ", loopdsp / (60*24));
-          loopdsp %= (60*24);
+        if (loopdsp >= 60 * 24) {
+          printf("%li day(s) ", loopdsp / (60 * 24));
+          loopdsp %= (60 * 24);
         }
         if (loopdsp >= 60) {
           printf("%lih ", loopdsp / 60);
@@ -290,16 +312,15 @@ void plannif_display(const struct plannif* plan, int verbose, const char* progna
   }
 }
 
-
 // private : scans the buffer, and fills the schedule structure accordingly
-void plannif_scanf(struct plannif* plan, const unsigned char* buffer)
+void plannif_scanf(struct plannif *plan, const unsigned char *buffer)
 {
   int bufindex = 0;
   ulong nextWord;
   int actionNo = 1;
 
   READNEXTBYTE;
-  plan->socket = (nextWord-1)/3;
+  plan->socket = (nextWord - 1) / 3;
   READNEXTDOUBLEWORD;
   plan->timeStamp = nextWord;
 
@@ -342,53 +363,53 @@ void plannif_scanf(struct plannif* plan, const unsigned char* buffer)
 }
 
 // queries the device, and fills the schedule structure
-void usb_command_getplannif(usb_dev_handle *udev, int socket, struct plannif* plan)
+void usb_command_getplannif(usb_dev_handle *udev, int socket,
+                            struct plannif *plan)
 {
-  int  reqtype=0x21 | USB_DIR_IN; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /*request type*/,
-  int  req=0x01;
+  int reqtype = 0x21 | USB_DIR_IN; /* request type */
+  int req = 0x01;
   unsigned char buffer[0x27];
 
-  if ( usb_control_msg_tries(udev /* handle*/,
-                             reqtype,
-                             req,
-                             ((0x03<<8) | (3*socket)) +1,
-                             0 /*index*/,
-                             (char*) buffer /*bytes*/,
-                             0x27, /*size*/
-                             5000) < 0x27 ) {
-    fprintf(stderr,"Error performing requested action\n"
-            "Libusb error string: %s\nTerminating\n",usb_strerror());
-    usb_close (udev);
+  if (usb_control_msg_tries(udev,                               /* handle */
+                            reqtype,
+                            req,
+                            ((0x03 << 8) | (3 * socket)) + 1,
+                            0,                                  /* index  */
+                            (char *)buffer,                     /* bytes  */
+                            0x27,                               /* size   */
+                            5000) < 0x27 ) {
+    fprintf(stderr, "Error performing requested action\n"
+            "Libusb error string: %s\nTerminating\n", usb_strerror());
+    usb_close(udev);
     exit(-5);
   }
 
   /* // debug
   int n;
   for(n = 0 ; n < 0x27 ; n++)
-    printf("%02x ",(unsigned char)buffer[n]);
+    printf("%02x ", (unsigned char)buffer[n]);
   printf("\n");
   // */
 
   plannif_scanf(plan, buffer);
 }
 
-
 // private : prints the buffer according to the schedule structure
-void plannif_printf(const struct plannif* plan, unsigned char* buffer)
+void plannif_printf(const struct plannif *plan, unsigned char *buffer)
 {
   int bufindex = 0;
   ulong nextWord, time4next;
   int actionNo;
+  int i;
 
-  nextWord = 3*plan->socket +1;
+  nextWord = 3 * plan->socket + 1;
   WRITENEXTBYTE;
   nextWord = plan->timeStamp;
   WRITENEXTDOUBLEWORD;
 
-  int i;
-  for (i=bufindex; i<0x27; i=i+2) {
+  for (i=bufindex; i < 0x27; i += 2) {
     buffer[i] = 0xFF;
-    buffer[i+1] = 0x3F;
+    buffer[i + 1] = 0x3F;
   }
 
   if (plan->actions[0].timeForNext == -1) {
@@ -446,38 +467,36 @@ void usb_command_setplannif(usb_dev_handle *udev, struct plannif* plan)
   /*// debug
   int n;
   for(n = 0 ; n < 0x27 ; n++)
-    printf("%02x ",(unsigned char)buffer[n]);
+    printf("%02x ", (unsigned char)buffer[n]);
   printf("\n");
   plannif_reset(plan);
   plannif_scanf(plan, &buffer[0]);
   plannif_display(plan, 0, NULL);
   exit(0);
   //*/
-  if ( usb_control_msg_tries(udev /* handle*/,
-                             reqtype,
-                             req,
-                             ((0x03<<8) | (3*plan->socket)) +1,
-                             0 /*index*/,
-                             (char*) buffer /*bytes*/,
-                             0x27, /*size*/
-                             5000) < 0x27 ) {
-    fprintf(stderr,"Error performing requested action\n"
-            "Libusb error string: %s\nTerminating\n",usb_strerror());
+  if (usb_control_msg_tries(udev,                                  /* handle */
+                            reqtype,
+                            req,
+                            ((0x03 << 8) | (3 * plan->socket)) + 1,
+                            0,                                      /* index */
+                            (char *) buffer,                        /* bytes */
+                            0x27,                                   /* size  */
+                            5000) < 0x27 ) {
+    fprintf(stderr, "Error performing requested action\n"
+            "Libusb error string: %s\nTerminating\n", usb_strerror());
     usb_close (udev);
     exit(-5);
   }
-
 }
 
-
 // prepares the plannif structure with initial values : compulsory before structure use !
-void plannif_reset (struct plannif* plan)
+void plannif_reset (struct plannif *plan)
 {
   int i;
 
   plan->socket = 0;
   plan->timeStamp = 0;
-  for (i=0 ; i<sizeof(plan->actions)/sizeof(struct plannifAction) ; i++) {
+  for (i = 0 ; i < sizeof(plan->actions) / sizeof(struct plannifAction); ++i) {
     plan->actions[i].switchOn = -1;
     plan->actions[i].timeForNext = -1;
   }
