@@ -230,8 +230,7 @@ static void parse_command_line(int argc, char *argv[], int count,
       }
     }
     if(strchr("ofgtaAm", c)) {
-      if(!strncmp(optarg,"all", strlen("all"))
-         || (atoi(optarg) == 7) ) {
+      if(!strncmp(optarg,"all", strlen("all"))) {
         //use all outlets
         from=1;
         upto=4;
