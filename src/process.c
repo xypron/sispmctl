@@ -38,9 +38,9 @@
 int debug = 0;
 int verbose = 1;
 #ifdef DATADIR
-char* homedir = DATADIR;
+char *homedir = DATADIR;
 #else
-char* homedir = 0;
+char *homedir = 0;
 #endif
 
 #ifndef WEBLESS
