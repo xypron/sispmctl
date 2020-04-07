@@ -368,7 +368,7 @@ void usb_command_getplannif(usb_dev_handle *udev, int socket,
 {
   int reqtype = 0x21 | USB_DIR_IN; /* request type */
   int req = 0x01;
-  unsigned char buffer[0x27];
+  unsigned char buffer[0x28];
 
   if (usb_control_msg_tries(udev,                               /* handle */
                             reqtype,
@@ -376,7 +376,7 @@ void usb_command_getplannif(usb_dev_handle *udev, int socket,
                             ((0x03 << 8) | (3 * socket)) + 1,
                             0,                                  /* index  */
                             (char *)buffer,                     /* bytes  */
-                            0x27,                               /* size   */
+                            0x28,                               /* size   */
                             5000) < 0x27 ) {
     fprintf(stderr, "Error performing requested action\n"
             "Libusb error string: %s\nTerminating\n", usb_strerror());
