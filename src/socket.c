@@ -84,7 +84,7 @@ void l_listen(int*sock, struct usb_device*dev, int devnum)
   }
 }
 
-int*socket_init(char* bind_arg)
+int *socket_init(char *bind_arg)
 {
   int *s;
   int on = 1;
