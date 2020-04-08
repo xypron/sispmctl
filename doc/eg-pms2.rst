@@ -25,7 +25,9 @@ The first 5 bytes are:
 
 The next groups of five bytes indicate the scheduled actions:
 
-* 1 byte indicating the action: 0x00 = off, 0x01 = on
+* 1 byte where
+  bit 0 indicates the action: 0 off, 1 on, and
+  bit 1 indicates if the action shall be repeated in a loop.
 * 4 bytes seconds since 1970-01-01 in LSB format indicating the scheduled time
 
 The last 5 bytes are:

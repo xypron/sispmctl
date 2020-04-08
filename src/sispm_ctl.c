@@ -270,8 +270,7 @@ void plannif_display(const struct plannif *plan, int verbose,
   // now read all filled rows, except the possibly last "stop" row
   for (action = 0;
        action < sizeof(plan->actions) / sizeof(struct plannifAction) &&
-       (plan->actions[action].switchOn != -1) &&
-       (plan->actions[action].timeForNext > 0); ++action) {
+       plan->actions[action].switchOn != -1; ++action) {
     date += 60 * plan->actions[action].timeForNext;
     if ((action + 1 < sizeof(plan->actions)/sizeof(struct plannifAction)) &&
         (plan->actions[action+1].switchOn != -1)) {
@@ -369,6 +368,7 @@ void usb_command_getplannif(usb_dev_handle *udev, int socket,
   int reqtype = 0x21 | USB_DIR_IN; /* request type */
   int req = 0x01;
   unsigned char buffer[0x28];
+  unsigned int id;
 
   if (usb_control_msg_tries(udev,                               /* handle */
                             reqtype,
@@ -391,7 +391,11 @@ void usb_command_getplannif(usb_dev_handle *udev, int socket,
   printf("\n");
   // */
 
-  plannif_scanf(plan, buffer);
+  id = get_id(usb_device(udev));
+  if (id == PRODUCT_ID_SISPM_EG_PMS2)
+    pms2_buffer_to_schedule(buffer, plan);
+  else
+    plannif_scanf(plan, buffer);
 }
 
 // private : prints the buffer according to the schedule structure
@@ -458,11 +462,20 @@ void plannif_printf(const struct plannif *plan, unsigned char *buffer)
 // prepares the buffer according to plannif and sends it to the device
 void usb_command_setplannif(usb_dev_handle *udev, struct plannif* plan)
 {
-  int  reqtype=0x21; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /*request type*/,
-  int  req=0x09;
-  unsigned char buffer[0x27];
+  int reqtype=0x21; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /*request type*/,
+  int req=0x09;
+  unsigned char buffer_size = 0x27;
+  unsigned char buffer[0x28];
+  unsigned int id;
 
-  plannif_printf(plan, buffer);
+  id = get_id(usb_device(udev));
+  if (id == PRODUCT_ID_SISPM_EG_PMS2) {
+    if (pms2_schedule_to_buffer(plan, buffer))
+        exit(-2);
+  } else {
+    buffer_size = 0x27;
+    plannif_printf(plan, buffer);
+  }
 
   /*// debug
   int n;
@@ -480,8 +493,8 @@ void usb_command_setplannif(usb_dev_handle *udev, struct plannif* plan)
                             ((0x03 << 8) | (3 * plan->socket)) + 1,
                             0,                                      /* index */
                             (char *) buffer,                        /* bytes */
-                            0x27,                                   /* size  */
-                            5000) < 0x27 ) {
+                            buffer_size,                            /* size  */
+                            5000) < buffer_size ) {
     fprintf(stderr, "Error performing requested action\n"
             "Libusb error string: %s\nTerminating\n", usb_strerror());
     usb_close (udev);
