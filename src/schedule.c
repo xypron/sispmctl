@@ -2,9 +2,8 @@
 /*
  * Conversion routines for schedules
  *
- * Copyright (c) 2017 Heinrich Schuchardt
+ * Copyright (c) 2020 Heinrich Schuchardt
  */
-
 
 #include <stdint.h>
 #include <stdio.h>
