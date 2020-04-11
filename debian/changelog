@@ -1,3 +1,9 @@
+sispmctl4 (4.7-0) unstable; urgency=medium
+
+  * Release 4.7
+
+ -- Heinrich Schuchardt <xypron.glpk@gmx.de>  Sat, 11 Apr 2020 18:50:10 +0200
+
 sispmctl4 (4.6-0) unstable; urgency=medium
 
   * Release 4.6
