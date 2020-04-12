@@ -28,7 +28,13 @@ static uint16_t supported_product_ids[] = {
 	PRODUCT_ID_SISPM_EG_PMS2,
 };
 
-static int usb_check_id(struct libusb_device_descriptor *desc)
+/**
+ * usb_device_supported() - check if the device is supported
+ *
+ * @desc:	USB device descriptor
+ * Return:	0 if supported
+ */
+static int usb_device_supported(struct libusb_device_descriptor *desc)
 {
 	size_t i;
 
@@ -41,35 +47,59 @@ static int usb_check_id(struct libusb_device_descriptor *desc)
 	return -1;
 }
 
+/**
+ * usb_control_transfer() - exchange data with USB device
+ *
+ * Up to five attempts to transfer the data are made.
+ *
+ * @handle:	device handle
+ * @type:	request type for setup packet
+ * @request:	request field for setup packet
+ * @value:	value field for setup packet
+ * @index:	index field for setup packet
+ * @data:	data buffer
+ * @length:	size of data buffer
+ * Return:	number of bytes transferred or error code
+ */
 static int usb_control_transfer(libusb_device_handle *handle, uint8_t type,
                                 uint8_t request, uint16_t value, uint16_t index,
-                                unsigned char *data, uint16_t length,
-                                unsigned int timeout)
+                                unsigned char *data, uint16_t length)
 {
 	int ret, i;
 
 	for (i = 0; i < 5; ++i) {
 		usleep(500 * i);
 		ret = libusb_control_transfer(handle, type, request, value,
-		                              index, data, length, timeout);
+		                              index, data, length, 5000);
 		if (ret == length)
 			break;
 	}
 	return ret;
 }
 
+/**
+ * usb_get_serial() - retrieve the serial number of a Gembird device
+ *
+ * @dev:	device
+ * @serial:	buffer to receive serial number (must be 15 bytes long)
+ * @len:	size of the buffer
+ * Return:	0 for success
+ */
 static int usb_get_serial(libusb_device *dev, char *serial, size_t len)
 {
 	int ret;
 	char buffer[5];
 	libusb_device_handle *handle;
 
+	if (len < 15)
+		return LIBUSB_ERROR_OTHER;
+
 	ret = libusb_open(dev, &handle);
 	if (ret)
 		goto err;
 
 	ret = usb_control_transfer(handle, 0xa1, 0x01, 0x301, 0, buffer,
-	                           sizeof(buffer), 5000);
+	                           sizeof(buffer));
 
 	if (ret < 0)
 		goto err;
@@ -112,7 +142,7 @@ void usb_list_devices(libusb_context *context, bool numeric)
 		ret = libusb_get_device_descriptor(dev, &desc);
 		if (ret)
 			continue;
-		if (usb_check_id(&desc))
+		if (usb_device_supported(&desc))
 			continue;
 		if (!usb_get_serial(list[i], serial, sizeof(serial))) {
 			char *format = numeric ? DEV_INFO_NUM : DEV_INFO_TXT;
