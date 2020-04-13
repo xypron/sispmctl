@@ -49,12 +49,12 @@ static uint16_t supported_product_ids[] = {
 };
 
 /**
- * usb_device_supported() - check if the device is supported
+ * pms_device_supported() - check if the device is supported
  *
  * @desc:	USB device descriptor
  * Return:	0 if supported
  */
-static int usb_device_supported(struct libusb_device_descriptor *desc)
+static int pms_device_supported(struct libusb_device_descriptor *desc)
 {
 	size_t i;
 
@@ -163,7 +163,8 @@ static int pms_serial_id_cmp(const void *a, const void *b) {
  *		After usage call 
  * Return:	0 for success
  */
-int pms_get_list(libusb_context *context, struct pms_device_list **pms_list)
+static int pms_get_list(libusb_context *context,
+			struct pms_device_list **pms_list)
 {
 	libusb_device **list;
 	int ret;
@@ -183,7 +184,7 @@ int pms_get_list(libusb_context *context, struct pms_device_list **pms_list)
 		ret = libusb_get_device_descriptor(dev, &desc);
 		if (ret)
 			continue;
-		if (usb_device_supported(&desc))
+		if (pms_device_supported(&desc))
 			continue;
 		if (!usb_get_serial(list[i], pms->serial_id,
 				    sizeof(pms->serial_id))) {
