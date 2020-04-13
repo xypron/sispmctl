@@ -5,9 +5,13 @@
  * Copyright (c) 2020 Heinrich Schuchardt
  */
 
+#include <errno.h>
+#include <malloc.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <libusb-1.0/libusb.h>
 #include "sispm_ctl.h"
@@ -18,7 +22,23 @@
 			"USB information:  bus %03d, device %03d\n" \
 			"device type:      %d-socket SiS-PM\n" \
 			"serial number:    %s\n\n"
-#define DEV_INFO_NUM "%d %03d %03d\n%d\n%s\n\n"
+#define DEV_INFO_NUM	"%d %03d %03d\n%d\n%s\n\n"
+
+struct pms_device {
+	libusb_device *dev;
+	uint16_t vendor_id;
+	uint16_t product_id;
+	uint8_t bus_number;
+	uint8_t device_address;
+	uint8_t first_port;
+	uint8_t port_count;
+	char serial_id[15];
+};
+
+struct pms_device_list {
+	size_t count;
+	struct pms_device device[0];
+};
 
 static uint16_t supported_product_ids[] = {
 	PRODUCT_ID_SISPM,
@@ -121,47 +141,127 @@ err:
 }
 
 /**
- * usb_list_devices() - list usb devices
+ * pms_serial_id_cmp() - compare two PMS devices by serial ID
+ *
+ * This function is used for sorting the PMS devices by serial ID.
+ */
+static int pms_serial_id_cmp(const void *a, const void *b) {
+	return strcmp(((struct pms_device *)a)->serial_id,
+		      ((struct pms_device *)b)->serial_id);
+}
+
+/**
+ * pms_get_list() - get PMS device list
+ *
+ * A list of PMS devices sorted by serial ID is returned.
+ *
+ * After usage call pms_destroy_list() to adjust reference counts and to free
+ * memory.
  *
  * @context:	USB context
- * @numeric:	numeric output
+ * @pms_list:	pointer to receive list of PMS devices
+ *		After usage call 
+ * Return:	0 for success
  */
-void usb_list_devices(libusb_context *context, bool numeric)
+int pms_get_list(libusb_context *context, struct pms_device_list **pms_list)
 {
 	libusb_device **list;
 	int ret;
-	ssize_t list_size, i;
-	char serial[15];
-	size_t count;
+	ssize_t count, list_size, i;
 
 	list_size = libusb_get_device_list(context, &list);
+	*pms_list= malloc(sizeof(struct pms_device_list) +
+			  list_size * sizeof(struct pms_device));
+	if (!*pms_list) {
+		return -ENOMEM;
+	}
 	for (i = 0, count = 0; count < MAXGEMBIRD && i < list_size; ++i) {
 		struct libusb_device_descriptor desc;
 		libusb_device *dev = list[i];
+		struct pms_device *pms = &(*pms_list)->device[count];
 
 		ret = libusb_get_device_descriptor(dev, &desc);
 		if (ret)
 			continue;
 		if (usb_device_supported(&desc))
 			continue;
-		if (!usb_get_serial(list[i], serial, sizeof(serial))) {
-			char *format = numeric ? DEV_INFO_NUM : DEV_INFO_TXT;
-			int ports;
-
+		if (!usb_get_serial(list[i], pms->serial_id,
+				    sizeof(pms->serial_id))) {
+			/* Increment the reference count of the PMS device */
+			pms->dev = libusb_ref_device(dev);
+			pms->vendor_id = desc.idVendor;
+			pms->product_id = desc.idProduct;
+			pms->bus_number = libusb_get_bus_number(dev);
+			pms->device_address = libusb_get_device_address(dev);
 			switch (desc.idProduct) {
 			case PRODUCT_ID_MSISPM_OLD:
+				pms->port_count = 1;
+				pms->first_port = 0;
+				break;
 			case PRODUCT_ID_MSISPM_FLASH:
-				ports = 1;
+				pms->port_count = 1;
+				pms->first_port = 1;
 				break;
 			default:
-				ports = 4;
+				pms->port_count = 4;
+				pms->first_port = 1;
 			}
-			printf(format, count, libusb_get_bus_number(dev),
-			       libusb_get_device_address(dev), ports, serial);
 			++count;
 		}
 	}
-	libusb_free_device_list(list, 0);
+	qsort((*pms_list)->device, count, sizeof(struct pms_device),
+	      pms_serial_id_cmp);
+
+	/* Free the list and decrement the reference count of all devices */
+	libusb_free_device_list(list, 1);
+
+	(*pms_list)->count = count;
+	return 0;
+}
+
+/**
+ * pms_destroy_list() - destroy a list of PMS devices
+ *
+ * The reference count of the USB devices is decremented and the allocated
+ * memory is freed.
+ *
+ * @list:	list to destroy
+ */
+void pms_destroy_list(struct pms_device_list *list) {
+	size_t i;
+
+	if (!list)
+		return;
+	for (i = 0; i < list->count; ++i)
+		/* Decrement reference count of the PMS devices */
+		libusb_unref_device(list->device[i].dev);
+	free(list);
+}
+
+/**
+ * pms_list_devices() - print a list of PMS devices
+ *
+ * @context:	USB context
+ * @numeric:	numeric output
+ */
+int pms_list_devices(libusb_context *context, bool numeric) {
+	struct pms_device_list *pms_devices;
+	size_t i;
+	int ret;
+
+	ret = pms_get_list(context, &pms_devices);
+	if (ret)
+		return ret;
+
+	for (i = 0; i < pms_devices->count; ++i) {
+		struct pms_device *pms = &pms_devices->device[i];
+		char *format = numeric ? DEV_INFO_NUM : DEV_INFO_TXT;
+
+		printf(format, i, pms->bus_number, pms->device_address,
+		       pms->port_count, pms->serial_id);
+	}
+	pms_destroy_list(pms_devices);
+	return 0;
 }
 
 int main()
@@ -173,8 +273,8 @@ int main()
 	if (ret)
 		return 1;
 
-	usb_list_devices(context, false);
-	usb_list_devices(context, true);
+	pms_list_devices(context, false);
+	pms_list_devices(context, true);
 
 	libusb_exit(context);
 	return 0;
