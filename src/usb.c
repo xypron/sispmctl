@@ -88,7 +88,7 @@ static int usb_control_transfer(libusb_device_handle *handle, uint8_t type,
 static int usb_get_serial(libusb_device *dev, char *serial, size_t len)
 {
 	int ret;
-	char buffer[5];
+	unsigned char buffer[5];
 	libusb_device_handle *handle;
 
 	if (len < 15)
