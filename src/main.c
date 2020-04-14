@@ -534,6 +534,10 @@ static void parse_command_line(int argc, char *argv[], int count,
         break;
       case 'u':
         homedir = strdup(optarg);
+	if (homedir[0] != '/') {
+          fprintf(stderr, "'%s' is not an absolute path\n", homedir);
+          exit(EXIT_FAILURE);
+        }
         if(verbose) printf("Web pages come from \"%s\".\n",homedir);
         break;
       case 'i':
