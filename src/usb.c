@@ -98,6 +98,63 @@ static int usb_control_transfer(libusb_device_handle *handle, uint8_t type,
 }
 
 /**
+ * usb_set_status() - set the status of an outlet
+ *
+ * @dev:	USB device
+ * @outlet:	number of the outlet
+ * @status:	0 - off, 1 - on
+ * Return:	0 for success
+ */
+static int usb_set_status(libusb_device *dev, int outlet, int status)
+{
+	int ret;
+	unsigned char buffer[2] = {3 * outlet, status ? 0x03 : 0x00};
+	libusb_device_handle *handle;
+
+	ret = libusb_open(dev, &handle);
+	if (ret)
+		goto err;
+
+	ret = usb_control_transfer(handle, 0x21, 0x09, 0x0300 + 3 * outlet, 0,
+				   buffer, sizeof(buffer));
+	if (ret == 2)
+		ret = 0;
+	else
+		ret = LIBUSB_ERROR_OTHER;
+err:
+	libusb_close(handle);
+	return ret;
+}
+
+/**
+ * usb_get_status() - get the status of an outlet
+ *
+ * @dev:	USB device
+ * @outlet:	number of the outlet
+ * Return:	bit 0 - switch status, bit 1 - power status, < 0 for error
+ */
+static int usb_get_status(libusb_device *dev, int outlet)
+{
+	int ret;
+	unsigned char buffer[2];
+	libusb_device_handle *handle;
+
+	ret = libusb_open(dev, &handle);
+	if (ret)
+		goto err;
+
+	ret = usb_control_transfer(handle, 0xa1, 0x01, 0x0300 + 3 * outlet, 0,
+				   buffer, sizeof(buffer));
+	if (ret == 2)
+		ret = buffer[1] & 3;
+	else
+		ret = LIBUSB_ERROR_OTHER;
+err:
+	libusb_close(handle);
+	return ret;
+}
+
+/**
  * usb_get_serial() - retrieve the serial number of a Gembird device
  *
  * @dev:	device
@@ -133,10 +190,6 @@ static int usb_get_serial(libusb_device *dev, char *serial, size_t len)
 	}
 err:
 	libusb_close(handle);
-
-	if (ret < 0)
-		printf("Error %s\n", libusb_error_name(ret));
-
 	return ret;
 }
 
