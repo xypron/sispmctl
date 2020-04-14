@@ -120,7 +120,7 @@ void usb_command_getplannif(usb_dev_handle *udev, int socket,
 void usb_command_setplannif(usb_dev_handle *udev, struct plannif* plan);
 void plannif_display(const struct plannif* plan, int verbose,
                      const char* progname);
-void process(int out,char*v,struct usb_device*dev,int devnum);
+void process(int out, char *request);
 
 usb_dev_handle*get_handle(struct usb_device*dev);
 int usb_command(usb_dev_handle *udev, int b1, int b2,

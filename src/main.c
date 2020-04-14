@@ -557,7 +557,7 @@ static void parse_command_line(int argc, char *argv[], int count,
           if (c == 'l')
             daemonize();
           while(1)
-            l_listen(s,dev[devnum],devnum);
+            l_listen(s);
         } else
           exit(EXIT_FAILURE);
         break;

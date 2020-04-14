@@ -40,9 +40,9 @@
 #include "nethelp.h"
 
 #ifndef WEBLESS
-int listenport=LISTENPORT;
+int listenport = LISTENPORT;
 
-void l_listen(int*sock, struct usb_device*dev, int devnum)
+void l_listen(int *sock)
 {
   int i;
   int s;
@@ -76,7 +76,7 @@ void l_listen(int*sock, struct usb_device*dev, int devnum)
         perror("Lost provider connection");
         syslog(LOG_ERR, "Lost provider connection: %s\n", strerror(errno));
       } else if (i > 0) {
-        process(s,buffer,dev,devnum);
+        process(s, buffer);
       }
       break;
     }
