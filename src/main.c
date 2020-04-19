@@ -576,7 +576,10 @@ static void parse_command_line(int argc, char *argv[], int count,
         } else if (!strncmp(optarg,"off", strlen("off"))) {
           sispm_buzzer_off(udev);
           if(verbose) printf("Turned buzzer %s\n", onoff[numeric]);
-        }
+        } else {
+          fprintf(stderr,"Unknown option: -b %s\nTerminating\n", optarg);
+          exit(-7);
+	}
         break;
       case 'v':
         print_disclaimer();
@@ -586,7 +589,7 @@ static void parse_command_line(int argc, char *argv[], int count,
         print_usage(argv[0]);
         exit(1);
       default:
-        fprintf(stderr,"Unknown Option: %c(%x)\nTerminating\n",c,c);
+        fprintf(stderr,"Unknown option: %c(%x)\nTerminating\n",c,c);
         exit(-7);
       }
     } // loop through devices
