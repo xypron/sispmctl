@@ -20,9 +20,9 @@
 
 #define DEV_INFO_TXT 	"Gembird #%d\n" \
 			"USB information:  bus %03d, device %03d\n" \
-			"device type:      %d-socket SiS-PM\n" \
+			"device type:      %d-socket %s\n" \
 			"serial number:    %s\n\n"
-#define DEV_INFO_NUM	"%d %03d %03d\n%d\n%s\n\n"
+#define DEV_INFO_NUM	"%d %03d %03d\n%d%.0s\n%s\n\n"
 
 struct pms_device {
 	libusb_device *dev;
@@ -41,12 +41,40 @@ struct pms_device_list {
 };
 
 static uint16_t supported_product_ids[] = {
-	PRODUCT_ID_SISPM,
 	PRODUCT_ID_MSISPM_OLD,
+	PRODUCT_ID_SISPM,
 	PRODUCT_ID_MSISPM_FLASH,
 	PRODUCT_ID_SISPM_FLASH_NEW,
 	PRODUCT_ID_SISPM_EG_PMS2,
 };
+
+/*
+ * This array must be sorted according to supported_product_ids.
+ */
+static const char *product_names[] = {
+	"MSIS-PM",
+	"SIS-PM",
+	"MSIS-PM",
+	"EG-PMS",
+	"EG-PMS2",
+};
+
+/**
+ * pms_get_device_type_name() - get device type name
+ *
+ * @dev:	device
+ * Return:	name of device type
+ */
+static const char *pms_get_device_type_name(struct pms_device *dev)
+{
+	size_t i;
+
+	for (i = 0; i < ARRAY_SIZE(supported_product_ids); ++i) {
+		if (dev->product_id == supported_product_ids[i])
+			return product_names[i];
+	}
+	return NULL;
+}
 
 /**
  * pms_device_supported() - check if the device is supported
@@ -182,7 +210,7 @@ static int usb_get_serial(libusb_device *dev, char *serial, size_t len)
 		goto err;
 
 	if (ret == 5) {
-		snprintf(serial, len, "%02x:%02x:%02x:%02x:%02x\n",
+		snprintf(serial, len, "%02x:%02x:%02x:%02x:%02x",
 		         buffer[0], buffer[1], buffer[2], buffer[3], buffer[4]);
 		ret = 0;
 	} else {
@@ -239,29 +267,32 @@ static int pms_get_list(libusb_context *context,
 			continue;
 		if (pms_device_supported(&desc))
 			continue;
-		if (!usb_get_serial(list[i], pms->serial_id,
+		if (usb_get_serial(list[i], pms->serial_id,
 				    sizeof(pms->serial_id))) {
-			/* Increment the reference count of the PMS device */
-			pms->dev = libusb_ref_device(dev);
-			pms->vendor_id = desc.idVendor;
-			pms->product_id = desc.idProduct;
-			pms->bus_number = libusb_get_bus_number(dev);
-			pms->device_address = libusb_get_device_address(dev);
-			switch (desc.idProduct) {
-			case PRODUCT_ID_MSISPM_OLD:
-				pms->port_count = 1;
-				pms->first_port = 0;
-				break;
-			case PRODUCT_ID_MSISPM_FLASH:
-				pms->port_count = 1;
-				pms->first_port = 1;
-				break;
-			default:
-				pms->port_count = 4;
-				pms->first_port = 1;
-			}
-			++count;
+			/* provide dummy string replacing serial number */
+			snprintf(pms->serial_id, sizeof(pms->serial_id),
+				 "no-serial-%04d", count);
 		}
+		/* Increment the reference count of the PMS device */
+		pms->dev = libusb_ref_device(dev);
+		pms->vendor_id = desc.idVendor;
+		pms->product_id = desc.idProduct;
+		pms->bus_number = libusb_get_bus_number(dev);
+		pms->device_address = libusb_get_device_address(dev);
+		switch (desc.idProduct) {
+		case PRODUCT_ID_MSISPM_OLD:
+			pms->port_count = 1;
+			pms->first_port = 0;
+			break;
+		case PRODUCT_ID_MSISPM_FLASH:
+			pms->port_count = 1;
+			pms->first_port = 1;
+			break;
+		default:
+			pms->port_count = 4;
+			pms->first_port = 1;
+		}
+		++count;
 	}
 	qsort((*pms_list)->device, count, sizeof(struct pms_device),
 	      pms_serial_id_cmp);
@@ -312,7 +343,8 @@ int pms_list_devices(libusb_context *context, bool numeric) {
 		char *format = numeric ? DEV_INFO_NUM : DEV_INFO_TXT;
 
 		printf(format, i, pms->bus_number, pms->device_address,
-		       pms->port_count, pms->serial_id);
+		       pms->port_count, pms_get_device_type_name(pms),
+		       pms->serial_id);
 	}
 	pms_destroy_list(pms_devices);
 	return 0;
