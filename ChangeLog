@@ -1,3 +1,7 @@
+12 Aug 2020 - 4.8
+	Sleep two seconds upon wrong webserver password.
+	Improve parameter checks.
+
 10 Apr 2020 - 4.7
 	Support scheduling on EG-PMS2
 	Step up security in systemd service definition
