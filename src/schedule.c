@@ -15,8 +15,10 @@
 static unsigned char
 *pms2_write_block(uint8_t action, uint32_t time, unsigned char *ptr)
 {
+	int i;
+
 	*ptr++ = action;	
-	for (int i = 0; i < 4; ++i) {
+	for (i = 0; i < 4; ++i) {
 		*ptr++ = (uint8_t)time;
 		time >>= 8;
 	}
@@ -34,9 +36,11 @@ static unsigned char
 static const unsigned char
 *pms2_read_block(uint8_t *action, uint32_t *time, const unsigned char *ptr)
 {
+	int i;
+
 	*action = *ptr++;
 	*time = 0;
-	for (int i = 0; i < 4; ++i) {
+	for (i = 0; i < 4; ++i) {
 		*time >>= 8;
 		*time += (uint32_t)*ptr++ << 24;
 	}
