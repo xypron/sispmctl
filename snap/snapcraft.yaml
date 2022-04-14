@@ -3,6 +3,8 @@ license: GPL-2.0-or-later
 version: '4.9'
 grade: stable
 summary: Silver Shield PM Control for Linux (sispmctl)
+source-code: https://sourceforge.net/p/sispmctl/git/
+issues: https://sourceforge.net/p/sispmctl/_list/tickets
 description: |
   SiS-PM Control for Linux provides a management software
   for the following USB controlled powerstrips::
