@@ -7,6 +7,10 @@ lib_LTLIBRARIES = libsispmctl.la
 
 sispmctl_LDADD = libsispmctl.la
 
+if ALLSTATICCOND
+sispmctl_LDFLAGS = -all-static
+endif
+
 EXTRA_DIST =  \
 	web1/index.html web1/logo.png web1/off1.html web1/off2.html \
 	web1/off3.html web1/off4.html web1/on1.html web1/on2.html \
