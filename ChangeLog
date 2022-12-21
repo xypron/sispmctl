@@ -1,6 +1,13 @@
+21 Dec 2022 - 4.10
+	Provide snapcraft.yaml to build as snap
+	Provide script to create password file
+	Disable ProtectClock in sispmctl.service
+	Add folder with artwork
+
 09 Apr 2021 - 4.9
 	Correct display of serial number.
 	Fix build error with GCC 4.8.
+
 12 Aug 2020 - 4.8
 	Sleep two seconds upon wrong webserver password.
 	Improve parameter checks.
