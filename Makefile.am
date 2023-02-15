@@ -1,8 +1,9 @@
-SUBDIRS = src man
+SUBDIRS = man src
 
 ACLOCAL_AMFLAGS = -I m4
 
 exampledir = $(docdir)/examples
+artworkdir = $(docdir)/artwork
 
 dist_example_DATA= \
 	examples/60-sispmctl.rules \
@@ -11,3 +12,7 @@ dist_example_DATA= \
 
 dist_doc_DATA = \
 	README.md COPYING
+
+dist_artwork_DATA = \
+	artwork/sispmctl.png \
+	artwork/sispmctl.svg
