@@ -27,7 +27,7 @@ description: |
       /snap/sispmctl/current/share/doc/sispmctl/examples/60-sispmctl.rules \
       /lib/udev/rules.d/
 
-base: core20
+base: core22
 
 confinement: strict
 
