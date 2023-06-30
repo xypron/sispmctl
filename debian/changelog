@@ -1,0 +1,58 @@
+sispmctl (4.10-1) unstable; urgency=medium
+
+  * New upstream release
+  * Add sispmctl group
+  * Add udev rules
+  * Build with web interface
+
+ -- Heinrich Schuchardt <heinrich.schuchardt@canonical.com>  Fri, 30 Jun 2023 13:09:42 +0200
+
+sispmctl (3.1-3) unstable; urgency=medium
+
+  * QA upload.
+  * Add support for EnerGenie EG-PMS2 (Closes: #929612).
+
+ -- Cyril Brulebois <kibi@debian.org>  Mon, 06 Feb 2023 04:11:25 +0100
+
+sispmctl (3.1-2) unstable; urgency=medium
+
+  * QA upload.
+  * Set maintainer to Debian QA Group <packages@qa.debian.org>. (see: #986708)
+
+ -- Marcos Talau <talau@debian.org>  Sat, 12 Nov 2022 14:22:42 -0300
+
+sispmctl (3.1-1) unstable; urgency=low
+
+  * New upstream release.
+  * Standards-Version: 3.9.2 (no changes required).
+  * Use latest debhelper >= 8 and new '3.0 (quilt)' source format.
+  * debian/watch: Add file.
+
+ -- Uwe Hermann <uwe@debian.org>  Tue, 27 Dec 2011 03:32:20 +0100
+
+sispmctl (2.7-1) unstable; urgency=low
+
+  * New upstream release.
+    + Support for msis-pm (single socket) and sis-pm (device ID 0xfd13).
+    + Add -m switch for power status.
+  * debian/copyright: Switch to machine-readable format as specified at
+    http://wiki.debian.org/Proposals/CopyrightFormat.
+
+ -- Uwe Hermann <uwe@debian.org>  Sun, 18 May 2008 02:18:09 +0200
+
+sispmctl (2.5-1) unstable; urgency=low
+
+  * New upstream release.
+    + This fixes a segfault when using the -b option.
+  * Standards-Version: 3.7.3 (no changes required).
+  * debian/control: Add Homepage field.
+  * Versioned build-dependency on libusb-dev (>= 0.1.8) as per README.
+
+ -- Uwe Hermann <uwe@debian.org>  Wed, 12 Dec 2007 00:16:45 +0100
+
+sispmctl (2.4b-1) unstable; urgency=low
+
+  * Initial release (Closes: #415633).
+
+ -- Uwe Hermann <uwe@debian.org>  Sun,  8 Apr 2007 03:16:25 +0200
+

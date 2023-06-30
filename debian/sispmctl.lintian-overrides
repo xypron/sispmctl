@@ -1,0 +1,2 @@
+sispmctl: link-to-shared-library-in-wrong-package
+sispmctl: package-name-doesnt-match-sonames
