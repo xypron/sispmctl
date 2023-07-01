@@ -217,7 +217,8 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
     fclose(in);
     return;
   } else if (verbose)
-    printf("Accessing Gembird #%d USB device %s\n", devnum, dev->filename );
+    fprintf(stderr, "Accessing Gembird #%d USB device %s\n", devnum,
+            dev->filename );
   id = get_id(dev);
 
   lastpos = ftell(in);
