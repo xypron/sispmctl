@@ -1,0 +1,139 @@
+SiS-PM Control for Linux
+========================
+
+Build dependencies
+------------------
+
+* libusb-1.0-0-dev
+
+Changelog
+---------
+
+31 May 2024 - 5.0
+	Complete rewrite
+
+04 May 2024 - 4.12
+	snapcraft: use local source for building
+	Mention /etc/sispmctl/password in man-page
+	Add favicon.ico
+	Always use original control data for libusb calls
+
+06 Jul 2023 - 4.11
+	Create /etc/sispmctl/ in passwordsetup.sh
+	Avoid incorrect web output if not in quiet mode
+	Use core22 for snap
+	Include artwork in distribution file
+
+21 Dec 2022 - 4.10
+	Provide snapcraft.yaml to build as snap
+	Provide script to create password file
+	Disable ProtectClock in sispmctl.service
+	Add folder with artwork
+
+09 Apr 2021 - 4.9
+	Correct display of serial number.
+	Fix build error with GCC 4.8.
+
+12 Aug 2020 - 4.8
+	Sleep two seconds upon wrong webserver password.
+	Improve parameter checks.
+
+10 Apr 2020 - 4.7
+	Support scheduling on EG-PMS2
+	Step up security in systemd service definition
+
+01 Apr 2020 - 4.6
+	Add option to specify powerstrip by USB Bus:Device
+	Improve stability of webserver
+
+11 Mar 2020 - 4.5
+	Provide basic authentication.
+	Provide new skin 3.
+
+10 Mar 2020 - 4.4
+	Provide new skin 2.
+
+09 Mar 2020 - 4.3
+	Fix files truncated by webserver.
+	Provide larget on and off buttons.
+	Wait for udev service before starting sispmctl service.
+
+22 May 2019 - 4.2
+	Fix a buffer overrun in the webserver.
+
+18 Nov 2018 - 4.1
+	Add support for Gembird EG-PMS2 with idVendor=04b4, idProduct=fd15.
+	Display version number in web server.
+	Remove ineffective seteuid() call.
+	When the outlet number is replaced indicate the correct new number.
+	Refactor code.
+	Update documenation.
+
+18 Feb 2016 - 4.0
+	Adjust configuration files to autotools standard.
+	Separate the binary into an executable and a library.
+	Fix various bugs like a memory leak and unused variables.
+	Code cleanup.
+
+	By default only user root can access the Gembird devices.
+	File examples/60-sispmctl.rules has been added. It provides udev rules
+	which allow group sispmctl to read from and write to the devices. For
+	usage copy it to /lib/udev/rules.d/. Then reload the udev rules with
+	udevadm control --reload-rules
+
+28 Nov 2011 - 3.1
+	cleanup web-themes
+	webserver daemonizes when send into listen mode (FREETZ patch)
+	fixes for the two mSIS-PM-versions (thanks to ksjh and exelnet)
+	several bugfixes and cleanups
+
+30 Mar 2011 - 3.0
+	Olivier Matheret added timer functionality
+	Heike Zimmerer added gemplug
+	Sven Anders added -D option to select device by serial number
+	several bugfixes and cleanups
+
+28 Mar 2008 - 2.7
+	-m switch for power status added, some other small additions,
+	experimental support for ids
+
+03 Mar 2008 - 2.6
+	msis-pm (single socket) and sis-pm with new device id of 0xfd13
+	supported. Bugfixes.
+
+03 Dec 2007 - 2.5
+	some (small) bug-fixes
+
+17 Aug 2006 - 2.4
+	added GUI written in Python (see extras directory)
+	included bug fixes from Marius Konitzer.
+
+17 Mar 2006 - 2.3
+	added support for mSIS-PM devices
+
+03 Mar 2006 - 2.2
+	cleaned-up a lot more, added important configure time options
+
+09 Feb 2006 - 2.1
+	clean-up
+	added some doc, cleaned-up autotool files
+
+05 Feb 2006 - 1.2
+	integrated web interface
+	including three "skins"
+
+13 Feb 2005 - 1.1a
+	supporting multiple usb devices
+	fixing naming conventions
+	options on output format
+	added man page
+	prepared for i(18)n
+
+24 Feb 2005 - 1.1
+	bugfixes
+	Fixed small error in configure script, relaxed dependency for libusb
+	to include version >=0.1.5, added new command line arguments -q and -v
+	added Troubleshooting section
+
+03 Aug 2004 - 1.0b
+	initial revision, switching of outlets works
