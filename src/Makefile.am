@@ -1,5 +1,5 @@
 libsispmctl_la_LDFLAGS = \
-	-version-info 2:2:2
+	-version-info 2:3:2
 
 bin_PROGRAMS = sispmctl 
 

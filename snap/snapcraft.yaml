@@ -1,7 +1,7 @@
 name: sispmctl
 icon: artwork/sispmctl.svg
 license: GPL-2.0-or-later
-version: '4.11'
+version: '4.12'
 grade: stable
 summary: Silver Shield PM Control for Linux (sispmctl)
 source-code: https://sourceforge.net/p/sispmctl/git/

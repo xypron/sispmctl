@@ -2,10 +2,11 @@
 
 Update version information in
 
-ChangeLog	- release information
-configure.ac	- release number
-src/Makefile.am - library version information
-man/sispmctl.1	- date
+ChangeLog		- release information
+configure.ac		- release number
+src/Makefile.am		- library version information
+man/sispmctl.1		- date
+snap/snapcraft.yaml	- release number
 
 ./autogen.sh
 ./configure

@@ -1,3 +1,9 @@
+04 May 2024 - 4.12
+	snapcraft: use local source for building
+	Mention /etc/sispmctl/password in man-page
+	Add favicon.ico
+	Always use original control data for libusb calls
+
 06 Jul 2023 - 4.11
 	Create /etc/sispmctl/ in passwordsetup.sh
 	Avoid incorrect web output if not in quiet mode
