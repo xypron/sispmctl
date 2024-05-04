@@ -43,20 +43,33 @@ int get_id(struct usb_device *dev)
   return dev->descriptor.idProduct;
 }
 
-int usb_control_msg_tries(usb_dev_handle *dev, int requesttype, int request,
-                          int value, int index, char *bytes, int size,
-                          int timeout)
+static int usb_control_msg_tries(usb_dev_handle *dev, int requesttype,
+				 int request, int value, int index,
+				 char *bytes, size_t size, int timeout)
 {
-  int ret, i=0;
+	int ret;
+	char buf[64];
 
-  do {
-    usleep(500*i);
-    ret = usb_control_msg(dev, requesttype, request, value, index, bytes, size,
-                          timeout);
-    i++;
-  } while ((ret != size) && (i < 5));
-  return ret;
+	if (size > sizeof(buf)) {
+		return -1;
+	}
+
+	for (int i = 0; i < 5; ++i) {
+		usleep(500 * i);
+		memcpy(buf, bytes, size);
+		ret = usb_control_msg(dev, requesttype, request, value, index,
+				      buf, size, timeout);
+		if (ret == size) {
+			break;
+		}
+	}
+
+	memcpy(bytes, buf, size);
+
+	return ret;
 }
+
+
 
 // for identification: reqtype=a1, request=01, b1=0x01, size=5
 char *get_serial(usb_dev_handle *udev)
