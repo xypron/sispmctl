@@ -175,12 +175,11 @@ static int get_status(struct environment *e, struct sispm_device *dev,
 	return EXIT_SUCCESS;
 }
 
-static int set_id(struct environment *e, struct sispm_device *dev,
-		  const char *optarg)
+static int set_id(struct sispm_device *dev, const char *optarg)
 {
 	unsigned char buffer[5] = { 0 };
 	char *str, *s;
-	int index;
+	size_t index;
 	int ret;
 
 	if (dev->product_id < 0xfd13) {
@@ -247,7 +246,7 @@ static int parse_options(struct environment *e, int argc, char *const argv[])
 {
 	int index;
 	struct sispm_device *dev = e->list;
-	const static struct option long_options[] = {
+	static const struct option long_options[] = {
 		{ "device", required_argument, NULL, 'd' },
 		{ "help", no_argument, NULL, 'h' },
 		{ "id", required_argument, NULL, 'D' },
@@ -342,7 +341,7 @@ static int parse_options(struct environment *e, int argc, char *const argv[])
 			version();
 			return EXIT_FAILURE;
 		case SETID:
-			ret = set_id(e, dev, optarg);
+			ret = set_id(dev, optarg);
 			break;
 		}
 
@@ -358,7 +357,7 @@ static int parse_options(struct environment *e, int argc, char *const argv[])
 int main(int argc, char *argv[])
 {
 	int ret;
-	struct environment e = { verbose: 1 };
+	struct environment e = { .verbose = 1 };
 
 	if (sis_connect(&e))
 		return EXIT_FAILURE;

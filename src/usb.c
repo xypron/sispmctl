@@ -103,7 +103,7 @@ static int sis_usb_control_transfer(libusb_device_handle *handle,
 		ret = libusb_control_transfer(handle, requesttype, request,
 					      value, index, buf, size,
 					      timeout);
-		if (ret == size)
+		if (ret == (int)size)
 			break;
 	}
 	memcpy(bytes, buf, size);
