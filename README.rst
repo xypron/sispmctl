@@ -14,6 +14,7 @@ Building
     meson setup builddir
     cd builddir/
     ninja
+    ninja install
 
 Changelog
 ---------
