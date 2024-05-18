@@ -6,6 +6,15 @@ Build dependencies
 
 * libusb-1.0-0-dev
 
+Building
+--------
+
+.. code-block:: bash
+
+    meson setup builddir
+    cd builddir/
+    ninja
+
 Changelog
 ---------
 
