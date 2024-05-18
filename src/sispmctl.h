@@ -1,7 +1,5 @@
 #include <libusb.h>
 
-#define PACKAGE_VERSION "5.0-alpha"
-
 struct sispm_device {
 	libusb_device *dev;
 	char id[15];
