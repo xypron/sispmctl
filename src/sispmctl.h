@@ -8,7 +8,8 @@ struct sispm_device {
 	int num;
 	int bus;
 	int addr;
-	int product_id;
+	unsigned short product_id;
+	unsigned short vendor_id;
 };
 
 struct environment {

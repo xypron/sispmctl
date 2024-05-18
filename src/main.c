@@ -21,8 +21,9 @@ static void list_devices(struct environment *e)
 			printf("%s\n\n", ptr->id);
 		} else {
 			printf("Gembird #%zu\n", ptr - e->list);
-			printf("USB information:  bus %03d, device %03d\n",
-			       ptr->bus, ptr->addr);
+			printf("USB information:  bus %03d, device %03d, id %04x:%04x\n",
+			       ptr->bus, ptr->addr,
+			       ptr->vendor_id, ptr->product_id);
 			printf("device type:	  %d-output %sSiS-PM\n",
 			       ptr->max_outlet - ptr->min_outlet + 1,
 			       ptr->max_outlet - ptr->min_outlet ? "" : "m");

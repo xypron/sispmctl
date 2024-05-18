@@ -219,6 +219,7 @@ static int sis_read_info(struct sispm_device *dev)
 	dev->bus = libusb_get_bus_number(dev->dev);
 	dev->addr = libusb_get_device_address(dev->dev);
 	dev->product_id = desc.idProduct;
+	dev->vendor_id = desc.idVendor;
 
 	return 1;
 }
