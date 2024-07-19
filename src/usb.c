@@ -358,10 +358,6 @@ int sis_connect(struct environment *e)
 		return 1;
 	}
 	e->count = sis_count(list);
-	if (!e->count) {
-		e->list = NULL;
-		return 1;
-	}
 	e->list = calloc(e->count + 1, sizeof(struct sispm_device));
 	if (!e->list) {
 		perror("Out of memory");

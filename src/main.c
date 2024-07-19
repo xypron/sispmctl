@@ -13,6 +13,11 @@
  */
 static void list_devices(struct environment *e)
 {
+	if (!e->count && !e->numeric) {
+		printf("No supported device\n");
+		return;
+	}
+		
 	for (struct sispm_device *ptr = e->list; ptr->dev; ++ptr) {
 		if (e->numeric) {
 			printf("%zu %03d %03d\n", ptr - e->list, ptr->bus,
