@@ -3,7 +3,7 @@ project('sispmctl', 'c',
 	default_options : [
 		'c_std=gnu11',
 		'warning_level=3'],
-	license : 'GPL-2.0')
+	license : 'GPL-2.0-or-later')
 
 extra_args = ['-DPACKAGE_VERSION="@0@"'.format(meson.project_version())]
 dep = [dependency('libusb-1.0')]
