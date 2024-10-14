@@ -32,7 +32,7 @@ description: |
         /snap/sispmctl/current/share/doc/sispmctl/examples/60-sispmctl.rules \
         /lib/udev/rules.d/
 
-base: core22
+base: core24
 
 confinement: strict
 
