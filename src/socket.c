@@ -148,6 +148,7 @@ int *socket_init(char *bind_arg)
 
 socket_error:
   close(*s);
+  free(s);
   return NULL;
 }
 #endif // !WEBLESS
