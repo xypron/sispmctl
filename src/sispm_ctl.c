@@ -332,6 +332,8 @@ void plannif_scanf(struct plannif *plan, const unsigned char *buffer)
   int actionNo = 1;
 
   READNEXTBYTE;
+  if (!nextWord)
+    nextWord = 1;
   plan->socket = (nextWord - 1) / 3;
   READNEXTDOUBLEWORD;
   plan->timeStamp = nextWord;
