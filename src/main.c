@@ -197,7 +197,7 @@ static void parse_command_line(int argc, char *argv[], int count,
   int status;
   int devnum = 0;
   usb_dev_handle *udev = NULL;
-  usb_dev_handle *sudev = NULL; //scan device
+  usb_dev_handle *sudev; //scan device
   unsigned int id=0; //product id of current device
   char *onoff[] = {"off", "on", "0", "1"};
 #ifndef WEBLESS
@@ -316,7 +316,6 @@ static void parse_command_line(int argc, char *argv[], int count,
           else
             printf("%s\n", get_serial(sudev));
           usb_close(sudev);
-          sudev = NULL;
           printf("\n");
         }
         break;
@@ -663,7 +662,7 @@ max_gembird:
 
   /* get serial number of each device */
   for (i = 0; i < count; ++i) {
-    usb_dev_handle *sudev = NULL;
+    usb_dev_handle *sudev;
 
     sudev = get_handle(usbdev[i]);
     if (sudev == NULL) {
@@ -676,7 +675,6 @@ max_gembird:
     } else {
       usbdevsn[i] = strdup(get_serial(sudev));
       usb_close(sudev);
-      sudev = NULL;
     }
   }
 
