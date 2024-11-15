@@ -37,7 +37,6 @@
 #include <usb.h>
 #include "sispm_ctl.h"
 #include "socket.h"
-#include "nethelp.h"
 
 #ifndef WEBLESS
 int listenport=LISTENPORT;
