@@ -640,10 +640,11 @@ int main(int argc, char *argv[])
       if (count == MAXGEMBIRD) {
         fprintf(stderr,"%d devices found. Please recompile if you need to "
                 "support more devices!\n",count);
-        break;
+        goto max_gembird;
       }
     }
   }
+max_gembird:
 
   /* bubble sort them first, thnx Ingo Flaschenberger */
   if (count > 1) {
