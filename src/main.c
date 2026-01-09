@@ -622,9 +622,9 @@ int main(int argc, char *argv[])
   // initialize by setting device pointers to zero
   for (count = 0; count < MAXGEMBIRD; ++count)
     usbdev[count] = NULL;
-  count = 0;
 
   //first search for GEMBIRD (m)SiS-PM devices
+  count = 0;
   for (bus = usb_busses; bus; bus = bus->next) {
     for (dev = bus->devices; dev; dev = dev->next) {
       if ((dev->descriptor.idVendor == VENDOR_ID)
