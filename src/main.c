@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #define __USE_XOPEN
 #include <signal.h>
 #include <syslog.h>
@@ -92,6 +93,13 @@ static void daemonize()
 {
   /* Our process ID and Session ID */
   pid_t pid;
+
+  /* Check that we're not running as root */
+  if (geteuid() == 0) {
+    fprintf(stderr, "The web service shall not run as root\n");
+    syslog(LOG_ERR, "The web service shall not run as root\n");
+    exit(EXIT_FAILURE);
+  }
 
   /* Fork off the parent process */
   pid = fork();
