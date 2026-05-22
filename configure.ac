@@ -47,7 +47,7 @@ AS_HELP_STRING([--with-bindaddr=IP], [bind listening socket to IP]),
 AC_SUBST(BINDADDR)
 
 dnl check for libusb
-PKG_CHECK_MODULES(LIBUSB, libusb >= 0.1.11)
+PKG_CHECK_MODULES(LIBUSB, libusb-1.0 >= 1.0.0)
 CFLAGS="$CFLAGS $LIBUSB_CFLAGS"
 LIBS="$LIBS $LIBUSB_LIBS"
 

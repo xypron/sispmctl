@@ -27,7 +27,7 @@
 #ifndef SISPM_CTL_H
 #define SISPM_CTL_H
 
-#include <usb.h>
+#include <libusb-1.0/libusb.h>
 
 #define MAXGEMBIRD                      32
 #define MAXANSWER                       8192
@@ -44,8 +44,8 @@
 /* Size of socket receive buffer */
 #define BUFFERSIZE                      4096
 
-#define USB_DIR_IN                      0x80            /* to host */
-#define USB_DIR_OUT                     0               /* to device */
+#define USB_DIR_IN                      LIBUSB_ENDPOINT_IN
+#define USB_DIR_OUT                     LIBUSB_ENDPOINT_OUT
 #define cpu_to_le16(a)                  (a)
 
 
@@ -115,28 +115,29 @@ struct plannif {
 };
 
 void plannif_reset (struct plannif* plan);
-void usb_command_getplannif(usb_dev_handle *udev, int socket,
+void usb_command_getplannif(libusb_device_handle *udev, int product_id, int socket,
                             struct plannif* plan);
-void usb_command_setplannif(usb_dev_handle *udev, struct plannif* plan);
+void usb_command_setplannif(libusb_device_handle *udev, int product_id,
+                            struct plannif* plan);
 void plannif_display(const struct plannif* plan, int verbose,
                      const char* progname);
-void process(int out,char*v,struct usb_device*dev,int devnum);
+void process(int out,char*v,libusb_device*dev,int devnum);
 
-usb_dev_handle*get_handle(struct usb_device*dev);
-int usb_command(usb_dev_handle *udev, int b1, int b2,
+libusb_device_handle*get_handle(libusb_device*dev);
+int usb_command(libusb_device_handle *udev, int b1, int b2,
                 int return_value_expected);
 
 #define sispm_buzzer_on(udev)           usb_command(udev, 0x02, 0x00, 0)
 #define sispm_buzzer_off(udev)          usb_command(udev, 0x02, 0x04, 0)
 
-int get_id( struct usb_device* dev);
-char* get_serial(usb_dev_handle *udev);
-int sispm_switch_on(usb_dev_handle * udev,int id, int outlet);
-int sispm_switch_off(usb_dev_handle * udev,int id, int outlet);
-int sispm_switch_getstatus(usb_dev_handle * udev,int id, int outlet);
-int sispm_get_power_supply_status(usb_dev_handle * udev,int id, int outlet);
+int get_id( libusb_device* dev);
+char* get_serial(libusb_device_handle *udev);
+int sispm_switch_on(libusb_device_handle * udev,int id, int outlet);
+int sispm_switch_off(libusb_device_handle * udev,int id, int outlet);
+int sispm_switch_getstatus(libusb_device_handle * udev,int id, int outlet);
+int sispm_get_power_supply_status(libusb_device_handle * udev,int id, int outlet);
 int check_outlet_number(int id, int outlet);
-int sispm_switch_toggle(usb_dev_handle * udev,int id, int outlet);
+int sispm_switch_toggle(libusb_device_handle * udev,int id, int outlet);
 
 extern int debug;
 extern int verbose;

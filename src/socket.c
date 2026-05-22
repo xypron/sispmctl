@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <stdlib.h>
 #include <syslog.h>
 #include <time.h>
 #include <sys/socket.h>
@@ -34,14 +35,14 @@
 #ifdef HAVE_NET_ETHERNET_H
 #include <net/ethernet.h>
 #endif
-#include <usb.h>
+#include <libusb-1.0/libusb.h>
 #include "sispm_ctl.h"
 #include "socket.h"
 
 #ifndef WEBLESS
 int listenport=LISTENPORT;
 
-void l_listen(int*sock, struct usb_device*dev, int devnum)
+void l_listen(int*sock, libusb_device*dev, int devnum)
 {
   int i;
   int s;

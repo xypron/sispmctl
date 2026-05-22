@@ -36,7 +36,7 @@
 #include <signal.h>
 #include <syslog.h>
 #include <time.h>
-#include <usb.h>
+#include <libusb-1.0/libusb.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -195,7 +195,7 @@ static void print_usage(char *name)
 }
 
 static void parse_command_line(int argc, char *argv[], int count,
-                               struct usb_device *dev[], char *usbdevsn[])
+                               libusb_device *dev[], char *usbdevsn[])
 {
   int numeric = 0;
   int c;
@@ -204,8 +204,8 @@ static void parse_command_line(int argc, char *argv[], int count,
   int from = 1, upto = 4;
   int status;
   int devnum = 0;
-  usb_dev_handle *udev = NULL;
-  usb_dev_handle *sudev; //scan device
+  libusb_device_handle *udev = NULL;
+  libusb_device_handle *sudev; //scan device
   unsigned int id=0; //product id of current device
   char *onoff[] = {"off", "on", "0", "1"};
 #ifndef WEBLESS
@@ -231,7 +231,7 @@ static void parse_command_line(int argc, char *argv[], int count,
       default:
         fprintf(stderr, "No GEMBIRD SiS-PM found. Check USB connections, please!\n");
         if (udev != NULL) {
-          usb_close(udev);
+          libusb_close(udev);
           udev = NULL;
         }
         exit(1);
@@ -259,12 +259,11 @@ static void parse_command_line(int argc, char *argv[], int count,
       if(udev == NULL) {
         udev = get_handle(dev[devnum]);
         if(udev == NULL) {
-          fprintf(stderr, "No access to Gembird #%d USB device %s\n",
-                  devnum, dev[devnum]->filename );
+          fprintf(stderr, "No access to Gembird #%d USB device\n",
+                  devnum);
           exit(1);
         } else if(verbose) {
-          printf("Accessing Gembird #%d USB device %s\n", devnum,
-                 dev[devnum]->filename);
+          printf("Accessing Gembird #%d USB device\n", devnum);
         }
         id = get_id(dev[devnum]);
       }
@@ -295,11 +294,11 @@ static void parse_command_line(int argc, char *argv[], int count,
       case 's':
         for (status = 0; status < count; ++status) {
           if (numeric == 0)
-            printf("Gembird #%d\nUSB information:  bus %s, device %s\n", status,
-                   dev[status]->bus->dirname, dev[status]->filename);
+            printf("Gembird #%d\nUSB information:  bus %d, device %d\n", status,
+                   libusb_get_bus_number(dev[status]), libusb_get_device_address(dev[status]));
           else
-            printf("%d %s %s\n", status,
-                   dev[status]->bus->dirname, dev[status]->filename);
+            printf("%d %d %d\n", status,
+                   libusb_get_bus_number(dev[status]), libusb_get_device_address(dev[status]));
           id = get_id(dev[status]);
           if ((id == PRODUCT_ID_SISPM) ||
               (id == PRODUCT_ID_SISPM_FLASH_NEW) ||
@@ -315,15 +314,15 @@ static void parse_command_line(int argc, char *argv[], int count,
           sudev = get_handle(dev[status]);
           id = get_id(dev[status]);
           if(sudev == NULL) {
-            fprintf(stderr, "No access to Gembird #%d USB device %s\n",
-                    status, dev[status]->filename );
+            fprintf(stderr, "No access to Gembird #%d USB device\n",
+                    status);
             exit(1);
           }
           if (numeric == 0)
             printf("serial number:    %s\n",get_serial(sudev));
           else
             printf("%s\n", get_serial(sudev));
-          usb_close(sudev);
+          libusb_close(sudev);
           printf("\n");
         }
         break;
@@ -331,7 +330,7 @@ static void parse_command_line(int argc, char *argv[], int count,
       // replace previous (first is default) device by selected one
       case 'd': // by id
         if (udev != NULL) {
-          usb_close(udev);
+          libusb_close(udev);
           udev = NULL;
         }
         devnum = atoi(optarg);
@@ -339,7 +338,7 @@ static void parse_command_line(int argc, char *argv[], int count,
           fprintf(stderr, "Invalid number or given device not found.\n"
                   "Terminating\n");
           if (udev != NULL) {
-            usb_close(udev);
+            libusb_close(udev);
             udev = NULL;
           }
           exit(-8);
@@ -351,7 +350,7 @@ static void parse_command_line(int argc, char *argv[], int count,
             fprintf(stderr, "now comparing %s and %s\n", usbdevsn[j], optarg);
           if (strcasecmp(usbdevsn[j], optarg) == 0) {
             if (udev != NULL) {
-              usb_close(udev);
+              libusb_close(udev);
               udev = NULL;
             }
             devnum = j;
@@ -362,7 +361,7 @@ static void parse_command_line(int argc, char *argv[], int count,
           fprintf(stderr, "No device with serial number %s found.\n"
                   "Terminating\n",optarg);
           if (udev != NULL) {
-            usb_close(udev);
+            libusb_close(udev);
             udev = NULL;
           }
           exit(-8);
@@ -371,13 +370,13 @@ static void parse_command_line(int argc, char *argv[], int count,
       case 'U': // by USB Bus:Device
         for (j=0; j < count; ++j) {
           char tmp[8194];
-          sprintf(tmp, "%s:%s", dev[j]->bus->dirname, dev[j]->filename);
+          sprintf(tmp, "%d:%d", libusb_get_bus_number(dev[j]), libusb_get_device_address(dev[j]));
 
           if (debug)
             fprintf(stderr, "now comparing %s and %s\n", tmp, optarg);
           if (strcasecmp(tmp, optarg) == 0) {
             if (udev != NULL) {
-              usb_close(udev);
+              libusb_close(udev);
               udev = NULL;
             }
             devnum = j;
@@ -388,7 +387,7 @@ static void parse_command_line(int argc, char *argv[], int count,
           fprintf(stderr, "No device at USB Bus:Device %s found.\n"
                   "Terminating\n",optarg);
           if (udev != NULL) {
-            usb_close(udev);
+            libusb_close(udev);
             udev = NULL;
           }
           exit(-8);
@@ -502,10 +501,10 @@ static void parse_command_line(int argc, char *argv[], int count,
           plan.actions[lastAction].timeForNext = loop;
 
         // let's go, and check
-        usb_command_setplannif(udev, &plan);
+        usb_command_setplannif(udev, id, &plan);
         if(verbose) {
           plannif_reset (&plan);
-          usb_command_getplannif(udev, outlet, &plan);
+          usb_command_getplannif(udev, id, outlet, &plan);
           plannif_display(&plan, 0, NULL);
         }
 
@@ -518,7 +517,7 @@ static void parse_command_line(int argc, char *argv[], int count,
         outlet = check_outlet_number(id, i);
         struct plannif plan;
         plannif_reset (&plan);
-        usb_command_getplannif(udev,outlet,&plan);
+        usb_command_getplannif(udev, id, outlet, &plan);
         plannif_display(&plan, verbose, argv[0]);
         break;
       case 'g':
@@ -603,7 +602,7 @@ static void parse_command_line(int argc, char *argv[], int count,
   } // loop through options
 
   if (udev) {
-    usb_close(udev);
+    libusb_close(udev);
     udev = NULL;
   }
   return;
@@ -612,10 +611,11 @@ static void parse_command_line(int argc, char *argv[], int count,
 
 int main(int argc, char *argv[])
 {
-  struct usb_bus *bus;
-  struct usb_device *dev, *usbdev[MAXGEMBIRD], *usbdevtemp;
+  libusb_device **devs, *dev, *usbdev[MAXGEMBIRD], *usbdevtemp;
+  libusb_context *ctx = NULL;
+  ssize_t usb_count;
   char *usbdevsn[MAXGEMBIRD];
-  int count=0, found = 0, i=1;
+  int dev_count=0, found = 0, i=1;
 
 #ifndef MSG_NOSIGNAL
   signal(SIGPIPE, SIG_IGN);
@@ -623,42 +623,52 @@ int main(int argc, char *argv[])
 
   memset(usbdev,0,sizeof(usbdev));
 
-  usb_init();
-  usb_find_busses();
-  usb_find_devices();
+  libusb_init(&ctx);
 
   // initialize by setting device pointers to zero
-  for (count = 0; count < MAXGEMBIRD; ++count)
-    usbdev[count] = NULL;
+  for (int i = 0; i < MAXGEMBIRD; ++i)
+    usbdev[i] = NULL;
 
   //first search for GEMBIRD (m)SiS-PM devices
-  count = 0;
-  for (bus = usb_busses; bus; bus = bus->next) {
-    for (dev = bus->devices; dev; dev = dev->next) {
-      if ((dev->descriptor.idVendor == VENDOR_ID)
-          && ((dev->descriptor.idProduct == PRODUCT_ID_SISPM) ||
-              (dev->descriptor.idProduct == PRODUCT_ID_MSISPM_OLD) ||
-              (dev->descriptor.idProduct == PRODUCT_ID_MSISPM_FLASH) ||
-              (dev->descriptor.idProduct == PRODUCT_ID_SISPM_FLASH_NEW) ||
-              (dev->descriptor.idProduct == PRODUCT_ID_SISPM_EG_PMS2))) {
-        usbdev[count] = dev;
-        ++count;
-      }
-      if (count == MAXGEMBIRD) {
-        fprintf(stderr,"%d devices found. Please recompile if you need to "
-                "support more devices!\n",count);
-        goto max_gembird;
-      }
+  usb_count = libusb_get_device_list(ctx, &devs);
+  if (usb_count < 0) {
+    fprintf(stderr, "Failed to get USB device list\n");
+    return 1;
+  }
+
+  dev_count = 0;
+  for (i = 0; i < usb_count; i++) {
+    struct libusb_device_descriptor desc;
+    dev = devs[i];
+
+    if (libusb_get_device_descriptor(dev, &desc) < 0) {
+      continue;
+    }
+
+    if ((desc.idVendor == VENDOR_ID)
+        && ((desc.idProduct == PRODUCT_ID_SISPM) ||
+            (desc.idProduct == PRODUCT_ID_MSISPM_OLD) ||
+            (desc.idProduct == PRODUCT_ID_MSISPM_FLASH) ||
+            (desc.idProduct == PRODUCT_ID_SISPM_FLASH_NEW) ||
+            (desc.idProduct == PRODUCT_ID_SISPM_EG_PMS2))) {
+      usbdev[dev_count] = libusb_ref_device(dev);
+      ++dev_count;
+    }
+    if (dev_count == MAXGEMBIRD) {
+      fprintf(stderr,"%d devices found. Please recompile if you need to "
+              "support more devices!\n",dev_count);
+      break;
     }
   }
-max_gembird:
+
+  libusb_free_device_list(devs, 1);
 
   /* bubble sort them first, thnx Ingo Flaschenberger */
-  if (count > 1) {
+  if (dev_count > 1) {
     do {
       found = 0;
-      for (i = 1; i < count; ++i) {
-        if (usbdev[i]->devnum < usbdev[i - 1]->devnum) {
+      for (i = 1; i < dev_count; ++i) {
+        if (libusb_get_device_address(usbdev[i]) < libusb_get_device_address(usbdev[i - 1])) {
           usbdevtemp = usbdev[i];
           usbdev[i] = usbdev[i - 1];
           usbdev[i - 1] = usbdevtemp;
@@ -669,20 +679,19 @@ max_gembird:
   }
 
   /* get serial number of each device */
-  for (i = 0; i < count; ++i) {
-    usb_dev_handle *sudev;
+  for (i = 0; i < dev_count; ++i) {
+    libusb_device_handle *sudev;
 
     sudev = get_handle(usbdev[i]);
     if (sudev == NULL) {
-      fprintf(stderr, "No access to Gembird #%d USB device %s\n",
-              i, usbdev[i]->filename );
+      fprintf(stderr, "No access to Gembird #%d USB device\n", i);
       usbdevsn[i] = malloc(5);
       usbdevsn[i][0] = '#';
       usbdevsn[i][1] = '0'+i;
       usbdevsn[i][2] = '\0';
     } else {
       usbdevsn[i] = strdup(get_serial(sudev));
-      usb_close(sudev);
+      libusb_close(sudev);
     }
   }
 
@@ -690,7 +699,15 @@ max_gembird:
   if (argc <= 1)
     print_usage(argv[0]);
   else
-    parse_command_line(argc, argv, count, usbdev, usbdevsn);
+    parse_command_line(argc, argv, dev_count, usbdev, usbdevsn);
 
+  /* Clean up */
+  for (i = 0; i < dev_count; ++i) {
+    libusb_unref_device(usbdev[i]);
+    if (usbdevsn[i])
+      free(usbdevsn[i]);
+  }
+
+  libusb_exit(ctx);
   return 0;
 }

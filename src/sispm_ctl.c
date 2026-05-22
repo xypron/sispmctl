@@ -31,19 +31,21 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
-#include <usb.h>
+#include <libusb-1.0/libusb.h>
 #include <assert.h>
 #include "sispm_ctl.h"
 
 char serial_id[15];
 
-int get_id(struct usb_device *dev)
+int get_id(libusb_device *dev)
 {
+  struct libusb_device_descriptor desc;
   assert(dev!=0);
-  return dev->descriptor.idProduct;
+  libusb_get_device_descriptor(dev, &desc);
+  return desc.idProduct;
 }
 
-static int usb_control_msg_tries(usb_dev_handle *dev, int requesttype,
+static int usb_control_msg_tries(libusb_device_handle *dev, int requesttype,
 				 int request, int value, int index,
 				 char *bytes, size_t size, int timeout)
 {
@@ -51,14 +53,15 @@ static int usb_control_msg_tries(usb_dev_handle *dev, int requesttype,
 	char buf[64];
 
 	if (size > sizeof(buf)) {
+		fprintf(stderr, "Error: buffer size %zu exceeds maximum %zu\n", size, sizeof(buf));
 		return -1;
 	}
 
 	for (int i = 0; i < 5; ++i) {
 		usleep(500 * i);
 		memcpy(buf, bytes, size);
-		ret = usb_control_msg(dev, requesttype, request, value, index,
-				      buf, size, timeout);
+		ret = libusb_control_transfer(dev, requesttype, request, value, index,
+				      (unsigned char *)buf, size, timeout);
 		if (ret == size) {
 			break;
 		}
@@ -66,29 +69,37 @@ static int usb_control_msg_tries(usb_dev_handle *dev, int requesttype,
 
 	memcpy(bytes, buf, size);
 
+	/* check for transfer errors */
+	if (ret < 0) {
+		/* libusb error */
+		fprintf(stderr, "Error performing requested action\n"
+				"Libusb error: %s\nTerminating\n", libusb_strerror(ret));
+	}
+
 	return ret;
 }
 
 
 
+
 // for identification: reqtype=a1, request=01, b1=0x01, size=5
-char *get_serial(usb_dev_handle *udev)
+char *get_serial(libusb_device_handle *udev)
 {
   int  reqtype=0xa1; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /* request type */,
   int  req=0x01;
   unsigned char buffer[6] = {0, 0, 0, 0, 0, 0};
+  int ret;
 
-  if (usb_control_msg_tries(udev,               /* handle */
+  ret = usb_control_msg_tries(udev,               /* handle */
                             reqtype,
                             req,
                             (0x03 << 8) | 1,
                             0,                  /* index  */
                             (char *)buffer,     /* bytes  */
                             5,                  /* size   */
-                            5000) < 2 ) {
-    fprintf(stderr, "Error performing requested action\n"
-            "Libusb error string: %s\nTerminating\n", usb_strerror());
-    usb_close (udev);
+                            5000);
+  if (ret < 2) {
+    libusb_close (udev);
     exit(-5);
   }
 
@@ -97,11 +108,12 @@ char *get_serial(usb_dev_handle *udev)
   return serial_id;
 }
 
-int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected)
+int usb_command(libusb_device_handle *udev, int b1, int b2, int return_value_expected)
 {
   int  reqtype=0x21; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /* request type */,
   int  req=0x09;
   char buffer[5];
+  int ret;
 
   buffer[0]=b1;
   buffer[1]=b2;
@@ -109,17 +121,16 @@ int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected)
     reqtype|=USB_DIR_IN;
     req=0x01;
   }
-  if (usb_control_msg_tries(udev,               /* handle */
+  ret = usb_control_msg_tries(udev,               /* handle */
                             reqtype,
                             req,
                             (0x03 << 8) | b1,
                             0,                  /* index  */
                             buffer,             /* bytes  */
                             5,                  /* size   */
-                            5000) < 2 ) {
-    fprintf(stderr, "Error performing requested action\n"
-            "Libusb error string: %s\nTerminating\n", usb_strerror());
-    usb_close (udev);
+                            5000);
+  if (ret < 2) {
+    libusb_close (udev);
     exit(-5);
   }
 
@@ -127,32 +138,39 @@ int usb_command(usb_dev_handle *udev, int b1, int b2, int return_value_expected)
 }
 
 
-usb_dev_handle *get_handle(struct usb_device*dev)
+libusb_device_handle *get_handle(libusb_device*dev)
 {
-  usb_dev_handle *udev=NULL;
+  libusb_device_handle *udev=NULL;
+  int ret;
+
   if(!dev)
     return NULL;
-  udev = usb_open(dev);
+
+  ret = libusb_open(dev, &udev);
+  if (ret != 0) {
+    fprintf(stderr, "Unable to open USB device: %s\n", libusb_strerror(ret));
+    return NULL;
+  }
 
   /* prepare USB access */
   if (!udev) {
-    fprintf(stderr, "Unable to open USB device %s\n", usb_strerror());
+    fprintf(stderr, "Unable to open USB device\n");
     return NULL;
   }
-  if (usb_set_configuration(udev, 1)) {
-    fprintf(stderr, "USB set configuration %s\n", usb_strerror());
-    usb_close (udev);
+  if ((ret = libusb_set_configuration(udev, 1)) < 0) {
+    fprintf(stderr, "USB set configuration: %s\n", libusb_strerror(ret));
+    libusb_close (udev);
     return NULL;
   }
-  if (usb_claim_interface(udev, 0)) {
-    fprintf(stderr, "USB claim interface %s\nMaybe device already in use?\n",
-            usb_strerror());
-    usb_close(udev);
+  if ((ret = libusb_claim_interface(udev, 0)) < 0) {
+    fprintf(stderr, "USB claim interface: %s\nMaybe device already in use?\n",
+            libusb_strerror(ret));
+    libusb_close(udev);
     return NULL;
   }
-  if (usb_set_altinterface(udev, 0)) {
-    fprintf(stderr, "USB set alt interface %s\n", usb_strerror());
-    usb_close (udev);
+  if ((ret = libusb_set_interface_alt_setting(udev, 0, 0)) < 0) {
+    fprintf(stderr, "USB set alt interface: %s\n", libusb_strerror(ret));
+    libusb_close (udev);
     return NULL;;
   }
   return udev;
@@ -190,19 +208,19 @@ int check_outlet_number(int id, int outlet)
   return outlet;
 }
 
-int sispm_switch_on(usb_dev_handle *udev, int id, int outlet)
+int sispm_switch_on(libusb_device_handle *udev, int id, int outlet)
 {
   outlet=check_outlet_number(id, outlet);
   return usb_command(udev, 3 * outlet, 0x03, 0 ) ;
 }
 
-int sispm_switch_off(usb_dev_handle *udev, int id, int outlet)
+int sispm_switch_off(libusb_device_handle *udev, int id, int outlet)
 {
   outlet=check_outlet_number(id, outlet);
   return usb_command(udev, 3 * outlet, 0x00, 0 );
 }
 
-int sispm_switch_toggle(usb_dev_handle *udev, int id, int outlet)
+int sispm_switch_toggle(libusb_device_handle *udev, int id, int outlet)
 {
   if (!sispm_switch_getstatus(udev, id, outlet)) { //on
     sispm_switch_on(udev, id, outlet);
@@ -215,7 +233,7 @@ int sispm_switch_toggle(usb_dev_handle *udev, int id, int outlet)
   return 0;
 }
 
-int sispm_switch_getstatus(usb_dev_handle * udev, int id, int outlet)
+int sispm_switch_getstatus(libusb_device_handle * udev, int id, int outlet)
 {
   int result;
 
@@ -224,7 +242,7 @@ int sispm_switch_getstatus(usb_dev_handle * udev, int id, int outlet)
   return result & 1;
 }
 
-int sispm_get_power_supply_status(usb_dev_handle *udev, int id, int outlet)
+int sispm_get_power_supply_status(libusb_device_handle *udev, int id, int outlet)
 {
   int result;
 
@@ -377,25 +395,24 @@ void plannif_scanf(struct plannif *plan, const unsigned char *buffer)
 }
 
 // queries the device, and fills the schedule structure
-void usb_command_getplannif(usb_dev_handle *udev, int socket,
+void usb_command_getplannif(libusb_device_handle *udev, int product_id, int socket,
                             struct plannif *plan)
 {
   int reqtype = 0x21 | USB_DIR_IN; /* request type */
   int req = 0x01;
   unsigned char buffer[0x28];
-  unsigned int id;
+  int ret;
 
-  if (usb_control_msg_tries(udev,                               /* handle */
+  ret = usb_control_msg_tries(udev,                               /* handle */
                             reqtype,
                             req,
                             ((0x03 << 8) | (3 * socket)) + 1,
                             0,                                  /* index  */
                             (char *)buffer,                     /* bytes  */
                             0x28,                               /* size   */
-                            5000) < 0x27 ) {
-    fprintf(stderr, "Error performing requested action\n"
-            "Libusb error string: %s\nTerminating\n", usb_strerror());
-    usb_close(udev);
+                            5000);
+  if (ret < 0x27) {
+    libusb_close(udev);
     exit(-5);
   }
 
@@ -406,11 +423,12 @@ void usb_command_getplannif(usb_dev_handle *udev, int socket,
   printf("\n");
   // */
 
-  id = get_id(usb_device(udev));
-  if (id == PRODUCT_ID_SISPM_EG_PMS2)
+  /* parse schedule buffer according to device type */
+  if (product_id == PRODUCT_ID_SISPM_EG_PMS2) {
     pms2_buffer_to_schedule(buffer, plan);
-  else
+  } else {
     plannif_scanf(plan, buffer);
+  }
 }
 
 // private : prints the buffer according to the schedule structure
@@ -475,18 +493,18 @@ void plannif_printf(const struct plannif *plan, unsigned char *buffer)
 }
 
 // prepares the buffer according to plannif and sends it to the device
-void usb_command_setplannif(usb_dev_handle *udev, struct plannif* plan)
+void usb_command_setplannif(libusb_device_handle *udev, int product_id,
+                            struct plannif* plan)
 {
   int reqtype=0x21; //USB_DIR_OUT + USB_TYPE_CLASS + USB_RECIP_INTERFACE /*request type*/,
   int req=0x09;
   unsigned char buffer_size = 0x27;
   unsigned char buffer[0x28];
-  unsigned int id;
+  int ret;
 
-  id = get_id(usb_device(udev));
-  if (id == PRODUCT_ID_SISPM_EG_PMS2) {
+  if (product_id == PRODUCT_ID_SISPM_EG_PMS2) {
     if (pms2_schedule_to_buffer(plan, buffer))
-        exit(-2);
+      exit(-2);
   } else {
     buffer_size = 0x27;
     plannif_printf(plan, buffer);
@@ -502,17 +520,16 @@ void usb_command_setplannif(usb_dev_handle *udev, struct plannif* plan)
   plannif_display(plan, 0, NULL);
   exit(0);
   //*/
-  if (usb_control_msg_tries(udev,                                  /* handle */
+  ret = usb_control_msg_tries(udev,                                  /* handle */
                             reqtype,
                             req,
                             ((0x03 << 8) | (3 * plan->socket)) + 1,
                             0,                                      /* index */
                             (char *) buffer,                        /* bytes */
                             buffer_size,                            /* size  */
-                            5000) < buffer_size ) {
-    fprintf(stderr, "Error performing requested action\n"
-            "Libusb error string: %s\nTerminating\n", usb_strerror());
-    usb_close (udev);
+                            5000);
+  if (ret < buffer_size) {
+    libusb_close (udev);
     exit(-5);
   }
 }

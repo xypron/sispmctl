@@ -31,7 +31,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <usb.h>
+#include <stdlib.h>
+#include <libusb-1.0/libusb.h>
 #include "config.h"
 #include "sispm_ctl.h"
 
@@ -117,7 +118,7 @@ char *next_word(char *ptr)
   }
 }
 
-void process(int out,char *request, struct usb_device *dev, int devnum)
+void process(int out,char *request, libusb_device *dev, int devnum)
 {
   char xbuffer[BSIZE+2];
   char filename[1024];
@@ -126,7 +127,7 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
   long length = 0;
   long lastpos = 0;
   long remlen = 0;
-  usb_dev_handle *udev;
+  libusb_device_handle *udev;
   unsigned int id; //product id of current device
   char *retvalue = NULL;
 
@@ -209,16 +210,13 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
   /* get device-handle/-id */
   udev = get_handle(dev);
   if (udev == NULL) {
-    fprintf(stderr, "No access to Gembird #%d USB device %s\n", devnum,
-            dev->filename);
-    syslog(LOG_ERR, "No access to Gembird #%d USB device %s\n", devnum,
-           dev->filename);
+    fprintf(stderr, "No access to Gembird #%d USB device\n", devnum);
+    syslog(LOG_ERR, "No access to Gembird #%d USB device\n", devnum);
     service_not_available(out);
     fclose(in);
     return;
   } else if (verbose)
-    fprintf(stderr, "Accessing Gembird #%d USB device %s\n", devnum,
-            dev->filename );
+    fprintf(stderr, "Accessing Gembird #%d USB device\n", devnum);
   id = get_id(dev);
 
   lastpos = ftell(in);
@@ -364,7 +362,7 @@ void process(int out,char *request, struct usb_device *dev, int devnum)
   }
 
   if (udev != NULL) {
-    usb_close(udev);
+    libusb_close(udev);
     udev = NULL;
   }
   fclose(in);
