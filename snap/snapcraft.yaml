@@ -54,4 +54,4 @@ parts:
       - libusb-dev
       - pkg-config
     stage-packages:
-      - libusb-0.1-4
+      - libusb-1.0-0
