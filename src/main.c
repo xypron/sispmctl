@@ -33,7 +33,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <pthread.h>
 #include <signal.h>
 #include <syslog.h>
 #include <time.h>
@@ -88,17 +87,6 @@ static void read_password(void)
     exit(EXIT_FAILURE);
   }
   fclose(file);
-}
-
-/* Child handler for pthread_atfork - handle threading after fork */
-static libusb_context **g_ctx_ptr = NULL;
-
-static void atfork_child(void)
-{
-  /* After fork in child, libusb's pthread mutexes need reinitializing.
-     However, we must NOT call libusb_exit() as that destroys the context
-     and invalidates all device references. Instead, do nothing here and
-     let libusb handle the forked state. */
 }
 
 static void daemonize(void)
@@ -566,14 +554,52 @@ static void parse_command_line(int argc, char *argv[], int count,
       case 'l':
       case 'L': {
         int *s;
+        char *selected_serial = NULL;
 
         openlog("sispmctl", LOG_PID, LOG_INFO);
         read_password();
         if (verbose)
           printf("Server goes to listen mode now.\n");
         if ((s = socket_init(bindaddr)) != NULL) {
-          if (c == 'l')
+          if (c == 'l') {
+            /* Store serial number of selected device before fork */
+            selected_serial = strdup(usbdevsn[devnum]);
+            
+            /* Close any open device handle before fork */
+            if (udev) {
+              libusb_close(udev);
+              udev = NULL;
+            }
+            /* Exit libusb context cleanly before fork */
+            libusb_exit(ctx);
+            ctx = NULL;
+            
             daemonize();
+            
+            /* After fork in child, reinitialize libusb fresh and find device by serial */
+            libusb_init(&ctx);
+            
+            /* Re-enumerate and find the device by serial number */
+            libusb_device **devs;
+            ssize_t usb_count = libusb_get_device_list(ctx, &devs);
+            if (usb_count > 0) {
+              dev[devnum] = NULL;
+              for (int idx = 0; idx < usb_count; idx++) {
+                libusb_device_handle *tmp_dev = get_handle(devs[idx]);
+                if (tmp_dev != NULL) {
+                  char *serial = get_serial(tmp_dev);
+                  if (serial && strcmp(serial, selected_serial) == 0) {
+                    dev[devnum] = libusb_ref_device(devs[idx]);
+                  }
+                  libusb_close(tmp_dev);
+                }
+              }
+              libusb_free_device_list(devs, 1);
+            }
+            
+            if (selected_serial)
+              free(selected_serial);
+          }
           while(1)
             l_listen(s,dev[devnum],devnum);
         } else
@@ -640,10 +666,6 @@ int main(int argc, char *argv[])
     fprintf(stderr, "libusb_init failed: %s\n", libusb_strerror(ret));
     return 1;
   }
-
-  /* Register atfork handler to handle threading after fork */
-  g_ctx_ptr = &ctx;
-  pthread_atfork(NULL, NULL, atfork_child);
 
   //first search for GEMBIRD (m)SiS-PM devices
   usb_count = libusb_get_device_list(ctx, &devs);
