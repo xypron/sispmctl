@@ -25,6 +25,7 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#define _GNU_SOURCE
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
@@ -32,7 +33,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#define __USE_XOPEN
+#include <pthread.h>
 #include <signal.h>
 #include <syslog.h>
 #include <time.h>
@@ -89,7 +90,19 @@ static void read_password(void)
   fclose(file);
 }
 
-static void daemonize()
+/* Child handler for pthread_atfork - reinitialize libusb in child process */
+static libusb_context **g_ctx_ptr = NULL;
+
+static void atfork_child(void)
+{
+  /* After fork in child, reinitialize libusb with fresh context */
+  if (g_ctx_ptr && *g_ctx_ptr) {
+    libusb_exit(*g_ctx_ptr);
+    libusb_init(g_ctx_ptr);
+  }
+}
+
+static void daemonize(void)
 {
   /* Our process ID and Session ID */
   pid_t pid;
@@ -624,6 +637,10 @@ int main(int argc, char *argv[])
   memset(usbdev,0,sizeof(usbdev));
 
   libusb_init(&ctx);
+
+  /* Register atfork handler to reinitialize libusb in child after fork */
+  g_ctx_ptr = &ctx;
+  pthread_atfork(NULL, NULL, atfork_child);
 
   // initialize by setting device pointers to zero
   for (int i = 0; i < MAXGEMBIRD; ++i)
