@@ -59,7 +59,12 @@ static int usb_control_msg_tries(libusb_device_handle *dev, int requesttype,
 
 	for (int i = 0; i < 5; ++i) {
 		usleep(500 * i);
-		memcpy(buf, bytes, size);
+		/* For input requests (USB_DIR_IN), clear buffer; for output, copy from bytes */
+		if (requesttype & LIBUSB_ENDPOINT_IN) {
+			memset(buf, 0, size);
+		} else {
+			memcpy(buf, bytes, size);
+		}
 		ret = libusb_control_transfer(dev, requesttype, request, value, index,
 				      (unsigned char *)buf, size, timeout);
 		if (ret == size) {
