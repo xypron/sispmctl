@@ -90,16 +90,15 @@ static void read_password(void)
   fclose(file);
 }
 
-/* Child handler for pthread_atfork - reinitialize libusb in child process */
+/* Child handler for pthread_atfork - handle threading after fork */
 static libusb_context **g_ctx_ptr = NULL;
 
 static void atfork_child(void)
 {
-  /* After fork in child, reinitialize libusb with fresh context */
-  if (g_ctx_ptr && *g_ctx_ptr) {
-    libusb_exit(*g_ctx_ptr);
-    libusb_init(g_ctx_ptr);
-  }
+  /* After fork in child, libusb's pthread mutexes need reinitializing.
+     However, we must NOT call libusb_exit() as that destroys the context
+     and invalidates all device references. Instead, do nothing here and
+     let libusb handle the forked state. */
 }
 
 static void daemonize(void)
@@ -636,15 +635,15 @@ int main(int argc, char *argv[])
 
   memset(usbdev,0,sizeof(usbdev));
 
-  libusb_init(&ctx);
+  int ret = libusb_init(&ctx);
+  if (ret < 0) {
+    fprintf(stderr, "libusb_init failed: %s\n", libusb_strerror(ret));
+    return 1;
+  }
 
-  /* Register atfork handler to reinitialize libusb in child after fork */
+  /* Register atfork handler to handle threading after fork */
   g_ctx_ptr = &ctx;
   pthread_atfork(NULL, NULL, atfork_child);
-
-  // initialize by setting device pointers to zero
-  for (int i = 0; i < MAXGEMBIRD; ++i)
-    usbdev[i] = NULL;
 
   //first search for GEMBIRD (m)SiS-PM devices
   usb_count = libusb_get_device_list(ctx, &devs);
