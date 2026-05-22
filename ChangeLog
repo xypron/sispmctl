@@ -1,3 +1,14 @@
+22 May 2026 - 4.13
+	Switch to libusb-1.0
+	Add root privilege check to daemonize function
+	Fix buffer overrun in main.c
+	Avoid memory leak in socket_init
+	Prevent underflow in plannif_scanf
+	Fix incorrect NULL assignments
+	Remove unused nethelp.c and nethelp.h files
+	Add AppStream metadata
+	Update snap configuration to use core24
+	Add documentation for building on NixOS
 04 May 2024 - 4.12
 	snapcraft: use local source for building
 	Mention /etc/sispmctl/password in man-page
